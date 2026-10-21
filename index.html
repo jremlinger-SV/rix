@@ -474,10 +474,11 @@ body.gameover .over button{font-size:1.1rem;padding:12px 26px;margin-top:6px}
   .family{font-size:.76rem;padding-bottom:10px}
 }
 .scoreline{position:relative}
-.livecrown{position:absolute;margin-left:8px;align-self:center;width:1.9rem;height:1.9rem;filter:drop-shadow(0 0 6px rgba(255,216,77,.8));animation:lcin .7s cubic-bezier(.2,.9,.3,1.5) both}
+.scorewrap{position:relative;display:inline-flex}
+.livecrown{position:absolute;left:100%;top:calc(50% - .95rem);margin-left:6px;width:1.9rem;height:1.9rem;filter:drop-shadow(0 0 6px rgba(255,216,77,.8));animation:lcin .7s cubic-bezier(.2,.9,.3,1.5) both}
 .livecrown svg{width:100%;height:100%}
 @keyframes lcin{0%{opacity:0;transform:translateY(-14px) scale(.3) rotate(-25deg)}100%{opacity:1;transform:none}}
-@media (min-height: 900px){.livecrown{width:2.3rem;height:2.3rem}}
+@media (min-height: 900px){.livecrown{width:2.3rem;height:2.3rem;top:calc(50% - 1.15rem)}}
 html.intro-on,html.intro-on body{background:#02040b!important}
 html.intro-on body::before{display:none}
 button.ghostbtn.small{padding:3px 12px;font-size:.8rem;border-width:1.5px;border-radius:8px;margin-left:auto}
@@ -565,7 +566,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
       <div class="stat"><small>Rekord</small><b id="best">50.000</b></div>
     </div>
   </header>
-  <div class="scoreline" aria-label="Punkte"><b id="score">50.000</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></div>
+  <div class="scoreline" aria-label="Punkte"><span class="scorewrap"><b id="score">50.000</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span></div>
   <div class="turbobar off" id="turbobar" aria-hidden="true"><span class="x2" id="turbomul">×2</span><div class="track"><div class="fill" id="turbofill"></div></div><span class="sec" id="turbosec">15 s</span></div>
   <div class="boardslot" id="boardslot">
   <div class="boardwrap">
