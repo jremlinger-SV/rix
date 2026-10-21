@@ -51,7 +51,7 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .scoreline b{font-family:var(--display);font-weight:700;font-size:clamp(2.3rem,11.5vw,2.9rem);line-height:1;letter-spacing:.01em;background:linear-gradient(180deg,var(--fg),color-mix(in srgb,var(--accent) 70%,var(--fg)));-webkit-background-clip:text;background-clip:text;color:transparent}
 #score{display:inline-block;transition:transform .15s}
 #score.bump{transform:scale(1.18)}
-.boardwrap{position:relative;flex:none;width:min(100cqw,calc(100cqh - var(--tb,140px) - 14px))}
+.boardwrap{position:relative;flex:none;width:min(100cqw,calc(100cqh - var(--tb,140px) - 54px))}
 /* Effekte ab 2 Linien */
 .fx{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;border-radius:14px}
 .fx .beam{position:absolute;border-radius:6px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95) 45%,#9fd8ff 55%,transparent);box-shadow:0 0 18px 4px rgba(125,200,255,.7);animation:beam .34s cubic-bezier(.3,0,.2,1) var(--bd,0ms) both}
@@ -82,7 +82,7 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .combo.show{animation:float 1s ease-out}
 @keyframes float{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-110%) scale(1)}}
 .tray{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--board);border-radius:14px;padding:10px 10px;width:var(--bw);box-sizing:border-box;align-self:center}
-.foot{width:var(--bw);align-self:center;margin-top:2px}
+.foot{width:var(--bw);align-self:center;margin-block:auto;flex:none}
 .slot{display:flex;align-items:center;justify-content:center;min-height:var(--th,60px);padding-block:4px;border-radius:10px;touch-action:none;cursor:grab}
 .slot:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .slot.dead .mini{opacity:.3;filter:grayscale(.7)}
@@ -92,8 +92,8 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .floating{position:fixed;left:0;top:0;display:grid;gap:3px;pointer-events:none;z-index:50;opacity:.95;filter:drop-shadow(0 8px 10px rgba(0,0,0,.3))}
 .floating .blk{border-radius:5px}
 .floating .gap{visibility:hidden}
-.foot{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:.78rem;margin-top:-4px}
-.top2{display:flex;gap:8px;flex-wrap:wrap;min-width:0;font-variant-numeric:tabular-nums}
+.foot{display:flex;justify-content:center;align-items:center;gap:10px;color:var(--muted);font-size:.78rem}
+.top2{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-width:0;font-variant-numeric:tabular-nums}
 .top2 .chip{display:inline-flex;align-items:center;gap:5px;background:var(--panel);border-radius:999px;padding:3px 10px 3px 7px;font-size:.8rem;color:var(--fg);max-width:100%;white-space:nowrap}
 .top2 .chip b{font-family:var(--display);font-weight:600}
 .top2 .chip .pl{color:var(--muted);font-weight:700;font-size:.75rem;min-width:1.05em;text-align:center}
@@ -390,6 +390,7 @@ body.skin-geburtstag .cell[data-c],body.skin-geburtstag .blk{background:var(--sy
 /* Kompakter, wenn Safari- oder App-Leisten Höhe kosten (iPhone 15 und neuer) */
 @media (max-height: 800px){
   .app{gap:8px;padding-block:12px 2px}
+  .boardslot{gap:8px}
   .logo{width:30px;height:30px}.wordmark{font-size:1.4rem}
   .scoreline{margin-block:-4px -6px}.scoreline b{font-size:clamp(2rem,10vw,2.5rem)}
   .tray{padding:8px}
@@ -416,6 +417,7 @@ body.gameover .over button{font-size:1.1rem;padding:12px 26px;margin-top:6px}
 /* Große iPhones (Plus/Pro Max): Kopf und Punkte etwas größer, damit kein Leerraum entsteht */
 @media (min-height: 900px){
   .app{gap:14px;padding-top:26px}
+  .boardslot{gap:14px}
   .logo{width:42px;height:42px}.wordmark{font-size:1.9rem}
   .stat b{font-size:1.45rem}
   .scoreline b{font-size:3.3rem}
@@ -540,12 +542,12 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
     </div>
   </div>
   <div class="tray" id="tray"></div>
-  </div>
-  <div class="netline" id="netline" hidden></div>
   <div class="foot">
     <div class="top2" id="top2" aria-label="Highscores Platz 1 und 2"></div>
     <button class="ghostbtn small" id="restart">Neu</button>
   </div>
+  </div>
+  <div class="netline" id="netline" hidden></div>
   <div class="player" id="playerline" hidden>Spieler: <b id="pname"></b> <button class="linkbtn" id="changename" type="button">Wechseln</button></div>
 
   <div class="rotate" id="rotate" aria-live="polite"><div class="rot-ph" aria-hidden="true"><i></i></div><b>Bitte hochkant halten</b><span>Jemrix ist fürs Hochformat gemacht. Das Spiel pausiert so lange.</span></div>
@@ -793,7 +795,23 @@ function buildShape(el, p, size){
   }
 }
 let trayH=null;
-const syncBW=()=>{ const w=boardEl.parentElement.getBoundingClientRect().width; if (w>0) document.querySelector('.app').style.setProperty('--bw',Math.round(w)+'px'); };
+const syncBW=()=>{ const w=boardEl.parentElement.getBoundingClientRect().width; if (w>0) document.querySelector('.app').style.setProperty('--bw',Math.round(w)+'px'); centerScore(); };
+/* Punktezahl genau mittig zwischen Kopfzeile und Spielfeld */
+function centerScore(){
+  const sl=document.querySelector('.scoreline'), hd=document.querySelector('header'), b=$('score');
+  if (!sl||!hd||!b) return;
+  // Zahl nach unten schieben, das Spielfeld bleibt stehen (oben mehr, unten gleich viel weniger Abstand)
+  for (let k=0;k<3;k++){
+    const x=parseFloat(sl.dataset.shift||'0');
+    const hb=hd.getBoundingClientRect().bottom, br=b.getBoundingClientRect(), bt=boardEl.getBoundingClientRect().top;
+    const delta=((bt-br.bottom)-(br.top-hb))/2;
+    if (Math.abs(delta)<1) break;
+    const nx=x+delta; sl.dataset.shift=nx;
+    sl.style.marginTop=(-6+nx)+'px'; sl.style.marginBottom=(-4-nx)+'px';
+  }
+}
+window.addEventListener('resize',()=>setTimeout(centerScore,50));
+try{ document.fonts && document.fonts.ready.then(()=>centerScore()); }catch(_){}
 try{ new ResizeObserver(syncBW).observe(boardEl.parentElement); }catch(_){ window.addEventListener('resize',syncBW); }
 function renderTray(fresh){
   trayEl.innerHTML='';
@@ -1331,7 +1349,8 @@ function finishGame(title){
 function enterGameOver(){
   endTurbo();
   const wr=boardEl.parentElement.getBoundingClientRect(), tr=trayEl.getBoundingClientRect(), t2=$('top2').getBoundingClientRect();
-  const bottom=Math.max(wr.bottom, Math.min(innerHeight-4, Math.max(tr.bottom, t2.bottom)));
+  const fam=$('family').getBoundingClientRect().top-10;
+  const bottom=Math.max(wr.bottom, Math.min(innerHeight-4, Math.max(tr.bottom, t2.bottom, fam)));
   $('over').style.height=Math.round(bottom-wr.top)+'px';
   document.body.classList.add('gameover');
   $('over').hidden=false;
