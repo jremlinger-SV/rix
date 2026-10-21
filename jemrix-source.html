@@ -505,10 +505,11 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .overbtns button{min-width:10em;box-sizing:border-box}
 .ghostbtn.light{color:#dfe6fb;border-color:rgba(223,230,251,.45)}
 /* ===== Mehrspieler ===== */
-.mps{position:fixed;inset:0;z-index:250;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;box-sizing:border-box;
+.mps{position:fixed;inset:0;z-index:250;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;box-sizing:border-box;
   padding:calc(env(safe-area-inset-top,0px) + 18px) max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 18px) max(20px,env(safe-area-inset-left,0px));
   background:radial-gradient(circle at 50% 28%,#1a3375,#070c1f 78%);color:#e8f0ff;text-align:center;overflow-y:auto;font-family:var(--body)}
-.mpv{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+.mpv{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;margin-block:auto}
+.mps .sub:empty,.mpwins:empty{display:none}
 .mps h2{font-family:var(--display);font-weight:700;font-size:1.75rem;margin:0;line-height:1.1}
 .mps .sub{color:#9fb8e8;font-size:.95rem;margin:0;max-width:26em}
 .mps .mplogo{width:52px;height:52px;filter:drop-shadow(0 4px 14px rgba(77,155,255,.5))}
@@ -551,10 +552,11 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .mpbtns button{min-width:11em}
 .mpdots::after{content:"";animation:dots 1.4s steps(4) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
-.mpinvite{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);z-index:240;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border-radius:999px;
+.mpinvite{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);transform:translateX(-50%);z-index:240;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border-radius:999px;
   background:#0f1d3d;color:#e8f0ff;box-shadow:0 8px 24px rgba(5,10,30,.45);font-size:.9rem;white-space:nowrap;animation:invdrop .45s cubic-bezier(.2,.9,.3,1.3)}
 .mpinvite .mpgo{padding:6px 12px;border-radius:999px;font-size:.9rem}
-@keyframes invdrop{from{transform:translate(-50%,-140%)}to{transform:translateX(-50%)}}
+@keyframes invdrop{from{transform:translate(-50%,140%);opacity:0}to{transform:translateX(-50%);opacity:1}}
+.mpx{border:0;background:transparent;color:#9fb8e8;font-size:1.3rem;line-height:1;padding:4px 8px;cursor:pointer}
 .mpcount{position:fixed;inset:0;z-index:260;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(7,12,31,.6)}
 .mpcount b{font-family:"Lilita One",var(--display);font-weight:400;font-size:min(9rem,40vh);line-height:1;color:#fff;-webkit-text-stroke:.05em #2f6bff;paint-order:stroke fill;text-shadow:0 .06em 0 #1d3a9e}
 .mpcount b.pop{animation:cdpop .9s ease-out both}
@@ -601,7 +603,7 @@ body.mp .rotate{display:none!important}
 @media (orientation: portrait){body.mpplay .rotate{display:flex!important}}
 body.mp .rotate .rot-ph{animation-name:rotq}
 body.mpsel .rotate{display:none!important}
-@media (orientation: landscape) and (max-height: 560px){.modes{flex-direction:row;width:min(760px,100%)}.modebtn{flex:1;flex-direction:column;text-align:center;gap:8px;padding:14px 10px;font-size:1.2rem}.mps .mplogo{display:none}.mps{gap:10px}.mpv{gap:10px}}
+@media (orientation: landscape) and (max-height: 560px){.modes{flex-direction:row;width:min(760px,100%)}.modebtn{flex:1;flex-direction:column;text-align:center;gap:8px;padding:14px 10px;font-size:1.2rem}.mps .mplogo{display:none}.mps{gap:10px;padding-top:10px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}.mpv{gap:8px}.mps h2{font-size:1.4rem}.mprank li{padding:6px 12px}.mpbtns{flex-direction:row}}
 body.mpdone .app{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
 body.mpdone .boardwrap,body.mpdone .tray,body.mpdone .turbobar{display:none}
 body.mpdone .mpopp{flex-wrap:wrap;gap:18px}
@@ -689,20 +691,20 @@ body.mpdone .oc .on{font-size:1.05rem}
         <div class="mpnames" id="mpnames"></div>
         <form class="mpform" id="mpform" novalidate><input id="mpname" maxlength="20" autocomplete="given-name" placeholder="Anderer Name" aria-label="Vorname"><button type="submit" class="mpgo">Los</button></form>
       </div>
-      <p class="mperr" id="mperr"></p>
+      <p class="mperr" id="mperr" role="alert"></p>
       <p class="mphint" id="mphint" hidden><span class="rot-ph mpq" aria-hidden="true"><i></i></span><span>Jetzt das iPhone quer drehen – gespielt wird im Querformat.</span></p>
       <div class="mpbtns"><button class="ghostbtn light" type="button" id="mpcancel">Abbrechen</button></div>
     </div>
   </div>
-  <div class="mps" id="mpres" hidden>
-    <h2 id="mprt">Emma gewinnt!</h2>
+  <div class="mps" id="mpres" hidden><div class="mpv">
+    <h2 id="mprt" aria-live="polite">Emma gewinnt!</h2>
     <ol class="mprank" id="mprank"></ol>
     <p class="mpwins" id="mprwins"></p>
     <p class="sub" id="mprsub"></p>
     <div class="mpbtns"><button type="button" id="mprematch">Revanche</button><button class="ghostbtn light" type="button" id="mpquit">Beenden</button></div>
-  </div>
-  <div class="mpcount" id="mpcount" hidden><b id="mpcn">3</b><span id="mpcs"></span></div>
-  <div class="mpinvite" id="mpinvite" hidden><span id="mpinvt"></span><button type="button" class="mpgo" id="mpinvgo">Mitspielen</button></div>
+  </div></div>
+  <div class="mpcount" id="mpcount" hidden aria-live="assertive"><b id="mpcn">3</b><span id="mpcs"></span></div>
+  <div class="mpinvite" id="mpinvite" hidden role="status"><span id="mpinvt"></span><button type="button" class="mpgo" id="mpinvgo">Mitspielen</button><button type="button" class="mpx" id="mpinvx" aria-label="Einladung ausblenden">×</button></div>
   <div class="rotate" id="rotate" aria-live="polite"><div class="rot-ph" aria-hidden="true"><i></i></div><b>Bitte hochkant halten</b><span>Jemrix ist fürs Hochformat gemacht. Das Spiel pausiert so lange.</span></div>
   <div class="cine" id="cine" role="button" tabindex="0" aria-label="Jemrix – nur für die Remlingers">
     <canvas class="cine-stars" id="cineStars" aria-hidden="true"></canvas>
@@ -752,7 +754,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const MP={on:false, done:false, room:null, seed:0, size:0, setIdx:0, players:[], prev:{}, lastSent:'', offset:0, roomInfo:null,
+const MP={on:false, used:false, done:false, room:null, seed:0, size:0, setIdx:0, players:[], prev:{}, lastSent:'', offset:0, roomInfo:null,
   device:(()=>{ let d=load('jemrix-device',''); if (typeof d!=='string' || d.length<8){ d='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); save('jemrix-device',d); } return d; })()};
 
 function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
@@ -1067,7 +1069,7 @@ function setScore(v){
   s.classList.add('bump'); setTimeout(()=>s.classList.remove('bump'),150);
   if (score>best){ best=score; save('jemrix-best',best); }
 }
-function persist(){ if (MP.on) return; const tl=turboUntil>performance.now()?turboUntil-performance.now():0; save('jemrix-game',{grid,pieces,score,combo,sinceClear,stars:[...stars],skinOrder,skinBump,playTime,profile,turboLeft:tl,turboMul,turboTotal,bestAtStart}); }
+function persist(){ if (MP.on || MP.used) return; const tl=turboUntil>performance.now()?turboUntil-performance.now():0; save('jemrix-game',{grid,pieces,score,combo,sinceClear,stars:[...stars],skinOrder,skinBump,playTime,profile,turboLeft:tl,turboMul,turboTotal,bestAtStart}); }
 /* Looks */
 const SKINS=[['klassik','Klassik'],['glas','Glas'],['neon','Neon'],['pixel','Pixel'],['gem','Edelstein'],['eis','Eis'],['symbol','Symbole'],['blasen','Blasen'],['nacht','Sternennacht'],
   ['halloween','Halloween'],['weihnachten','Weihnachten'],['ostern','Ostern'],['fruehling','Frühling'],['sommer','Sommer'],['herbst','Herbst'],['winter','Winter'],['geburtstag','Geburtstag']];
@@ -1825,7 +1827,7 @@ function newGame(){
 /* Keyboard: Enter on a piece places it at the first free spot */
 trayEl.addEventListener('keydown',e=>{
   if (e.key!=='Enter' && e.key!==' ') return;
-  const i=[...trayEl.children].indexOf(e.target); const p=pieces[i]; if(!p||!player||!$('over').hidden||!$('reg').hidden||$('cine')) return;
+  const i=[...trayEl.children].indexOf(e.target); const p=pieces[i]; if(!p||!player||!$('over').hidden||!$('reg').hidden||$('cine')||wrongOrient()||MP.done||!$('mpcount').hidden||!$('mpscreen').hidden) return;
   e.preventDefault();
   for (let r=0;r<N;r++) for (let c=0;c<N;c++) if (fits(p.shape,r,c)){ place(i,r,c); return; }
 });
@@ -1914,7 +1916,7 @@ function showModes(cont){
   const ok=mpAvailable();
   document.querySelectorAll('.modebtn').forEach(b=>{ if (b.dataset.n!=='1') b.disabled=!ok; });
   $('mpnote').hidden=ok;
-  mpRenderInvites(); mpRenderWins();
+  mpLobbyKey=''; mpRenderInvites(); mpRenderWins();
   if (ok) mpPollLobby(true);
 }
 function closeModes(){
@@ -1923,7 +1925,10 @@ function closeModes(){
 }
 document.querySelectorAll('.modebtn').forEach(b=>b.addEventListener('click',()=>{
   const n=+b.dataset.n;
-  if (n===1){ closeModes(); return; }
+  if (n===1){
+    if (MP.used){ mpReload(false); return; }   // nach einer Mehrspieler-Partie: gespeichertes Einzelspiel sauber neu laden
+    closeModes(); return;
+  }
   if (!mpAvailable()) return;
   openLobby({create:true, size:n});
 }));
@@ -1938,15 +1943,20 @@ function mpRenderInvites(){
     d.append(sp,go); box.appendChild(d);
   });
 }
+let mpLobbyBusy=false, mpLobbyKey='', mpDismissed=new Set();
 async function mpPollLobby(force){
-  if (!mpAvailable() || document.hidden || MP.on) return;
-  const now=Date.now(); if (!force && now-mpLastLobby<1800) return; mpLastLobby=now;
+  if (!mpAvailable() || document.hidden || MP.on || mpLobbyBusy || $('cine')) return;
+  // schnell nur auf der Auswahl und im Wartebereich, im Einzelspiel nur alle 6 s
+  const fast = mpView!==null;
+  const now=Date.now(); if (!force && now-mpLastLobby<(fast?1800:6000)) return; mpLastLobby=now;
+  mpLobbyBusy=true;
   try{
     const j=await mpCall('mp_lobby');
     if (!j || j.ok===false) return;
     mpWins=j.wins||[]; mpRenderWins();
     mpInvites=(j.rooms||[]).filter(r=>r && r.id!==MP.room && Array.isArray(r.players) && r.players.length<r.size);
-    if (mpView==='mode') mpRenderInvites();
+    const key=JSON.stringify(mpInvites);
+    if (mpView==='mode' && key!==mpLobbyKey){ mpLobbyKey=key; mpRenderInvites(); }
     if (mpView==='lobby' && mpLobby && !mpLobby.joined && mpLobby.id){
       const r=(j.rooms||[]).find(x=>x.id===mpLobby.id);
       if (!r){ $('mperr').textContent='Dieses Spiel gibt es nicht mehr.'; mpLobby.gone=true; }
@@ -1954,15 +1964,18 @@ async function mpPollLobby(force){
     }
     mpRenderBanner();
   }catch(_){}
+  finally{ mpLobbyBusy=false; }
 }
 function mpRenderBanner(){
-  const show = !MP.on && mpView===null && !$('cine') && !document.querySelector('.bday') && mpInvites.length>0;
+  const list=mpInvites.filter(r=>!mpDismissed.has(r.id));
+  const show = !MP.on && mpView===null && !$('cine') && !document.querySelector('.bday') && list.length>0;
   const el=$('mpinvite');
   if (!show){ el.hidden=true; return; }
-  const r=mpInvites[0];
+  const r=list[0];
   $('mpinvt').textContent=`${clean(r.host)} wartet · ${r.size} Spieler`;
   el.dataset.id=r.id; el.hidden=false;
 }
+$('mpinvx').onclick=()=>{ mpDismissed.add($('mpinvite').dataset.id); $('mpinvite').hidden=true; };
 $('mpinvgo').onclick=()=>{
   const r=mpInvites.find(x=>x.id===$('mpinvite').dataset.id) || mpInvites[0]; if (!r) return;
   $('mpinvite').hidden=true;
@@ -1977,7 +1990,7 @@ function openLobby(o){
   mpLobby={id:o.id||null, size:o.size, host:o.host||'', create:!!o.create, joined:false, players:(o.players||[]).map(n=>({name:n})), starting:false};
   document.body.classList.add('mp'); document.body.classList.remove('mpplay','mpdone');
   $('mpscreen').hidden=false; $('mpmode').hidden=true; $('mplobby').hidden=false; $('mperr').textContent=''; document.body.classList.add('mpsel');
-  $('mpname').value='';
+  $('mpname').value=''; mpLobbyView='';
   mpRenderLobby();
 }
 function mpNameList(){
@@ -1985,8 +1998,11 @@ function mpNameList(){
   ['Emma','Jenny','Jens', player, ...localScores.map(e=>e.name)].forEach(n=>{ const c=clean(n); const k=c.toLowerCase(); if (c.length>=2 && !seen.has(k) && names.length<6){ seen.add(k); names.push(c); } });
   return names;
 }
+let mpLobbyView='';
 function mpRenderLobby(){
   const L=mpLobby; if (!L) return;
+  const vk=JSON.stringify([L.size,L.joined,L.starting,L.create,L.host,(L.players||[]).map(p=>[p.name,!!p.me])]);
+  if (vk===mpLobbyView) return; mpLobbyView=vk;
   $('mplt').textContent=`${L.size} Spieler`;
   const taken=new Set(L.players.filter(p=>!p.me).map(p=>clean(p.name).toLowerCase()));
   $('mpls').textContent = L.starting ? 'Alle da – gleich geht es los!'
@@ -2015,11 +2031,15 @@ async function mpPickName(raw){
   try{
     const j = L.create ? await mpCall('mp_create',{p_device:MP.device, p_name:n, p_size:L.size})
                        : await mpCall('mp_join',{p_room:L.id, p_device:MP.device, p_name:n});
-    if (!j || j.ok===false){ $('mperr').textContent=(j&&j.error)||'Das hat nicht geklappt.'; return; }
+    if (mpLobby!==L){   // inzwischen abgebrochen: Platz wieder freigeben
+      if (j && j.ok!==false && j.room) mpCall('mp_leave',{p_room:j.room.id, p_device:MP.device}).catch(()=>{});
+      return;
+    }
+    if (!j || j.ok===false){ if (mpLobby===L) $('mperr').textContent=(j&&j.error)||'Das hat nicht geklappt.'; return; }
     player=n; save('jemrix-name',n); showPlayer();
     L.joined=true; L.id=j.room.id; MP.room=j.room.id;
     mpTakeRoom(j);
-  }catch(_){ $('mperr').textContent='Keine Verbindung. Bitte nochmal versuchen.'; }
+  }catch(_){ if (mpLobby===L) $('mperr').textContent='Keine Verbindung. Bitte nochmal versuchen.'; }
   finally{ mpBusy=false; }
 }
 $('mpcancel').onclick=async()=>{
@@ -2031,6 +2051,11 @@ $('mpcancel').onclick=async()=>{
 
 /* Antwort vom Server verarbeiten (Wartebereich, Spiel, Ergebnis) */
 function mpTakeRoom(j){
+  if (j && j.ok===false && j.gone && !MP.on && mpView==='lobby' && mpLobby && mpLobby.joined){
+    // vom Server entfernt (zu lange weg): nicht als Geist weiterwarten
+    MP.room=null; mpLobby.joined=false; mpLobby.gone=true; mpLobbyView='';
+    $('mperr').textContent='Du warst zu lange weg. Bitte neu beitreten.'; mpRenderLobby(); return;
+  }
   if (!j || j.ok===false || !j.room) return;
   if (j.room.id!==MP.room) return;
   MP.offset = j.now - Date.now();
@@ -2066,7 +2091,8 @@ function mpCountdown(room){
   },60);
 }
 function mpStartGame(room){
-  MP.on=true; MP.done=false; MP.seed=room.seed|0; MP.size=room.size; MP.setIdx=0; MP.lastSent=''; MP.prev={}; mpResShown=false;
+  MP.on=true; MP.used=true; MP.done=false; MP.seed=room.seed|0;
+  pauseMode=false; turboLeft=0; bgTurbo=0; $('resume').hidden=true; idleTime=0; MP.size=room.size; MP.setIdx=0; MP.lastSent=''; MP.prev={}; mpResShown=false;
   document.body.classList.add('mp','mpplay'); document.body.classList.remove('mpdone','gameover');
   $('rotate').querySelector('b').textContent='Bitte quer halten';
   $('rotate').querySelector('span').textContent='Im Mehrspieler-Modus wird im Querformat gespielt.';
@@ -2145,7 +2171,7 @@ function mpLayout(){
   const ob=Math.floor(Math.max(56, Math.min(availH, (colW-12*(k-1))/k - 4, 170)));
   app.style.setProperty('--ob', ob+'px');
 }
-window.addEventListener('resize',()=>{ if (MP.on) setTimeout(()=>{ mpLayout(); syncBW(); renderTray(); },60); });
+window.addEventListener('resize',()=>{ if (MP.on) setTimeout(()=>{ mpLayout(); syncBW(); if (!drag) renderTray(); },60); });
 
 /* --- Abgleich: alle 0,7 s eigener Stand hin, Stand der anderen zurück --- */
 let mpInflight=false, mpLastTick=0;
@@ -2176,7 +2202,7 @@ setInterval(()=>{ mpTick(false); mpPollLobby(false); },350);
 
 /* --- Ergebnis --- */
 function mpShowResult(){
-  const rows=MP.players.map(p=>({name:clean(p.name), me:p.me, s:p.me ? Math.max(score, p.score||0) : Math.max((p.state&&p.state.s)||0, p.score||0)}))
+  const rows=MP.players.map(p=>({name:clean(p.name), me:p.me, s:p.score||0}))   // Server-Stand – gleiche Wertung auf allen iPhones
     .sort((a,b)=>b.s-a.s);
   const top=rows.length ? rows[0].s : 0;
   const winners=rows.filter(r=>r.s===top && top>0);
@@ -2207,7 +2233,7 @@ $('mprematch').onclick=async()=>{
   try{
     const j=await mpCall('mp_rematch',{p_room:MP.room, p_device:MP.device});
     if (!j || j.ok===false){ $('mprsub').textContent=(j&&j.error)||'Das hat nicht geklappt.'; $('mprematch').disabled=false; return; }
-    MP.on=false; MP.done=false; mpResShown=false; document.body.classList.remove('mpdone','mpplay');
+    MP.on=false; MP.done=false; mpResShown=false; document.body.classList.remove('mpdone','mpplay');   // MP.used bleibt: Einzelspiel bleibt geschützt
     $('mpres').hidden=true;
     openLobby({id:j.room.id, size:j.room.size, players:[]});
     mpLobby.joined=true; MP.room=j.room.id;
@@ -2215,11 +2241,12 @@ $('mprematch').onclick=async()=>{
   }catch(_){ $('mprsub').textContent='Keine Verbindung. Bitte nochmal versuchen.'; $('mprematch').disabled=false; }
   finally{ mpBusy=false; }
 };
-$('mpquit').onclick=()=>{
-  try{ localStorage.removeItem('jemrix-name'); }catch(e){}
+function mpReload(forgetName){
+  if (forgetName){ try{ localStorage.removeItem('jemrix-name'); }catch(e){} }
   document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
   setTimeout(()=>{ try{ location.reload(); }catch(e){ location.href=location.href.split('#')[0]; } },380);
-};
+}
+$('mpquit').onclick=()=>mpReload(true);
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden){ mpTick(true); mpPollLobby(true); } });
 
 let resumeTurbo=null;   // gespeicherter Turbo startet erst, wenn das Spiel wirklich losgeht
