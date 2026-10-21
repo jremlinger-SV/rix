@@ -19,12 +19,13 @@
   --bg:#0c1328; --panel:#152043; --board:#111a36; --well:#1e2b52; --fg:#e8f0ff; --muted:#93a6d4; --accent:#4d9bff; color-scheme:dark;
 }
 [hidden]{display:none!important}
+html{box-sizing:border-box}   /* Ränder von Statusleiste/Home-Balken zählen zur Höhe, nichts scrollt */
 html,body{height:100%}
 body{margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
   user-select:none;-webkit-user-select:none;touch-action:manipulation;overflow-x:hidden}
-.app{max-width:440px;margin:0 auto;padding-block:14px 20px;display:flex;flex-direction:column;gap:14px;min-height:100%;box-sizing:border-box}
+.app{max-width:440px;margin:0 auto;padding-block:34px 14px;display:flex;flex-direction:column;gap:14px;min-height:100%;box-sizing:border-box}
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 h1{font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0;letter-spacing:.01em;line-height:1}
 h1{display:flex;align-items:center;gap:9px}
@@ -49,7 +50,7 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .scoreline b{font-family:var(--display);font-weight:700;font-size:clamp(1.9rem,9.5vw,2.5rem);line-height:1;letter-spacing:.01em;background:linear-gradient(180deg,var(--fg),color-mix(in srgb,var(--accent) 70%,var(--fg)));-webkit-background-clip:text;background-clip:text;color:transparent}
 #score{display:inline-block;transition:transform .15s}
 #score.bump{transform:scale(1.18)}
-.boardwrap{position:relative;width:max(240px,min(100%,calc(100dvh - 454px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))));align-self:center}
+.boardwrap{position:relative;width:max(240px,min(100%,calc(100dvh - 458px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))));align-self:center}
 /* Effekte ab 2 Linien */
 .fx{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;border-radius:14px}
 .fx .beam{position:absolute;border-radius:6px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95) 45%,#9fd8ff 55%,transparent);box-shadow:0 0 18px 4px rgba(125,200,255,.7);animation:beam .34s cubic-bezier(.3,0,.2,1) var(--bd,0ms) both}
@@ -672,10 +673,17 @@ function curDiff(){
   return {d, a, grace:false};
 }
 const LAND=matchMedia('(orientation: landscape) and (max-height: 560px)');
+const IDLE_LIMIT=60; let idleTime=0;
 function gameActive(){ return grid && !document.hidden && !LAND.matches && $('over').hidden && $('reg').hidden && !$('cine') && !document.querySelector('.bday'); }
 setInterval(()=>{
   const now=performance.now();
-  if (tickLast && gameActive()) playTime+=Math.min(2,(now-tickLast)/1000);
+  if (tickLast && gameActive()){
+    const dt=Math.min(2,(now-tickLast)/1000);
+    playTime+=dt;
+    // Unsichtbarer Inaktivitäts-Timeout: 60 s ohne Spielzug beendet die Partie
+    idleTime+=dt;
+    if (idleTime>=IDLE_LIMIT && !drag){ idleTime=0; finishGame('Zeit abgelaufen'); }
+  }
   tickLast=now;
 },1000);
 /* Erfolgserlebnisse: nach der Schonzeit kommt immer wieder ein „Glückssatz“ –
@@ -901,6 +909,7 @@ function geom(){
   return {x0:a.left, y0:a.top, size:a.width, step:b.left-a.left};
 }
 function startDrag(e,i){
+  idleTime=0;
   if (drag) return;
   if (busy || !pieces[i] || !player || !$('over').hidden || !$('reg').hidden || LAND.matches) return;
   e.preventDefault();
@@ -1061,6 +1070,7 @@ function tickTurbo(){
 }
 const QUICK_MS=2500;
 function place(i,r,c){
+  idleTime=0;
   const p=pieces[i];
   p.shape.forEach(([dr,dc])=>grid[(r+dr)*N+c+dc]=p.color);
   const now=performance.now();
@@ -1272,7 +1282,11 @@ function checkOver(){
     if (!pieces.some(p=>canPlaceAnywhere(p.shape))) pieces=[{shape:SHAPES[0],color:pick(COLORS)},{shape:SHAPES[0],color:pick(COLORS)},{shape:SHAPES[1],color:pick(COLORS)}];
     renderTray(true); persist(); return;
   }
-  pauseMode=false; $('resume').hidden=true; $('overtitle').textContent='Kein Platz mehr';
+  finishGame('Kein Platz mehr');
+}
+/* Spiel beenden (kein Platz mehr oder 60 s ohne Zug): Ergebnis zählen, Highscore zeigen */
+function finishGame(title){
+  pauseMode=false; $('resume').hidden=true; $('overtitle').textContent=title;
   $('final').textContent=showPts(score);
   $('overmsg').textContent = score>bestAtStart && score>0 ? 'Neuer Rekord!' : `Punkte · Rekord ${showPts(best)}`;
   enterGameOver(); SND.end(score>bestAtStart && score>0);
@@ -1312,7 +1326,7 @@ function askName(){
   markLeader();
   if (!player) setTimeout(()=>{ try{$('regname').focus();}catch(e){} },50);
 }
-function setPlayer(n){ player=n; save('jemrix-name',n); $('reg').hidden=true; showPlayer(); SND.start();
+function setPlayer(n){ idleTime=0; player=n; save('jemrix-name',n); $('reg').hidden=true; showPlayer(); SND.start();
   if (isBirthdayKid(n) && score===0){ startTurbo(30000,2); const t=$('lvl'); t.textContent='Geburtstags-Turbo ×2 für 30 s'; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); } }
 $('regform').addEventListener('submit',e=>{
   e.preventDefault();
@@ -1544,6 +1558,7 @@ function playCine(done){
 }
 function familyIntro(){ const f=$('family'); f.classList.remove('intro'); void f.offsetWidth; f.classList.add('intro'); setTimeout(()=>f.classList.remove('intro'),1800); }
 function newGame(){
+  idleTime=0;
   familyIntro();
   if (typeof askName==='function') setTimeout(askName,0);
   score=0; combo=0; sinceClear=9; lastMove=0; level=1; endTurbo(); bestAtStart=best;
