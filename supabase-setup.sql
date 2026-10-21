@@ -40,18 +40,19 @@ as $$
 $$;
 
 -- Ergebnisse eintragen: behält pro Name immer nur den besten Wert.
--- Schutz: unsichtbare Zeichen werden entfernt, unrealistische Werte gekappt, höchstens 40 Namen.
+-- Schutz: unsichtbare Zeichen entfernt, nur lateinische Buchstaben, Werte gekappt, höchstens 40 Namen (schwächster fliegt raus).
 create or replace function public.submit_scores(p_code text, p_entries json)
 returns json
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 declare
   e json;
   v_name text;
   v_score integer;
   v_num numeric;
+  v_min integer;
 begin
   if p_code is distinct from (select family_code from jemrix_meta where id = 1) then
     return json_build_object('ok', false, 'error', 'Falscher Familien-Code');
@@ -60,24 +61,31 @@ begin
     return json_build_object('ok', false, 'error', 'Ungültige Daten');
   end if;
   for e in select * from json_array_elements(p_entries) loop
-    v_name := regexp_replace(coalesce(e->>'name', ''), '[\u0000-\u001F\u007F­​-‏‪-‮⁠-⁤﻿]', '', 'g');
-    v_name := left(btrim(regexp_replace(v_name, '\s+', ' ', 'g')), 20);
+    if json_typeof(e) <> 'object' then continue; end if;
+    v_name := regexp_replace(normalize(coalesce(e->>'name', ''), NFKC), '[\u0000-\u001F\u007F­​-‏‪-‮⁠-⁤﻿]', '', 'g');
+    v_name := btrim(left(btrim(regexp_replace(v_name, '\s+', ' ', 'g')), 20));
     begin
       v_num := (e->>'score')::numeric;
     exception when others then
       v_num := 0;
     end;
-    v_score := least(greatest(coalesce(round(v_num), 0), 0), 250000)::integer;   -- realistisch erreichbares Maximum
-    if char_length(v_name) >= 2 and v_score > 0
-       and (exists (select 1 from jemrix_scores where name_key = lower(v_name))
-            or (select count(*) from jemrix_scores) < 40) then
-      insert into jemrix_scores (name_key, name, score)
-      values (lower(v_name), v_name, v_score)
-      on conflict (name_key) do update
-        set score = greatest(jemrix_scores.score, excluded.score),
-            name = case when excluded.score > jemrix_scores.score then excluded.name else jemrix_scores.name end,
-            updated_at = now();
+    if v_num is null or v_num = 'NaN'::numeric or v_num < 0 then v_num := 0; end if;
+    v_score := least(round(v_num), 250000)::integer;   -- realistisch erreichbares Maximum
+    -- nur lateinische Buchstaben: keine Doppelgänger wie „Еmma“ mit kyrillischem E, kein HTML
+    if v_score <= 0 or not coalesce(v_name ~ '^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ'' .-]{1,19}$', false) then continue; end if;
+    if not exists (select 1 from jemrix_scores where name_key = lower(v_name))
+       and (select count(*) from jemrix_scores) >= 40 then
+      -- Liste voll: den schwächsten Eintrag ersetzen, statt neue Namen für immer auszusperren
+      select min(score) into v_min from jemrix_scores;
+      if v_score <= v_min then continue; end if;
+      delete from jemrix_scores where name_key = (select name_key from jemrix_scores order by score asc, updated_at asc limit 1);
     end if;
+    insert into jemrix_scores (name_key, name, score)
+    values (lower(v_name), v_name, v_score)
+    on conflict (name_key) do update
+      set score = greatest(jemrix_scores.score, excluded.score),
+          name = case when excluded.score > jemrix_scores.score then excluded.name else jemrix_scores.name end,
+          updated_at = now();
   end loop;
   return get_scores();
 end;

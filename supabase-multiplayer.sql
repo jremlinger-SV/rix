@@ -12,8 +12,10 @@ create table if not exists public.jemrix_rooms (
   status      text not null default 'open' check (status in ('open','playing','done','closed')),
   starts_at   timestamptz,
   finished_at timestamptz,
-  rematch     uuid
+  rematch     uuid,
+  sig         text not null default ''
 );
+alter table public.jemrix_rooms add column if not exists sig text not null default '';
 create index if not exists jemrix_rooms_status on public.jemrix_rooms (status, created_at);
 
 create table if not exists public.jemrix_room_players (
@@ -47,7 +49,13 @@ revoke all on public.jemrix_wins         from anon, authenticated;
 -- Hilfsfunktionen (nicht von außen aufrufbar)
 create or replace function public.mp_clean_name(p text)
 returns text language sql immutable set search_path = public, pg_temp as $$
-  select btrim(left(btrim(regexp_replace(regexp_replace(coalesce(p, ''), '[\u0000-\u001F\u007F­​-‏‪-‮⁠-⁤﻿]', '', 'g'), '\s+', ' ', 'g')), 20));
+  select btrim(left(btrim(regexp_replace(regexp_replace(normalize(coalesce(p, ''), NFKC), '[\u0000-\u001F\u007F­​-‏‪-‮⁠-⁤﻿]', '', 'g'), '\s+', ' ', 'g')), 20));
+$$;
+
+-- Nur lateinische Buchstaben (inkl. Umlaute), Leerzeichen, Bindestrich, Punkt, Apostroph – keine Doppelgänger aus anderen Schriften
+create or replace function public.jemrix_name_ok(p text)
+returns boolean language sql immutable set search_path = public, pg_temp as $$
+  select coalesce(p ~ '^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ'' .-]{1,19}$', false);
 $$;
 
 create or replace function public.mp_code_ok(p_code text)
@@ -144,7 +152,8 @@ begin
 end;
 $$;
 
-create or replace function public.mp_join(p_code text, p_room uuid, p_device text, p_name text)
+drop function if exists public.mp_join(text, uuid, text, text);
+create or replace function public.mp_join(p_code text, p_room uuid, p_device text, p_name text, p_sig text default '')
 returns json language plpgsql security definer set search_path = public, pg_temp as $$
 declare r jemrix_rooms; v_name text := mp_clean_name(p_name); v_n integer;
 begin
@@ -152,9 +161,13 @@ begin
   if char_length(v_name) < 2 or char_length(coalesce(p_device, '')) not between 8 and 64 then
     return json_build_object('ok', false, 'error', 'Bitte mindestens 2 Buchstaben eingeben.');
   end if;
+  if not jemrix_name_ok(v_name) then return json_build_object('ok', false, 'error', 'Bitte nur Buchstaben verwenden.'); end if;
   perform mp_cleanup();
   select * into r from jemrix_rooms where id = p_room for update;
   if not found or r.status <> 'open' then return json_build_object('ok', false, 'error', 'Dieses Spiel gibt es nicht mehr.'); end if;
+  if r.sig <> '' and coalesce(p_sig, '') <> r.sig then
+    return json_build_object('ok', false, 'version', true, 'error', 'Unterschiedliche Jemrix-Versionen. Bitte Jemrix auf allen iPhones schließen und neu öffnen.');
+  end if;
   if exists (select 1 from jemrix_room_players where room_id = p_room and name_key = lower(v_name) and device <> p_device) then
     return json_build_object('ok', false, 'error', (select name from jemrix_room_players where room_id = p_room and name_key = lower(v_name)) || ' spielt schon mit.');
   end if;
@@ -178,7 +191,8 @@ begin
 end;
 $$;
 
-create or replace function public.mp_create(p_code text, p_device text, p_name text, p_size integer)
+drop function if exists public.mp_create(text, text, text, integer);
+create or replace function public.mp_create(p_code text, p_device text, p_name text, p_size integer, p_sig text default '')
 returns json language plpgsql security definer set search_path = public, pg_temp as $$
 declare v_id uuid; v_name text := mp_clean_name(p_name);
 begin
@@ -186,14 +200,15 @@ begin
   if p_size is null or p_size not between 2 and 3 or char_length(v_name) < 2 or char_length(coalesce(p_device, '')) not between 8 and 64 then
     return json_build_object('ok', false, 'error', 'Ungültige Daten');
   end if;
+  if not jemrix_name_ok(v_name) then return json_build_object('ok', false, 'error', 'Bitte nur Buchstaben verwenden.'); end if;
   perform mp_cleanup();
-  if (select count(*) from jemrix_rooms where status = 'open' and host_device <> p_device) >= 5 then
+  if (select count(*) from jemrix_rooms where status = 'open' and host_device <> p_device) >= 15 then
     return json_build_object('ok', false, 'error', 'Gerade sind zu viele Spiele offen.');
   end if;
   delete from jemrix_room_players p using jemrix_rooms o where p.room_id = o.id and o.status = 'open' and p.device = p_device;
   update jemrix_rooms set status = 'closed' where status = 'open' and host_device = p_device;
-  insert into jemrix_rooms (size, seed, host, host_device)
-    values (p_size, floor(random() * 2147483646)::integer + 1, v_name, p_device) returning id into v_id;
+  insert into jemrix_rooms (size, seed, host, host_device, sig)
+    values (p_size, floor(random() * 2147483646)::integer + 1, v_name, p_device, left(coalesce(p_sig, ''), 40)) returning id into v_id;
   insert into jemrix_room_players (room_id, device, name_key, name) values (v_id, p_device, lower(v_name), v_name);
   return mp_room_json(v_id, p_device);
 end;
@@ -251,7 +266,8 @@ end;
 $$;
 
 -- Revanche: der Erste eröffnet ein neues Spiel mit gleicher Spielerzahl, die anderen treten bei
-create or replace function public.mp_rematch(p_code text, p_room uuid, p_device text)
+drop function if exists public.mp_rematch(text, uuid, text);
+create or replace function public.mp_rematch(p_code text, p_room uuid, p_device text, p_sig text default '')
 returns json language plpgsql security definer set search_path = public, pg_temp as $$
 declare r jemrix_rooms; v_name text; v_new uuid;
 begin
@@ -261,26 +277,26 @@ begin
   select name into v_name from jemrix_room_players where room_id = p_room and device = p_device;
   if v_name is null then return json_build_object('ok', false, 'error', 'Du warst nicht dabei.'); end if;
   if r.rematch is not null and exists (select 1 from jemrix_rooms where id = r.rematch and status = 'open') then
-    return mp_join(p_code, r.rematch, p_device, v_name);
+    return mp_join(p_code, r.rematch, p_device, v_name, p_sig);
   end if;
   if r.rematch is not null and exists (select 1 from jemrix_rooms where id = r.rematch and status in ('playing','done')) then
     return json_build_object('ok', false, 'error', 'Die Revanche läuft schon ohne dich.');
   end if;
   delete from jemrix_room_players p using jemrix_rooms o where p.room_id = o.id and o.status = 'open' and p.device = p_device;
   update jemrix_rooms set status = 'closed' where status = 'open' and host_device = p_device;
-  insert into jemrix_rooms (size, seed, host, host_device)
-    values (r.size, floor(random() * 2147483646)::integer + 1, v_name, p_device) returning id into v_new;
+  insert into jemrix_rooms (size, seed, host, host_device, sig)
+    values (r.size, floor(random() * 2147483646)::integer + 1, v_name, p_device, left(coalesce(p_sig, ''), 40)) returning id into v_new;
   insert into jemrix_room_players (room_id, device, name_key, name) values (v_new, p_device, lower(v_name), v_name);
   update jemrix_rooms set rematch = v_new where id = p_room;
   return mp_room_json(v_new, p_device);
 end;
 $$;
 
-revoke all on function public.mp_clean_name(text), public.mp_code_ok(text), public.mp_wins_json(), public.mp_cleanup(),
+revoke all on function public.mp_clean_name(text), public.jemrix_name_ok(text), public.mp_code_ok(text), public.mp_wins_json(), public.mp_cleanup(),
   public.mp_finalize(uuid), public.mp_room_json(uuid, text) from public, anon, authenticated;
-revoke all on function public.mp_lobby(text), public.mp_join(text, uuid, text, text), public.mp_create(text, text, text, integer),
-  public.mp_sync(text, uuid, text, json), public.mp_leave(text, uuid, text), public.mp_rematch(text, uuid, text) from public, authenticated;
-grant execute on function public.mp_lobby(text), public.mp_join(text, uuid, text, text), public.mp_create(text, text, text, integer),
-  public.mp_sync(text, uuid, text, json), public.mp_leave(text, uuid, text), public.mp_rematch(text, uuid, text) to anon;
+revoke all on function public.mp_lobby(text), public.mp_join(text, uuid, text, text, text), public.mp_create(text, text, text, integer, text),
+  public.mp_sync(text, uuid, text, json), public.mp_leave(text, uuid, text), public.mp_rematch(text, uuid, text, text) from public, authenticated;
+grant execute on function public.mp_lobby(text), public.mp_join(text, uuid, text, text, text), public.mp_create(text, text, text, integer, text),
+  public.mp_sync(text, uuid, text, json), public.mp_leave(text, uuid, text), public.mp_rematch(text, uuid, text, text) to anon;
 
 -- Siege zurücksetzen (nur im SQL Editor):  delete from jemrix_wins;

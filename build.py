@@ -6,6 +6,9 @@ import sys, re, pathlib, hashlib, time
 
 HERE = pathlib.Path(__file__).resolve().parent
 SRC = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / 'jemrix-source.html'
+MASTER = HERE.parent / 'achtfeld.html'
+if len(sys.argv) <= 1 and MASTER.exists() and MASTER.read_bytes() != SRC.read_bytes():
+    sys.exit('jemrix-source.html ist veraltet – erst achtfeld.html hineinkopieren')
 s = SRC.read_text(encoding='utf-8')
 
 def rep(a, b, count=1):
@@ -50,8 +53,8 @@ function recordScore(s){
   updateNet(); trySync(); renderTop2();
 }
 function takeList(j, seq){
-  if (!j || !Array.isArray(j.players)) return;
-  if (seq!=null){ if (seq<listApplied) return; listApplied=seq; }
+  if (!j || !Array.isArray(j.players)) return false;
+  if (seq!=null){ if (seq<listApplied) return false; listApplied=seq; }
   sharedRows=j.players.filter(p=>p && typeof p.score==='number').map(p=>({name:clean(p.name), score:p.score}));
   sharedCache=sharedRows; save('jemrix-shared-cache',sharedCache);
   if (typeof j.epoch==='number' && j.epoch>load('jemrix-server-epoch',0)){
@@ -80,7 +83,7 @@ async function trySync(){
     const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score)}))});
     // Antwort vom Server (auch eine Ablehnung): Stapel ist erledigt und blockiert die Warteschlange nicht
     pending=pending.slice(batch.length); save('jemrix-pending',pending);
-    if (j && j.ok!==false) takeList(j, seq);
+    if (j && j.ok!==false){ if (takeList(j, seq)===false) setTimeout(fetchScores,300); }   // ältere Antwort verworfen: Liste frisch holen
     netOk=true;
   }catch(e){ netOk=false; }
   finally{ syncing=false; refreshViews(); if (pending.length && netOk) setTimeout(trySync,300); }
@@ -200,5 +203,7 @@ for f in sorted([*(HERE/'fonts').glob('*'), *(HERE/'icons').glob('*'), HERE/'con
     h.update(f.name.encode()); h.update(f.read_bytes())
 ver = h.hexdigest()[:10]
 sw = (HERE / 'sw.template.js').read_text(encoding='utf-8').replace('__VERSION__', ver)
+for f in re.findall(r"'([^']+\.(?:html|js|webmanifest|png|woff2))'", sw.split('];')[0]):
+    assert (HERE / f).exists(), f'Offline-Datei fehlt: {f}'
 (HERE / 'sw.js').write_text(sw, encoding='utf-8')
 print('index.html und sw.js gebaut, Version', ver)
