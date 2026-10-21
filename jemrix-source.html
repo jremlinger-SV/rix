@@ -168,7 +168,8 @@ body.skin-nacht .board{background:radial-gradient(1px 1px at 12% 18%,#fff,transp
 body.skin-nacht .cell{background:rgba(255,255,255,.04)}
 body.skin-nacht .cell[data-c],body.skin-nacht .blk{background:radial-gradient(circle at 72% 28%,#fff 0 1.4px,transparent 2px),radial-gradient(circle at 30% 68%,rgba(255,255,255,.75) 0 1px,transparent 1.6px),var(--col)}
 /* Look-Wechsel: kurze Welle über die Steine */
-.cell.morph{animation:morph .5s ease-out var(--md,0ms) both}
+.board.skinglow{animation:skinglow .75s ease-out}
+@keyframes skinglow{0%{box-shadow:0 10px 30px rgba(20,26,50,.25),0 0 0 0 rgba(159,216,255,0)}35%{box-shadow:0 10px 30px rgba(20,26,50,.25),0 0 0 4px rgba(159,216,255,.75)}100%{box-shadow:0 10px 30px rgba(20,26,50,.25),0 0 0 0 rgba(159,216,255,0)}}
 @keyframes morph{0%{filter:brightness(1)}35%{filter:brightness(1.35) saturate(1.15)}100%{filter:brightness(1)}}
 /* Lebendiges Feld: ab und zu blitzt ein Stein */
 .cell.glint{animation:glint .7s ease-in-out}
@@ -176,7 +177,7 @@ body.skin-nacht .cell[data-c],body.skin-nacht .blk{background:radial-gradient(ci
 /* Bonus-Stern im Stein */
 .cell.star::after,.blk.star::after{content:"";position:absolute;inset:14%;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23fff%22%20stroke%3D%22%23bfe3ff%22%20stroke-width%3D%221%22%20d%3D%22M12%202.5l2.9%206%206.6.8-4.9%204.5%201.3%206.5L12%2017l-5.9%203.3%201.3-6.5-4.9-4.5%206.6-.8z%22/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 0 4px rgba(159,216,255,.95));animation:starpulse 1.6s ease-in-out infinite;pointer-events:none}
 @keyframes starpulse{0%,100%{transform:scale(.88) rotate(-8deg)}50%{transform:scale(1.04) rotate(8deg)}}
-@media (prefers-reduced-motion: reduce){.cell.morph,.cell.glint,.cell.star::after,.blk.star::after{animation:none}}
+@media (prefers-reduced-motion: reduce){.board.skinglow,.cell.glint,.cell.star::after,.blk.star::after{animation:none}}
 /* ===== Kino-Intro: nur für die Remlingers (6 s, dann Tippen) ===== */
 .cine{position:fixed;top:0;left:0;right:0;bottom:auto;height:100lvh;min-height:100%;z-index:290;overflow:hidden;background:#02040b;cursor:default;--gold:#cfe6ff;outline:none}
 .cine.ready{cursor:pointer}
@@ -1130,10 +1131,8 @@ function applySkin(announce){
   SKINS.forEach(([k])=>document.body.classList.remove('skin-'+k));
   if (key!=='klassik') document.body.classList.add('skin-'+key);
   const first=curSkin===null; curSkin=key;
-  if (!first && announce){
-    for (let k=0;k<N*N;k++){ if (!grid[k]) continue; const r=Math.floor(k/N), c=k%N; const d=Math.hypot(r-3.5,c-3.5);
-      const el=cells[k]; el.style.setProperty('--md',Math.round(d*35)+'ms'); retrigger(el,'morph',420+Math.round(d*35)); }
-  }
+  // Kein Effekt auf den Steinen selbst (sonst wirkt es, als baue sich das Feld neu auf) – nur der Rahmen leuchtet kurz
+  if (!first && announce && !document.body.classList.contains('turbo')) retrigger(boardEl,'skinglow',750);
   return label;
 }
 setInterval(()=>{
