@@ -739,7 +739,6 @@ body.mpdone .oc .on{font-size:1.05rem}
       </div>
       <p class="sub" id="mpnote" hidden>Mehrspieler gibt es nur in der Jemrix-App auf dem iPhone.</p>
       <p class="mpwins" id="mpwins"></p>
-      <p class="mpver" id="mpver"></p>
     </div>
     <div class="mpv" id="mplobby" hidden>
       <h2 id="mplt">2 Spieler</h2>
@@ -812,7 +811,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='21.10.2026, 22:38';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='21.10.2026, 22:43';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 const MP={on:false, used:false, done:false, room:null, seed:0, size:0, setIdx:0, players:[], prev:{}, lastSent:'', offset:0, roomInfo:null,
   device:(()=>{ let d=load('jemrix-device',''); if (typeof d!=='string' || d.length<8){ d='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); save('jemrix-device',d); } return d; })()};
 
@@ -1996,7 +1995,6 @@ function mpRenderWins(){ const t=mpWinsText(mpWins); $('mpwins').textContent=t; 
 /* --- Modusauswahl --- */
 function showModes(cont){
   if (window.__jemrixUpdate){ window.__jemrixUpdate=false; location.reload(); return; }   // neue Version bereit: jetzt sauber laden
-  $('mpver').textContent = APP_VERSION ? 'Version vom '+APP_VERSION : '';
   if (cont) mpModeDone=cont;
   mpView='mode'; mpLobby=null;
   document.body.classList.remove('mp','mpplay','mpdone');

@@ -699,7 +699,6 @@ body.mpdone .oc .on{font-size:1.05rem}
       </div>
       <p class="sub" id="mpnote" hidden>Mehrspieler gibt es nur in der Jemrix-App auf dem iPhone.</p>
       <p class="mpwins" id="mpwins"></p>
-      <p class="mpver" id="mpver"></p>
     </div>
     <div class="mpv" id="mplobby" hidden>
       <h2 id="mplt">2 Spieler</h2>
@@ -1949,7 +1948,6 @@ function mpRenderWins(){ const t=mpWinsText(mpWins); $('mpwins').textContent=t; 
 /* --- Modusauswahl --- */
 function showModes(cont){
   if (window.__jemrixUpdate){ window.__jemrixUpdate=false; location.reload(); return; }   // neue Version bereit: jetzt sauber laden
-  $('mpver').textContent = APP_VERSION ? 'Version vom '+APP_VERSION : '';
   if (cont) mpModeDone=cont;
   mpView='mode'; mpLobby=null;
   document.body.classList.remove('mp','mpplay','mpdone');
