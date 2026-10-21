@@ -58,12 +58,13 @@ img{max-width:100%}
 }
 [hidden]{display:none!important}
 html{box-sizing:border-box}   /* Ränder von Statusleiste/Home-Balken zählen zur Höhe, nichts scrollt */
-html,body{height:100%}
+html,body{height:100%;overflow:hidden}
 body{margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);
-  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-left:max(12px, env(safe-area-inset-left, 0px));padding-right:max(12px, env(safe-area-inset-right, 0px));
   user-select:none;-webkit-user-select:none;touch-action:manipulation;overflow-x:hidden}
-.app{--bw:max(250px,min(100%,calc(100dvh - var(--bwk,400px) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))));max-width:440px;margin:0 auto;padding-block:52px 14px;display:flex;flex-direction:column;gap:14px;min-height:100%;box-sizing:border-box}
+.app{--bw:min(100%,360px);max-width:440px;margin:0 auto;padding-block:18px 4px;display:flex;flex-direction:column;gap:10px;height:100%;min-height:560px;box-sizing:border-box}
+.boardslot{flex:1 1 auto;min-height:250px;container-type:size;display:grid;place-items:center}
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 h1{font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0;letter-spacing:.01em;line-height:1}
 h1{display:flex;align-items:center;gap:9px}
@@ -88,7 +89,7 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .scoreline b{font-family:var(--display);font-weight:700;font-size:clamp(1.9rem,9.5vw,2.5rem);line-height:1;letter-spacing:.01em;background:linear-gradient(180deg,var(--fg),color-mix(in srgb,var(--accent) 70%,var(--fg)));-webkit-background-clip:text;background-clip:text;color:transparent}
 #score{display:inline-block;transition:transform .15s}
 #score.bump{transform:scale(1.18)}
-.boardwrap{position:relative;width:var(--bw);align-self:center}
+.boardwrap{position:relative;width:min(100cqw,100cqh)}
 /* Effekte ab 2 Linien */
 .fx{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;border-radius:14px}
 .fx .beam{position:absolute;border-radius:6px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95) 45%,#9fd8ff 55%,transparent);box-shadow:0 0 18px 4px rgba(125,200,255,.7);animation:beam .34s cubic-bezier(.3,0,.2,1) var(--bd,0ms) both}
@@ -137,7 +138,7 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .top2 .chip .nmx{overflow:hidden;text-overflow:ellipsis;max-width:7.5em}
 .top2 .crown{width:1.05em;height:1.05em}
 .top2 .empty{font-size:.78rem;color:var(--muted)}
-.family{margin-top:auto;padding-block:10px 26px;display:flex;align-items:center;justify-content:center;gap:9px;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.family{padding-block:4px 6px;display:flex;align-items:center;justify-content:center;gap:9px;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .family b{font-family:var(--display);font-weight:600;letter-spacing:.06em;color:var(--accent)}
 .family .bits{display:inline-flex;gap:3px;align-items:center}
 .family .bits i{display:block;width:6px;height:6px;border-radius:1.5px;background:var(--b1)}
@@ -196,8 +197,8 @@ body.skin-nacht .board{background:radial-gradient(1px 1px at 12% 18%,#fff,transp
 body.skin-nacht .cell{background:rgba(255,255,255,.04)}
 body.skin-nacht .cell[data-c],body.skin-nacht .blk{background:radial-gradient(circle at 72% 28%,#fff 0 1.4px,transparent 2px),radial-gradient(circle at 30% 68%,rgba(255,255,255,.75) 0 1px,transparent 1.6px),var(--col)}
 /* Look-Wechsel: kurze Welle über die Steine */
-.cell.morph{animation:morph .42s cubic-bezier(.2,.9,.3,1.3) var(--md,0ms) both}
-@keyframes morph{0%{transform:scale(1)}40%{transform:scale(.78) rotate(-6deg)}100%{transform:scale(1)}}
+.cell.morph{animation:morph .5s ease-out var(--md,0ms) both}
+@keyframes morph{0%{filter:brightness(1)}35%{filter:brightness(1.35) saturate(1.15)}100%{filter:brightness(1)}}
 /* Lebendiges Feld: ab und zu blitzt ein Stein */
 .cell.glint{animation:glint .7s ease-in-out}
 @keyframes glint{0%,100%{filter:none;transform:none}45%{filter:brightness(1.45) saturate(1.2);transform:scale(1.06)}}
@@ -426,15 +427,14 @@ body.skin-geburtstag .cell[data-c],body.skin-geburtstag .blk{background:var(--sy
 @media (orientation: landscape) and (max-height: 560px){.rotate{display:flex}}
 /* Kompakter, wenn Safari- oder App-Leisten Höhe kosten (iPhone 15 und neuer) */
 @media (max-height: 800px){
-  .app{gap:9px;padding-block:26px 6px;--bwk:330px}
+  .app{gap:8px;padding-block:12px 2px}
   .logo{width:30px;height:30px}.wordmark{font-size:1.4rem}
   .scoreline{margin-block:-4px -6px}.scoreline b{font-size:clamp(1.7rem,8.4vw,2.1rem)}
   .tray{padding:8px}
-  .family{padding-block:4px 10px}
 }
 /* Spielende aufgeräumt */
 body.gameover .tray,body.gameover .top2,body.gameover .turbobar{visibility:hidden}
-body.gameover .over{bottom:auto;z-index:20;border-radius:16px;gap:8px;padding:22px 18px;background:linear-gradient(180deg,#132048,#0b1330);box-shadow:0 12px 40px rgba(5,10,30,.45),inset 0 0 0 1px rgba(159,216,255,.12)}
+body.gameover .over{box-sizing:border-box;bottom:auto;z-index:20;border-radius:16px;gap:8px;padding:22px 18px;background:linear-gradient(180deg,#132048,#0b1330);box-shadow:0 12px 40px rgba(5,10,30,.45),inset 0 0 0 1px rgba(159,216,255,.12)}
 body.gameover .board{visibility:hidden}
 body.gameover .over h2{font-size:clamp(1.5rem,5.5vw,1.9rem)}
 body.gameover .over .big{font-size:clamp(2.4rem,11vw,3.2rem)!important;margin:2px 0}
@@ -451,6 +451,15 @@ body.gameover .over button{font-size:1.1rem;padding:12px 26px;margin-top:6px}
 .sndbtn.off svg path:nth-child(2){display:none}
 .sndbtn.off::after{content:"";position:absolute;width:20px;height:2px;background:currentColor;transform:rotate(-45deg);border-radius:2px}
 .sndbtn{position:relative}
+/* Große iPhones (Plus/Pro Max): Kopf und Punkte etwas größer, damit kein Leerraum entsteht */
+@media (min-height: 900px){
+  .app{gap:14px;padding-top:26px}
+  .logo{width:42px;height:42px}.wordmark{font-size:1.9rem}
+  .stat b{font-size:1.45rem}
+  .scoreline b{font-size:2.9rem}
+  .top2 .chip{font-size:.9rem;padding:5px 12px 5px 9px}
+  .family{font-size:.76rem;padding-bottom:10px}
+}
 button.ghostbtn.small{padding:3px 12px;font-size:.8rem;border-width:1.5px;border-radius:8px;margin-left:auto}
 button{font-family:var(--display);font-weight:600;font-size:1rem;border:0;border-radius:10px;padding:10px 18px;background:var(--accent);color:#fff;cursor:pointer}
 button.ghostbtn{background:transparent;color:var(--muted);border:2px solid color-mix(in srgb, var(--muted) 40%, transparent);padding:7px 14px;font-size:.9rem}
@@ -481,7 +490,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .reg input{font:inherit;font-size:1.1rem;padding:10px 12px;border-radius:10px;border:2px solid transparent;background:#fff;color:#1d2440;text-align:center}
 .reg input:focus-visible{outline:none;border-color:var(--accent)}
 .reg .err{color:#ffb4c4;font-size:.85rem;min-height:1.1em}
-.netline{font-size:.82rem;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:8px;padding:6px 10px}
+.netline{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 34px);z-index:30;max-width:calc(100% - 40px);font-size:.78rem;font-weight:700;color:var(--accent);background:var(--panel);box-shadow:0 4px 14px rgba(15,29,61,.18);border-radius:999px;padding:6px 14px;text-align:center}
 .player{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);margin-top:-6px}
 .player b{color:var(--fg)}
 .linkbtn{background:none;border:0;padding:0;font:inherit;font-size:.85rem;color:var(--muted);text-decoration:underline;cursor:pointer}
@@ -537,6 +546,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
   </header>
   <div class="scoreline"><small>Punkte</small><b id="score">50.000</b></div>
   <div class="turbobar off" id="turbobar" aria-hidden="true"><span class="x2" id="turbomul">×2</span><div class="track"><div class="fill" id="turbofill"></div></div><span class="sec" id="turbosec">15 s</span></div>
+  <div class="boardslot" id="boardslot">
   <div class="boardwrap">
     <div class="board" id="board"></div>
     <div class="celebrate" id="celebrate" aria-live="polite"><span class="nm" id="celebname"></span></div>
@@ -561,6 +571,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
         <button type="submit">Los geht's</button>
       </form>
     </div>
+  </div>
   </div>
   <div class="tray" id="tray"></div>
   <div class="netline" id="netline" hidden></div>
@@ -815,22 +826,21 @@ function buildShape(el, p, size){
   }
 }
 let trayH=null;
+const syncBW=()=>{ const w=boardEl.parentElement.getBoundingClientRect().width; if (w>0) document.querySelector('.app').style.setProperty('--bw',Math.round(w)+'px'); };
+try{ new ResizeObserver(syncBW).observe(boardEl.parentElement); }catch(_){ window.addEventListener('resize',syncBW); }
 function renderTray(fresh){
   trayEl.innerHTML='';
-  const m = Math.max(12, Math.min(19, Math.floor(trayEl.clientWidth/3/5.6)));
-  if (fresh || trayH===null){
-    const hs=pieces.filter(Boolean).map(p=>dims(p.shape).h);
-    const h=Math.max(4, ...hs, 0);   // feste Mindesthöhe: 4 Steine
-    trayH=h*m+(h-1)*2;
-  }
+  const m = Math.max(12, Math.min(innerHeight>=900?28:24, Math.floor((trayEl.clientWidth||330)/3/5.0)));
+  trayH=4*m+3*2;   // feste Höhe für 4 Steine, damit sich das Layout nie verschiebt
   trayEl.style.setProperty('--th', trayH+'px');
   pieces.forEach((p,i)=>{
     const slot=document.createElement('div'); slot.className='slot';
     if (p){
       slot.tabIndex=0; slot.setAttribute('role','button'); slot.setAttribute('aria-label','Spielteil '+(i+1)+', Eingabetaste setzt es auf den ersten freien Platz');
       if (!canPlaceAnywhere(p.shape)) slot.classList.add('dead');
-      const mini=document.createElement('div'); mini.className='mini'; mini.style.setProperty('--m',m+'px');
-      buildShape(mini,p,m); slot.appendChild(mini);
+      const ph=dims(p.shape).h, mm= ph>4 ? Math.floor((trayH-2*(ph-1))/ph) : m;
+      const mini=document.createElement('div'); mini.className='mini'; mini.style.setProperty('--m',mm+'px');
+      buildShape(mini,p,mm); slot.appendChild(mini);
       if (fresh){ slot.classList.add('enter'); slot.style.setProperty('--sd',(i*45)+'ms'); }
       slot.addEventListener('pointerdown', e=>startDrag(e,i));
     }
@@ -1341,8 +1351,8 @@ function finishGame(title){
 function enterGameOver(){
   endTurbo();
   const wr=boardEl.parentElement.getBoundingClientRect(), tr=trayEl.getBoundingClientRect(), t2=$('top2').getBoundingClientRect();
-  const extra=Math.max(0, Math.max(tr.bottom, t2.bottom)-wr.bottom);
-  $('over').style.height=(wr.height+extra)+'px';
+  const bottom=Math.max(wr.bottom, Math.min(innerHeight-4, Math.max(tr.bottom, t2.bottom)));
+  $('over').style.height=Math.round(bottom-wr.top)+'px';
   document.body.classList.add('gameover');
   $('over').hidden=false;
 }
