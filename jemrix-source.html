@@ -5,7 +5,7 @@
 <style>
 /* Layout: one-screen spielfeld — logo + score strip, 8×8 board, three-piece tray. Deep-navy tray, seven separable blues; turbo swaps to a violet/teal set. */
 :root{
-  --bg:#e6eefb; --panel:#ffffff; --board:#16203f; --well:#222f57; --fg:#0f1d3d; --muted:#4f6290; --accent:#2563eb;
+  --bg:#cfdff7; --panel:#eef4ff; --board:#16203f; --well:#222f57; --fg:#0f1d3d; --muted:#4f6290; --accent:#2563eb;
   --b1:#2f6bff; --b2:#1d4ed8; --b3:#38bdf8; --b4:#9fd8ff; --b5:#22b8cf; --b6:#6c7dff; --b7:#c9e3ff;
   --t1:#a855f7; --t2:#d946ef; --t3:#2dd4bf; --t4:#34d399; --t5:#f472b6; --t6:#818cf8; --t7:#5eead4;
   --ok:rgba(255,255,255,.35); --bad:rgba(255,92,122,.42);
@@ -25,7 +25,7 @@ body{margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
   user-select:none;-webkit-user-select:none;touch-action:manipulation;overflow-x:hidden}
-.app{max-width:440px;margin:0 auto;padding-block:34px 14px;display:flex;flex-direction:column;gap:14px;min-height:100%;box-sizing:border-box}
+.app{--bw:max(250px,min(100%,calc(100dvh - var(--bwk,400px) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))));max-width:440px;margin:0 auto;padding-block:52px 14px;display:flex;flex-direction:column;gap:14px;min-height:100%;box-sizing:border-box}
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 h1{font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0;letter-spacing:.01em;line-height:1}
 h1{display:flex;align-items:center;gap:9px}
@@ -50,7 +50,7 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .scoreline b{font-family:var(--display);font-weight:700;font-size:clamp(1.9rem,9.5vw,2.5rem);line-height:1;letter-spacing:.01em;background:linear-gradient(180deg,var(--fg),color-mix(in srgb,var(--accent) 70%,var(--fg)));-webkit-background-clip:text;background-clip:text;color:transparent}
 #score{display:inline-block;transition:transform .15s}
 #score.bump{transform:scale(1.18)}
-.boardwrap{position:relative;width:max(240px,min(100%,calc(100dvh - 458px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))));align-self:center}
+.boardwrap{position:relative;width:var(--bw);align-self:center}
 /* Effekte ab 2 Linien */
 .fx{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;border-radius:14px}
 .fx .beam{position:absolute;border-radius:6px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95) 45%,#9fd8ff 55%,transparent);box-shadow:0 0 18px 4px rgba(125,200,255,.7);animation:beam .34s cubic-bezier(.3,0,.2,1) var(--bd,0ms) both}
@@ -80,7 +80,8 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .combo small{display:block;font-size:.9rem;font-weight:600;opacity:.95;text-wrap:balance}
 .combo.show{animation:float 1s ease-out}
 @keyframes float{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-110%) scale(1)}}
-.tray{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--board);border-radius:16px;padding:16px 12px}
+.tray{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--board);border-radius:14px;padding:10px 10px;width:var(--bw);box-sizing:border-box;align-self:center}
+.foot{width:var(--bw);align-self:center}
 .slot{display:flex;align-items:center;justify-content:center;min-height:var(--th,60px);padding-block:4px;border-radius:10px;touch-action:none;cursor:grab}
 .slot:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .slot.dead .mini{opacity:.3;filter:grayscale(.7)}
@@ -387,12 +388,11 @@ body.skin-geburtstag .cell[data-c],body.skin-geburtstag .blk{background:var(--sy
 @media (orientation: landscape) and (max-height: 560px){.rotate{display:flex}}
 /* Kompakter, wenn Safari- oder App-Leisten Höhe kosten (iPhone 15 und neuer) */
 @media (max-height: 800px){
-  .app{gap:9px;padding-block:8px 6px}
+  .app{gap:9px;padding-block:26px 6px;--bwk:330px}
   .logo{width:30px;height:30px}.wordmark{font-size:1.4rem}
   .scoreline{margin-block:-4px -6px}.scoreline b{font-size:clamp(1.7rem,8.4vw,2.1rem)}
-  .tray{padding:10px}
+  .tray{padding:8px}
   .family{padding-block:4px 10px}
-  .boardwrap{width:max(240px,min(100%,calc(100dvh - 368px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))))}
 }
 /* Spielende aufgeräumt */
 body.gameover .tray,body.gameover .top2,body.gameover .turbobar{visibility:hidden}
@@ -779,10 +779,10 @@ function buildShape(el, p, size){
 let trayH=null;
 function renderTray(fresh){
   trayEl.innerHTML='';
-  const m = Math.max(12, Math.min(20, Math.floor(trayEl.clientWidth/3/5.6)));
+  const m = Math.max(12, Math.min(19, Math.floor(trayEl.clientWidth/3/5.6)));
   if (fresh || trayH===null){
     const hs=pieces.filter(Boolean).map(p=>dims(p.shape).h);
-    const h=Math.max(window.innerHeight<800?4:5, ...hs, 0);   // feste Mindesthöhe: 5 Steine, bei knapper Höhe 4
+    const h=Math.max(4, ...hs, 0);   // feste Mindesthöhe: 4 Steine
     trayH=h*m+(h-1)*2;
   }
   trayEl.style.setProperty('--th', trayH+'px');
@@ -983,8 +983,11 @@ const TURBO_MS=15000;   // Multiplikator gilt 15 Sekunden: 2 Reihen ×2, 3 Reihe
 const SND=(()=>{
   let ctx=null, master=null, comp=null, on=load('jemrix-sound',true), lastPlop=0;
   const ok=()=>on && ctx && ctx.state==='running';
+  function unlockTick(){ try{ const b=ctx.createBuffer(1,1,22050), src=ctx.createBufferSource(); src.buffer=b; src.connect(ctx.destination); src.start(0); }catch(_){} }
   function init(){
-    if (ctx) { if (ctx.state==='suspended') ctx.resume().catch(()=>{}); return; }
+    // iOS: Web-Audio sonst stumm, wenn der Stummschalter aktiv ist
+    try{ if (navigator.audioSession && navigator.audioSession.type!=='playback') navigator.audioSession.type='playback'; }catch(_){}
+    if (ctx) { if (ctx.state!=='running') { ctx.resume().catch(()=>{}); unlockTick(); } return; }
     const AC=window.AudioContext||window.webkitAudioContext; if (!AC) return;
     try{
       ctx=new AC();
@@ -995,7 +998,7 @@ const SND=(()=>{
       const b=ctx.createBuffer(1,1,22050), src=ctx.createBufferSource(); src.buffer=b; src.connect(ctx.destination); src.start(0);
     }catch(e){ ctx=null; }
   }
-  ['pointerdown','touchend','keydown'].forEach(ev=>window.addEventListener(ev,init,{passive:true,capture:true}));
+  ['pointerdown','pointerup','touchend','click','keydown'].forEach(ev=>window.addEventListener(ev,()=>{ if (on) init(); },{passive:true,capture:true}));
   document.addEventListener('visibilitychange',()=>{ if (!ctx) return; if (document.hidden) ctx.suspend().catch(()=>{}); else if (on) ctx.resume().catch(()=>{}); });
   function tone({f=440,f2=null,type='sine',t=0,dur=.2,vol=.1,att=.005,rel=null,detune=0}){
     const now=ctx.currentTime+t, o=ctx.createOscillator(), g=ctx.createGain();
