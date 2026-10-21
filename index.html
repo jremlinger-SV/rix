@@ -49,17 +49,17 @@ img{max-width:100%}
   --b1:#2f6bff; --b2:#1d4ed8; --b3:#38bdf8; --b4:#9fd8ff; --b5:#22b8cf; --b6:#6c7dff; --b7:#c9e3ff;
   --t1:#a855f7; --t2:#d946ef; --t3:#2dd4bf; --t4:#34d399; --t5:#f472b6; --t6:#818cf8; --t7:#5eead4;
   --ok:rgba(255,255,255,.35); --bad:rgba(255,92,122,.42);
-  --score-fill:#2563eb; --score-edge:#ffffff; --score-shadow:#16306f; --score-hot:#f5b700;
+  --score-mix:#0b1a45; --score-edge:#ffffff;
   --display:"Fredoka", "Trebuchet MS", system-ui, sans-serif;
   --body:"Nunito", system-ui, -apple-system, sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0c1328; --panel:#152043; --board:#111a36; --well:#1e2b52; --fg:#e8f0ff; --muted:#93a6d4; --accent:#4d9bff; color-scheme:dark;
-  --score-fill:#9fd8ff; --score-edge:#0c1328; --score-shadow:#2f6bff; --score-hot:#ffd84d;
+  --score-mix:#ffffff; --score-edge:#0c1328;
 }}
 :root[data-theme="dark"]{
   --bg:#0c1328; --panel:#152043; --board:#111a36; --well:#1e2b52; --fg:#e8f0ff; --muted:#93a6d4; --accent:#4d9bff; color-scheme:dark;
-  --score-fill:#9fd8ff; --score-edge:#0c1328; --score-shadow:#2f6bff; --score-hot:#ffd84d;
+  --score-mix:#ffffff; --score-edge:#0c1328;
 }
 [hidden]{display:none!important}
 html{box-sizing:border-box}   /* Ränder von Statusleiste/Home-Balken zählen zur Höhe, nichts scrollt */
@@ -80,7 +80,7 @@ body.turbo{--b1:var(--t1);--b2:var(--t2);--b3:var(--t3);--b4:var(--t4);--b5:var(
 .cell[data-c],.blk{transition:background-color .45s ease}
 body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,var(--t2) 55%,transparent);animation:glow 1.6s ease-in-out infinite alternate}
 @keyframes glow{from{box-shadow:0 0 0 3px var(--t1),0 0 18px 2px color-mix(in srgb,var(--t2) 45%,transparent)}to{box-shadow:0 0 0 3px var(--t3),0 0 30px 6px color-mix(in srgb,var(--t3) 50%,transparent)}}
-.turbobar{display:flex;align-items:center;gap:10px;height:24px;margin-block:-4px;font-family:var(--display);font-weight:600;font-size:.9rem;color:var(--fg);transition:opacity .25s}
+.turbobar{display:flex;align-items:center;gap:10px;height:24px;margin-block:0 -4px;font-family:var(--display);font-weight:600;font-size:.9rem;color:var(--fg);transition:opacity .25s}
 .turbobar.off{visibility:hidden;opacity:0}
 .turbobar .x2{background:linear-gradient(90deg,var(--t1),var(--t2));color:#fff;border-radius:999px;padding:2px 10px}
 .turbobar .track{flex:1;height:8px;border-radius:999px;background:color-mix(in srgb,var(--muted) 25%,transparent);overflow:hidden}
@@ -89,18 +89,18 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .stats{display:flex;gap:14px;font-variant-numeric:tabular-nums;text-align:right}
 .stat small{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
 .stat b{font-family:var(--display);font-size:clamp(1rem,4.6vw,1.25rem);font-weight:600;line-height:1.1}
-.scoreline{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-block:-6px -4px;font-variant-numeric:tabular-nums}
+.scoreline{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-block:2px 2px;font-variant-numeric:tabular-nums}
 .scoreline small{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
-.scoreline b{font-family:"Lilita One",var(--display);font-weight:400;font-size:clamp(2.6rem,13vw,3.3rem);line-height:1;letter-spacing:0;color:var(--score-fill);-webkit-text-stroke:.09em var(--score-edge);paint-order:stroke fill;text-shadow:0 .07em 0 var(--score-shadow);display:inline-flex;white-space:nowrap;font-variant-numeric:tabular-nums}
+.scoreline b{font-family:"Lilita One",var(--display);font-weight:400;font-size:clamp(2.6rem,13vw,3.3rem);line-height:1;letter-spacing:0;color:color-mix(in srgb,var(--b2) 72%,var(--score-mix));-webkit-text-stroke:.09em var(--score-edge);paint-order:stroke fill;text-shadow:0 .07em 0 color-mix(in srgb,var(--b2) 55%,#0b1a45);transition:color .4s;display:inline-flex;white-space:nowrap;font-variant-numeric:tabular-nums}
 /* Zählwerk: jede Ziffer ist eine Rolle, die hochläuft */
 .od{display:inline-block;height:1.2em;overflow:hidden;position:relative;padding:0 .05em;margin:0 -.05em}
 .odc{display:block;will-change:transform}
 .odc>span{display:block;height:1.2em;line-height:1.2em;text-align:center;letter-spacing:0}
 .odp{display:inline-block;height:1.2em;line-height:1.2em;letter-spacing:0;margin:0 -.01em}
-#score.hot{color:var(--score-hot)}
+#score.hot{color:color-mix(in srgb,var(--b3) 75%,var(--score-mix))}
 #score{display:inline-flex;align-items:flex-start;transition:transform .15s}
 #score.bump{transform:scale(1.18)}
-.boardwrap{position:relative;flex:none;width:min(100cqw,calc(100cqh - var(--tb,140px) - 54px))}
+.boardwrap{position:relative;flex:none;width:min(100cqw,calc(100cqh - var(--tb,140px) - 44px))}
 /* Effekte ab 2 Linien */
 .fx{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;border-radius:14px}
 .fx .beam{position:absolute;border-radius:6px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95) 45%,#9fd8ff 55%,transparent);box-shadow:0 0 18px 4px rgba(125,200,255,.7);animation:beam .34s cubic-bezier(.3,0,.2,1) var(--bd,0ms) both}
@@ -441,7 +441,7 @@ body.skin-geburtstag .cell[data-c],body.skin-geburtstag .blk{background:var(--sy
   .app{gap:8px;padding-block:12px 2px}
   .boardslot{gap:8px}
   .logo{width:30px;height:30px}.wordmark{font-size:1.4rem}
-  .scoreline{margin-block:-4px -6px}.scoreline b{font-size:clamp(2.3rem,11vw,2.8rem)}
+  .scoreline{margin-block:0 0}.scoreline b{font-size:clamp(2.3rem,11vw,2.8rem)}
   .tray{padding:8px}
 }
 /* Spielende aufgeräumt */
@@ -848,14 +848,15 @@ function buildShape(el, p, size){
 let trayH=null;
 const syncBW=()=>{ const w=boardEl.parentElement.getBoundingClientRect().width; if (w>0) document.querySelector('.app').style.setProperty('--bw',Math.round(w)+'px'); centerScore(); };
 /* Punktezahl genau mittig zwischen Kopfzeile und Spielfeld */
-function centerScore(){
+function centerScore(){ return;   // Abstände jetzt fest per CSS (gleich oben und unten)
   const sl=document.querySelector('.scoreline'), hd=document.querySelector('header'), b=$('score');
   if (!sl||!hd||!b) return;
   // Zahl nach unten schieben, das Spielfeld bleibt stehen (oben mehr, unten gleich viel weniger Abstand)
   for (let k=0;k<3;k++){
     const x=parseFloat(sl.dataset.shift||'0');
     const hb=hd.getBoundingClientRect().bottom, br=b.getBoundingClientRect(), bt=boardEl.getBoundingClientRect().top;
-    const delta=((bt-br.bottom)-(br.top-hb))/2;
+    let delta=((bt-br.bottom)-(br.top-hb))/2;
+    const tb=document.getElementById('turbobar'); if (tb){ const gap=tb.getBoundingClientRect().top-(br.bottom+delta); if (gap<12) delta-=12-gap; }
     if (Math.abs(delta)<1) break;
     const nx=x+delta; sl.dataset.shift=nx;
     sl.style.marginTop=(-6+nx)+'px'; sl.style.marginBottom=(-4-nx)+'px';
