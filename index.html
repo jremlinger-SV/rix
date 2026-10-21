@@ -460,6 +460,11 @@ body.gameover .over button{font-size:1.1rem;padding:12px 26px;margin-top:6px}
   .top2 .chip{font-size:.9rem;padding:5px 12px 5px 9px}
   .family{font-size:.76rem;padding-bottom:10px}
 }
+.scoreline{position:relative}
+.livecrown{display:inline-block;width:1.9rem;height:1.9rem;align-self:center;filter:drop-shadow(0 0 6px rgba(255,216,77,.8));animation:lcin .7s cubic-bezier(.2,.9,.3,1.5) both}
+.livecrown svg{width:100%;height:100%}
+@keyframes lcin{0%{opacity:0;transform:translateY(-14px) scale(.3) rotate(-25deg)}100%{opacity:1;transform:none}}
+@media (min-height: 900px){.livecrown{width:2.3rem;height:2.3rem}}
 button.ghostbtn.small{padding:3px 12px;font-size:.8rem;border-width:1.5px;border-radius:8px;margin-left:auto}
 button{font-family:var(--display);font-weight:600;font-size:1rem;border:0;border-radius:10px;padding:10px 18px;background:var(--accent);color:#fff;cursor:pointer}
 button.ghostbtn{background:transparent;color:var(--muted);border:2px solid color-mix(in srgb, var(--muted) 40%, transparent);padding:7px 14px;font-size:.9rem}
@@ -544,7 +549,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
       <div class="stat"><small>Rekord</small><b id="best">50.000</b></div>
     </div>
   </header>
-  <div class="scoreline"><small>Punkte</small><b id="score">50.000</b></div>
+  <div class="scoreline"><small>Punkte</small><b id="score">50.000</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></div>
   <div class="turbobar off" id="turbobar" aria-hidden="true"><span class="x2" id="turbomul">×2</span><div class="track"><div class="fill" id="turbofill"></div></div><span class="sec" id="turbosec">15 s</span></div>
   <div class="boardslot" id="boardslot">
   <div class="boardwrap">
@@ -871,8 +876,18 @@ function setLevel(quiet){
   const look=applySkin(!quiet);
   if (l>level_prev && !quiet){ const t=$('lvl'); t.textContent='Stufe '+l+(look?' · Look: '+look:''); t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); }
 }
+/* Krone neben den Punkten, sobald der aktuelle Highscore (Platz 1) im laufenden Spiel überboten ist */
+let liveCrownOn=false;
+function updateLiveCrown(){
+  const el=$('livecrown'); if (!el) return;
+  const rows=topList().rows, top=rows.length ? rows[0].score : 0;
+  const on = score>0 && score>top;
+  if (on && !liveCrownOn){ el.innerHTML=CROWN; el.hidden=false; el.style.animation='none'; void el.offsetWidth; el.style.animation=''; setTimeout(()=>SND.star(),120); }
+  if (!on && liveCrownOn){ el.hidden=true; }
+  liveCrownOn=on;
+}
 function setScore(v){
-  score=v; const s=$('score'); countTo(score); setLevel();
+  score=v; const s=$('score'); countTo(score); setLevel(); updateLiveCrown();
   s.classList.add('bump'); setTimeout(()=>s.classList.remove('bump'),150);
   if (score>best){ best=score; save('jemrix-best',best); }
 }
@@ -1495,6 +1510,7 @@ function markLeader(){
   });
 }
 function renderTop2(){
+  if ($('over').hidden) updateLiveCrown();
   const box=$('top2'); box.innerHTML='';
   const rows=topList().rows.slice(0,2);
   if (!rows.length){ const e=document.createElement('span'); e.className='empty'; e.textContent='Noch keine Highscores'; box.appendChild(e); return; }
@@ -1625,7 +1641,7 @@ function newGame(){
   const op=opening(); grid=op.grid;
   stars=new Set(); skinOrder=shuffleSkins(); skinBump=0; curSkin=null; playTime=0; profile=newProfile(); setsSinceGift=0;
   pieces=op.pieces||newSet();
-  cancelAnimationFrame(countRaf); shownScore=0; $('score').textContent=showPts(0); setLevel(true); $('over').hidden=true; leaveGameOver();
+  cancelAnimationFrame(countRaf); shownScore=0; $('score').textContent=showPts(0); liveCrownOn=false; $('livecrown').hidden=true; setLevel(true); $('over').hidden=true; leaveGameOver();
   renderBoard(); renderTray(true); persist();
 }
 
@@ -1689,7 +1705,7 @@ try{
     stars=new Set((saved.stars||[]).filter(k=>grid[k])); skinOrder=saved.skinOrder||null; skinBump=saved.skinBump||0; curSkin=null; playTime=saved.playTime||0; profile=saved.profile||newProfile();
     bestAtStart=Math.max(0,best-0); if (saved.bestAtStart!=null) bestAtStart=saved.bestAtStart;
     if (pieces.every(p=>!p)) pieces=newSet();
-    shownScore=score; $('score').textContent=showPts(score); setLevel(true); renderBoard(); renderTray(true);
+    shownScore=score; $('score').textContent=showPts(score); setLevel(true); renderBoard(); renderTray(true); updateLiveCrown();
     if (saved.turboLeft>0) resumeTurbo={left:saved.turboLeft, mul:saved.turboMul||2, total:saved.turboTotal};
     checkOver();
   } else newGame();
