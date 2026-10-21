@@ -1363,7 +1363,7 @@ const SB_URL=(CFG.supabaseUrl||'').replace(/\/$/,''), SB_KEY=CFG.supabaseKey||''
 const ONLINE=!!(SB_URL && SB_KEY);
 async function api(fn, body){
   const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',cache:'no-store',
-    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},body:JSON.stringify(body||{})});
+    headers:Object.assign({'Content-Type':'application/json','apikey':SB_KEY}, SB_KEY.startsWith('sb_')?{}:{'Authorization':'Bearer '+SB_KEY}),body:JSON.stringify(body||{})});
   if (!r.ok) throw new Error('http '+r.status);
   return r.json();
 }
