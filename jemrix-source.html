@@ -168,6 +168,19 @@ body.skin-nacht .board{background:radial-gradient(1px 1px at 12% 18%,#fff,transp
 body.skin-nacht .cell{background:rgba(255,255,255,.04)}
 body.skin-nacht .cell[data-c],body.skin-nacht .blk{background:radial-gradient(circle at 72% 28%,#fff 0 1.4px,transparent 2px),radial-gradient(circle at 30% 68%,rgba(255,255,255,.75) 0 1px,transparent 1.6px),var(--col)}
 /* Look-Wechsel: kurze Welle über die Steine */
+.endhold{position:absolute;left:50%;bottom:calc(100% + 5px);transform:translateX(-50%);z-index:15;display:flex;align-items:baseline;gap:10px;white-space:nowrap;padding:7px 16px 10px;border-radius:999px;background:rgba(7,12,31,.86);color:#fff;box-shadow:0 6px 18px rgba(5,10,30,.35);pointer-events:none;overflow:hidden;animation:ehin .35s cubic-bezier(.2,.9,.3,1.3)}
+.endhold b{font-family:var(--display);font-weight:700;font-size:1.05rem}
+.endhold span{font-size:.88rem;color:#cfe0ff}
+.endhold em{font-style:normal;font-family:"Lilita One",var(--display);font-size:1.1rem;color:#ffd84d;display:inline-block;min-width:1.2em;text-align:center;font-variant-numeric:tabular-nums}
+.ehbar{position:absolute;left:14px;right:14px;bottom:4px;height:3px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden}
+.ehbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#38bdf8,#9fd8ff);transform-origin:left;transform:scaleX(1)}
+.endhold.run .ehbar i{transition:transform 10s linear;transform:scaleX(0)}
+@keyframes ehin{from{opacity:0;transform:translateX(-50%) translateY(6px)}to{opacity:1;transform:translateX(-50%)}}
+body.mp .endhold{bottom:auto;top:8px}
+body.ending .tray .slot{cursor:default}
+/* Beim Spielende klar zeigen, warum: Steine gut sichtbar, die nicht passenden rot umrandet */
+body.ending .slot.dead .mini{opacity:.9;filter:grayscale(.15)}
+body.ending .slot.dead{box-shadow:inset 0 0 0 2px rgba(248,113,113,.7);background:rgba(248,113,113,.08)}
 .board.skinglow{animation:skinglow .75s ease-out}
 @keyframes skinglow{0%{box-shadow:0 10px 30px rgba(20,26,50,.25),0 0 0 0 rgba(159,216,255,0)}35%{box-shadow:0 10px 30px rgba(20,26,50,.25),0 0 0 4px rgba(159,216,255,.75)}100%{box-shadow:0 10px 30px rgba(20,26,50,.25),0 0 0 0 rgba(159,216,255,0)}}
 @keyframes morph{0%{filter:brightness(1)}35%{filter:brightness(1.35) saturate(1.15)}100%{filter:brightness(1)}}
@@ -641,6 +654,7 @@ body.mpdone .oc .on{font-size:1.05rem}
     <div class="combo" id="combo"></div>
     <div class="fx" id="fx"></div>
     <div class="lvl" id="lvl"></div>
+    <div class="endhold" id="endhold" hidden role="status" aria-live="polite"><b id="ehTitle">Kein Platz mehr</b><span>Ergebnis in <em id="ehSec">10</em> s</span><i class="ehbar"><i id="ehFill"></i></i></div>
     <div class="over" id="over" hidden>
       <h2 id="overtitle">Kein Platz mehr</h2>
       <div class="big" id="final">0</div>
@@ -851,7 +865,7 @@ function curDiff(){
 const LAND=matchMedia('(orientation: landscape) and (max-height: 560px)');
 const IDLE_LIMIT=180; let idleTime=0;   // erst nach 3 Minuten ohne jede Berührung endet die Partie
 ['pointerdown','touchstart','keydown','wheel'].forEach(ev=>window.addEventListener(ev,()=>{ idleTime=0; },{capture:true,passive:true}));
-function gameActive(){ return grid && !document.hidden && !wrongOrient() && !MP.done && $('mpscreen').hidden && $('mpcount').hidden && $('over').hidden && $('reg').hidden && !$('cine') && !document.querySelector('.bday'); }
+function gameActive(){ return grid && !endHold && !document.hidden && !wrongOrient() && !MP.done && $('mpscreen').hidden && $('mpcount').hidden && $('over').hidden && $('reg').hidden && !$('cine') && !document.querySelector('.bday'); }
 setInterval(()=>{
   const now=performance.now();
   if (tickLast && gameActive()){
@@ -1071,7 +1085,7 @@ function setScore(v){
   s.classList.add('bump'); setTimeout(()=>s.classList.remove('bump'),150);
   if (score>best){ best=score; save('jemrix-best',best); }
 }
-function persist(){ if (MP.on || MP.used) return; const tl=turboUntil>performance.now()?turboUntil-performance.now():0; save('jemrix-game',{grid,pieces,score,combo,sinceClear,stars:[...stars],skinOrder,skinBump,playTime,profile,turboLeft:tl,turboMul,turboTotal,bestAtStart}); }
+function persist(){ if (MP.on || MP.used || endHold) return; const tl=turboUntil>performance.now()?turboUntil-performance.now():0; save('jemrix-game',{grid,pieces,score,combo,sinceClear,stars:[...stars],skinOrder,skinBump,playTime,profile,turboLeft:tl,turboMul,turboTotal,bestAtStart}); }
 /* Looks */
 const SKINS=[['klassik','Klassik'],['glas','Glas'],['neon','Neon'],['pixel','Pixel'],['gem','Edelstein'],['eis','Eis'],['symbol','Symbole'],['blasen','Blasen'],['nacht','Sternennacht'],
   ['halloween','Halloween'],['weihnachten','Weihnachten'],['ostern','Ostern'],['fruehling','Frühling'],['sommer','Sommer'],['herbst','Herbst'],['winter','Winter'],['geburtstag','Geburtstag']];
@@ -1152,7 +1166,7 @@ function geom(){
 function startDrag(e,i){
   idleTime=0;
   if (drag) return;
-  if (busy || !pieces[i] || !player || !$('over').hidden || !$('reg').hidden || wrongOrient() || MP.done || !$('mpcount').hidden || !$('mpscreen').hidden) return;
+  if (busy || endHold || !pieces[i] || !player || !$('over').hidden || !$('reg').hidden || wrongOrient() || MP.done || !$('mpcount').hidden || !$('mpscreen').hidden) return;
   e.preventDefault();
   const g=geom(), p=pieces[i];
   const fl=document.createElement('div'); fl.className='floating';
@@ -1536,14 +1550,35 @@ function checkOver(){
   finishGame('Kein Platz mehr');
 }
 /* Spiel beenden (kein Platz mehr oder 3 Minuten ohne Berührung): Ergebnis zählen, Highscore zeigen */
+/* Spielende: letztes Spielfeld 10 s mit Countdown stehen lassen, danach das Ergebnis */
+const END_HOLD_S=10;
+let endHold=null;
+function holdEnd(title, then){
+  const el=$('endhold'); $('ehTitle').textContent=title;
+  let left=END_HOLD_S; $('ehSec').textContent=left;
+  el.classList.remove('run'); el.hidden=false; void el.offsetWidth; el.classList.add('run');
+  document.body.classList.add('ending'); renderTray();
+  clearInterval(endHold);
+  endHold=setInterval(()=>{
+    left--;
+    if (left>0){ $('ehSec').textContent=left; return; }
+    clearInterval(endHold); endHold=null; el.hidden=true; el.classList.remove('run'); document.body.classList.remove('ending');
+    then();
+  },1000);
+}
 function finishGame(title){
-  if (MP.on){ mpFinish(); return; }
+  if (endHold) return;
+  if (MP.on){ mpFinish(title); return; }
+  // Ergebnis sofort sichern, dann 10 s das letzte Feld zeigen
+  endTurbo(); save('jemrix-game',null); recordScore(score);
+  SND.end(score>bestAtStart && score>0);
+  holdEnd(title, ()=>showGameOver(title));
+}
+function showGameOver(title){
   pauseMode=false; $('resume').hidden=true; $('overtitle').textContent=title;
   $('final').textContent=showPts(score);
   $('overmsg').textContent = score>bestAtStart && score>0 ? 'Neuer Rekord!' : `Punkte · Rekord ${showPts(best)}`;
-  enterGameOver(); SND.end(score>bestAtStart && score>0);
-  save('jemrix-game',null);
-  recordScore(score);
+  enterGameOver();
   renderScores();
 }
 /* Spielende: Ablage, Highscore-Chips und Turbo ausblenden, die Anzeige nutzt den frei gewordenen Platz */
@@ -1827,7 +1862,7 @@ function newGame(){
 /* Keyboard: Enter on a piece places it at the first free spot */
 trayEl.addEventListener('keydown',e=>{
   if (e.key!=='Enter' && e.key!==' ') return;
-  const i=[...trayEl.children].indexOf(e.target); const p=pieces[i]; if(!p||!player||!$('over').hidden||!$('reg').hidden||$('cine')||wrongOrient()||MP.done||!$('mpcount').hidden||!$('mpscreen').hidden) return;
+  const i=[...trayEl.children].indexOf(e.target); const p=pieces[i]; if(!p||endHold||!player||!$('over').hidden||!$('reg').hidden||$('cine')||wrongOrient()||MP.done||!$('mpcount').hidden||!$('mpscreen').hidden) return;
   e.preventDefault();
   for (let r=0;r<N;r++) for (let c=0;c<N;c++) if (fits(p.shape,r,c)){ place(i,r,c); return; }
 });
@@ -2070,6 +2105,7 @@ function mpTakeRoom(j){
   }
   if (MP.on){
     mpRenderOpp();
+    if (endHold) return;   // erst das eigene letzte Feld zeigen
     if (j.room.status==='done') mpShowResult();
     else if (MP.done) mpRenderWait();
   }
@@ -2105,13 +2141,13 @@ function mpStartGame(room){
   $('mpopp').innerHTML='';
   mpLayout(); renderBoard(); renderTray(true); mpRenderOpp(); applySkin(false);
 }
-function mpFinish(){
+function mpFinish(title){
   if (MP.done) return;
   MP.done=true; endTurbo();
   recordScore(score);
   SND.end(score>bestAtStart && score>0);
-  document.body.classList.add('mpdone');
-  mpRenderWait(); mpLayout(); mpTick(true);
+  mpTick(true);
+  holdEnd(title||'Kein Platz mehr', ()=>{ document.body.classList.add('mpdone'); mpRenderWait(); mpLayout(); mpTick(true); });
 }
 function mpRenderWait(){
   const rest=MP.players.filter(p=>!p.me && !p.done && p.age<45).map(p=>clean(p.name));
