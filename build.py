@@ -28,11 +28,15 @@ const CFG=window.JEMRIX_CONFIG||{};
 const SB_URL=(CFG.supabaseUrl||'').replace(/\/$/,''), SB_KEY=CFG.supabaseKey||'', FAMILY_CODE=CFG.familyCode||'';
 const ONLINE=!!(SB_URL && SB_KEY);
 async function api(fn, body){
-  const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',cache:'no-store',
+  const ac=new AbortController(), to=setTimeout(()=>ac.abort(),10000);   // hängende Verbindung nach 10 s abbrechen
+  try{
+  const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',cache:'no-store',signal:ac.signal,
     headers:Object.assign({'Content-Type':'application/json','apikey':SB_KEY}, SB_KEY.startsWith('sb_')?{}:{'Authorization':'Bearer '+SB_KEY}),body:JSON.stringify(body||{})});
   if (!r.ok) throw new Error('http '+r.status);
-  return r.json();
+  return await r.json();
+  } finally { clearTimeout(to); }
 }
+let listSeq=0, listApplied=0;   // ältere Antworten dürfen eine neuere Liste nicht überschreiben
 let pending=load('jemrix-pending',[]);
 let sharedCache=load('jemrix-shared-cache',null); // letzte bekannte gemeinsame Liste
 let syncing=false, netOk=null, fetching=false;
@@ -45,14 +49,15 @@ function recordScore(s){
   pending.push({name:player, score:s, at:Date.now()}); save('jemrix-pending',pending);
   updateNet(); trySync(); renderTop2();
 }
-function takeList(j){
+function takeList(j, seq){
   if (!j || !Array.isArray(j.players)) return;
+  if (seq!=null){ if (seq<listApplied) return; listApplied=seq; }
   sharedRows=j.players.filter(p=>p && typeof p.score==='number').map(p=>({name:clean(p.name), score:p.score}));
   sharedCache=sharedRows; save('jemrix-shared-cache',sharedCache);
   if (typeof j.epoch==='number' && j.epoch>load('jemrix-server-epoch',0)){
     // Liste wurde auf dem Server zurückgesetzt: lokale Listen ebenfalls leeren
     save('jemrix-server-epoch',j.epoch);
-    if (load('jemrix-server-epoch-seen',0)){ localScores=[]; save('jemrix-scores',localScores); best=0; save('jemrix-best',0); $('best').textContent=showPts(0); }
+    if (load('jemrix-server-epoch-seen',0)){ localScores=[]; save('jemrix-scores',localScores); best=0; save('jemrix-best',0); $('best').textContent=showPts(0); pending=[]; save('jemrix-pending',pending); }
     save('jemrix-server-epoch-seen',1);
   }
 }
@@ -61,7 +66,7 @@ async function fetchScores(){
   if (!ONLINE){ refreshViews(); return; }
   if (fetching) return; fetching=true;
   try{
-    takeList(await api('get_scores')); netOk=true;
+    const seq=++listSeq; takeList(await api('get_scores'), seq); netOk=true;
   }catch(e){ netOk=false; }
   finally{ fetching=false; refreshViews(); trySync(); }
 }
@@ -71,10 +76,12 @@ async function trySync(){
   syncing=true;
   const batch=pending.slice(0,50);
   try{
+    const seq=++listSeq;
     const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score)}))});
-    if (!j || j.ok===false) throw new Error((j&&j.error)||'Fehler');
+    // Antwort vom Server (auch eine Ablehnung): Stapel ist erledigt und blockiert die Warteschlange nicht
     pending=pending.slice(batch.length); save('jemrix-pending',pending);
-    takeList(j); netOk=true;
+    if (j && j.ok!==false) takeList(j, seq);
+    netOk=true;
   }catch(e){ netOk=false; }
   finally{ syncing=false; refreshViews(); if (pending.length && netOk) setTimeout(trySync,300); }
 }
@@ -150,6 +157,10 @@ HEAD = f'''<!doctype html>
 {FONTS}
 :root{{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}}
 body{{margin:0;font:14px system-ui,-apple-system,sans-serif;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}}
+/* Statusleiste: weiße Uhr/Akku-Symbole brauchen dunklen Grund, auch im hellen Modus */
+@media (display-mode: standalone){{
+  body::before{{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:#0c1328;z-index:400;pointer-events:none}}
+}}
 img{{max-width:100%}}
 [hidden]{{display:none!important}}
 </style>
@@ -163,7 +174,10 @@ assert 'fonts.googleapis' not in s
 (HERE / 'index.html').write_text(s, encoding='utf-8')
 
 # 5) Service Worker mit Versionsstempel (neue Version = neuer Cache)
-ver = hashlib.sha1(s.encode()).hexdigest()[:10]
+h = hashlib.sha1(s.encode())
+for f in sorted([*(HERE/'fonts').glob('*'), *(HERE/'icons').glob('*'), HERE/'config.js', HERE/'manifest.webmanifest', HERE/'sw.template.js']):
+    h.update(f.name.encode()); h.update(f.read_bytes())
+ver = h.hexdigest()[:10]
 sw = (HERE / 'sw.template.js').read_text(encoding='utf-8').replace('__VERSION__', ver)
 (HERE / 'sw.js').write_text(sw, encoding='utf-8')
 print('index.html und sw.js gebaut, Version', ver)

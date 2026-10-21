@@ -39,7 +39,8 @@ as $$
   );
 $$;
 
--- Ergebnisse eintragen: behält pro Name immer nur den besten Wert
+-- Ergebnisse eintragen: behält pro Name immer nur den besten Wert.
+-- Schutz: unsichtbare Zeichen werden entfernt, unrealistische Werte gekappt, höchstens 40 Namen.
 create or replace function public.submit_scores(p_code text, p_entries json)
 returns json
 language plpgsql
@@ -50,6 +51,7 @@ declare
   e json;
   v_name text;
   v_score integer;
+  v_num numeric;
 begin
   if p_code is distinct from (select family_code from jemrix_meta where id = 1) then
     return json_build_object('ok', false, 'error', 'Falscher Familien-Code');
@@ -58,9 +60,17 @@ begin
     return json_build_object('ok', false, 'error', 'Ungültige Daten');
   end if;
   for e in select * from json_array_elements(p_entries) loop
-    v_name  := left(btrim(regexp_replace(coalesce(e->>'name', ''), '\s+', ' ', 'g')), 20);
-    v_score := least(greatest(coalesce((e->>'score')::integer, 0), 0), 10000000);
-    if char_length(v_name) >= 2 and v_score > 0 then
+    v_name := regexp_replace(coalesce(e->>'name', ''), '[\u0000-\u001F\u007F­​-‏‪-‮⁠-⁤﻿]', '', 'g');
+    v_name := left(btrim(regexp_replace(v_name, '\s+', ' ', 'g')), 20);
+    begin
+      v_num := (e->>'score')::numeric;
+    exception when others then
+      v_num := 0;
+    end;
+    v_score := least(greatest(coalesce(round(v_num), 0), 0), 250000)::integer;   -- realistisch erreichbares Maximum
+    if char_length(v_name) >= 2 and v_score > 0
+       and (exists (select 1 from jemrix_scores where name_key = lower(v_name))
+            or (select count(*) from jemrix_scores) < 40) then
       insert into jemrix_scores (name_key, name, score)
       values (lower(v_name), v_name, v_score)
       on conflict (name_key) do update

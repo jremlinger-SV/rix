@@ -31,6 +31,10 @@
 @font-face{font-family:"Unbounded";font-style:normal;font-weight:200 900;font-display:swap;src:url(fonts/unbounded-latin-wght-normal.woff2) format("woff2")}
 :root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 body{margin:0;font:14px system-ui,-apple-system,sans-serif;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+/* Statusleiste: weiße Uhr/Akku-Symbole brauchen dunklen Grund, auch im hellen Modus */
+@media (display-mode: standalone){
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:#0c1328;z-index:400;pointer-events:none}
+}
 img{max-width:100%}
 [hidden]{display:none!important}
 </style>
@@ -823,7 +827,7 @@ function renderTray(fresh){
   pieces.forEach((p,i)=>{
     const slot=document.createElement('div'); slot.className='slot';
     if (p){
-      slot.tabIndex=0; slot.setAttribute('aria-label','Spielteil '+(i+1));
+      slot.tabIndex=0; slot.setAttribute('role','button'); slot.setAttribute('aria-label','Spielteil '+(i+1)+', Eingabetaste setzt es auf den ersten freien Platz');
       if (!canPlaceAnywhere(p.shape)) slot.classList.add('dead');
       const mini=document.createElement('div'); mini.className='mini'; mini.style.setProperty('--m',m+'px');
       buildShape(mini,p,m); slot.appendChild(mini);
@@ -992,6 +996,7 @@ function moveDrag(e){
   } else drag.pos=null;
 }
 function endDrag(){
+  idleTime=0;
   if (!drag) return;
   window.removeEventListener('pointermove',moveDrag);
   window.removeEventListener('pointerup',endDrag);
@@ -1293,10 +1298,11 @@ function showStanding(){
 }
 let turboLeft=0, bgTurbo=0;
 // Querformat wie Hintergrund behandeln: Turbo pausiert
-const onLand=()=>{ if (LAND.matches){ if (turboUntil>performance.now()){ bgTurbo=turboUntil-performance.now(); if (turboTimer){ clearInterval(turboTimer); turboTimer=null; } } }
+const onLand=()=>{ idleTime=0; if (LAND.matches){ if (turboUntil>performance.now()){ bgTurbo=turboUntil-performance.now(); if (turboTimer){ clearInterval(turboTimer); turboTimer=null; } } }
   else if (bgTurbo>0 && !pauseMode){ const tt=turboTotal; startTurbo(bgTurbo, turboMul); turboTotal=tt; bgTurbo=0; } };
 try{ LAND.addEventListener('change',onLand); }catch(_){ LAND.addListener && LAND.addListener(onLand); }
 document.addEventListener('visibilitychange',()=>{
+  if (!document.hidden) idleTime=0;
   if (document.hidden){ try{ if (grid && pieces && $('over').hidden) persist(); }catch(_){}
     if (turboUntil>performance.now()){ bgTurbo=turboUntil-performance.now(); if (turboTimer){ clearInterval(turboTimer); turboTimer=null; } } }
   else if (bgTurbo>0 && !pauseMode){ const tt=turboTotal; startTurbo(bgTurbo, turboMul); turboTotal=tt; bgTurbo=0; }
@@ -1376,11 +1382,15 @@ const CFG=window.JEMRIX_CONFIG||{};
 const SB_URL=(CFG.supabaseUrl||'').replace(/\/$/,''), SB_KEY=CFG.supabaseKey||'', FAMILY_CODE=CFG.familyCode||'';
 const ONLINE=!!(SB_URL && SB_KEY);
 async function api(fn, body){
-  const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',cache:'no-store',
+  const ac=new AbortController(), to=setTimeout(()=>ac.abort(),10000);   // hängende Verbindung nach 10 s abbrechen
+  try{
+  const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',cache:'no-store',signal:ac.signal,
     headers:Object.assign({'Content-Type':'application/json','apikey':SB_KEY}, SB_KEY.startsWith('sb_')?{}:{'Authorization':'Bearer '+SB_KEY}),body:JSON.stringify(body||{})});
   if (!r.ok) throw new Error('http '+r.status);
-  return r.json();
+  return await r.json();
+  } finally { clearTimeout(to); }
 }
+let listSeq=0, listApplied=0;   // ältere Antworten dürfen eine neuere Liste nicht überschreiben
 let pending=load('jemrix-pending',[]);
 let sharedCache=load('jemrix-shared-cache',null); // letzte bekannte gemeinsame Liste
 let syncing=false, netOk=null, fetching=false;
@@ -1393,14 +1403,15 @@ function recordScore(s){
   pending.push({name:player, score:s, at:Date.now()}); save('jemrix-pending',pending);
   updateNet(); trySync(); renderTop2();
 }
-function takeList(j){
+function takeList(j, seq){
   if (!j || !Array.isArray(j.players)) return;
+  if (seq!=null){ if (seq<listApplied) return; listApplied=seq; }
   sharedRows=j.players.filter(p=>p && typeof p.score==='number').map(p=>({name:clean(p.name), score:p.score}));
   sharedCache=sharedRows; save('jemrix-shared-cache',sharedCache);
   if (typeof j.epoch==='number' && j.epoch>load('jemrix-server-epoch',0)){
     // Liste wurde auf dem Server zurückgesetzt: lokale Listen ebenfalls leeren
     save('jemrix-server-epoch',j.epoch);
-    if (load('jemrix-server-epoch-seen',0)){ localScores=[]; save('jemrix-scores',localScores); best=0; save('jemrix-best',0); $('best').textContent=showPts(0); }
+    if (load('jemrix-server-epoch-seen',0)){ localScores=[]; save('jemrix-scores',localScores); best=0; save('jemrix-best',0); $('best').textContent=showPts(0); pending=[]; save('jemrix-pending',pending); }
     save('jemrix-server-epoch-seen',1);
   }
 }
@@ -1409,7 +1420,7 @@ async function fetchScores(){
   if (!ONLINE){ refreshViews(); return; }
   if (fetching) return; fetching=true;
   try{
-    takeList(await api('get_scores')); netOk=true;
+    const seq=++listSeq; takeList(await api('get_scores'), seq); netOk=true;
   }catch(e){ netOk=false; }
   finally{ fetching=false; refreshViews(); trySync(); }
 }
@@ -1419,10 +1430,12 @@ async function trySync(){
   syncing=true;
   const batch=pending.slice(0,50);
   try{
+    const seq=++listSeq;
     const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score)}))});
-    if (!j || j.ok===false) throw new Error((j&&j.error)||'Fehler');
+    // Antwort vom Server (auch eine Ablehnung): Stapel ist erledigt und blockiert die Warteschlange nicht
     pending=pending.slice(batch.length); save('jemrix-pending',pending);
-    takeList(j); netOk=true;
+    if (j && j.ok!==false) takeList(j, seq);
+    netOk=true;
   }catch(e){ netOk=false; }
   finally{ syncing=false; refreshViews(); if (pending.length && netOk) setTimeout(trySync,300); }
 }

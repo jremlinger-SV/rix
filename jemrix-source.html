@@ -789,7 +789,7 @@ function renderTray(fresh){
   pieces.forEach((p,i)=>{
     const slot=document.createElement('div'); slot.className='slot';
     if (p){
-      slot.tabIndex=0; slot.setAttribute('aria-label','Spielteil '+(i+1));
+      slot.tabIndex=0; slot.setAttribute('role','button'); slot.setAttribute('aria-label','Spielteil '+(i+1)+', Eingabetaste setzt es auf den ersten freien Platz');
       if (!canPlaceAnywhere(p.shape)) slot.classList.add('dead');
       const mini=document.createElement('div'); mini.className='mini'; mini.style.setProperty('--m',m+'px');
       buildShape(mini,p,m); slot.appendChild(mini);
@@ -958,6 +958,7 @@ function moveDrag(e){
   } else drag.pos=null;
 }
 function endDrag(){
+  idleTime=0;
   if (!drag) return;
   window.removeEventListener('pointermove',moveDrag);
   window.removeEventListener('pointerup',endDrag);
@@ -1259,10 +1260,11 @@ function showStanding(){
 }
 let turboLeft=0, bgTurbo=0;
 // Querformat wie Hintergrund behandeln: Turbo pausiert
-const onLand=()=>{ if (LAND.matches){ if (turboUntil>performance.now()){ bgTurbo=turboUntil-performance.now(); if (turboTimer){ clearInterval(turboTimer); turboTimer=null; } } }
+const onLand=()=>{ idleTime=0; if (LAND.matches){ if (turboUntil>performance.now()){ bgTurbo=turboUntil-performance.now(); if (turboTimer){ clearInterval(turboTimer); turboTimer=null; } } }
   else if (bgTurbo>0 && !pauseMode){ const tt=turboTotal; startTurbo(bgTurbo, turboMul); turboTotal=tt; bgTurbo=0; } };
 try{ LAND.addEventListener('change',onLand); }catch(_){ LAND.addListener && LAND.addListener(onLand); }
 document.addEventListener('visibilitychange',()=>{
+  if (!document.hidden) idleTime=0;
   if (document.hidden){ try{ if (grid && pieces && $('over').hidden) persist(); }catch(_){}
     if (turboUntil>performance.now()){ bgTurbo=turboUntil-performance.now(); if (turboTimer){ clearInterval(turboTimer); turboTimer=null; } } }
   else if (bgTurbo>0 && !pauseMode){ const tt=turboTotal; startTurbo(bgTurbo, turboMul); turboTotal=tt; bgTurbo=0; }
