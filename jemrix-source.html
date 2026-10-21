@@ -544,6 +544,8 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .mpgo{border:0;border-radius:12px;padding:9px 16px;background:#38bdf8;color:#05203a;font-family:var(--display);font-weight:700;font-size:1rem;cursor:pointer}
 .mpwins{font-size:.85rem;color:#9fb8e8;max-width:28em}
 .mpwins b{color:#ffd84d;font-weight:700}
+.mpver{font-size:.72rem;color:#5d74a8;margin:0;font-variant-numeric:tabular-nums}
+.mpver:empty{display:none}
 .slots{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .slotp{min-width:96px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.06);border:1.5px dashed rgba(159,216,255,.4);font-family:var(--display);font-weight:600;font-size:1.05rem;color:#9fb8e8}
 .slotp.in{border-style:solid;border-color:#4d9bff;background:rgba(47,107,255,.35);color:#fff;animation:slotin .35s cubic-bezier(.2,.9,.3,1.4)}
@@ -697,6 +699,7 @@ body.mpdone .oc .on{font-size:1.05rem}
       </div>
       <p class="sub" id="mpnote" hidden>Mehrspieler gibt es nur in der Jemrix-App auf dem iPhone.</p>
       <p class="mpwins" id="mpwins"></p>
+      <p class="mpver" id="mpver"></p>
     </div>
     <div class="mpv" id="mplobby" hidden>
       <h2 id="mplt">2 Spieler</h2>
@@ -769,6 +772,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
+const APP_VERSION='';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 const MP={on:false, used:false, done:false, room:null, seed:0, size:0, setIdx:0, players:[], prev:{}, lastSent:'', offset:0, roomInfo:null,
   device:(()=>{ let d=load('jemrix-device',''); if (typeof d!=='string' || d.length<8){ d='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); save('jemrix-device',d); } return d; })()};
 
@@ -1944,6 +1948,8 @@ function mpRenderWins(){ const t=mpWinsText(mpWins); $('mpwins').textContent=t; 
 
 /* --- Modusauswahl --- */
 function showModes(cont){
+  if (window.__jemrixUpdate){ window.__jemrixUpdate=false; location.reload(); return; }   // neue Version bereit: jetzt sauber laden
+  $('mpver').textContent = APP_VERSION ? 'Version vom '+APP_VERSION : '';
   if (cont) mpModeDone=cont;
   mpView='mode'; mpLobby=null;
   document.body.classList.remove('mp','mpplay','mpdone');

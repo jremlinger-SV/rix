@@ -119,8 +119,27 @@ rep('let shared=null, sharedRows=null, myId=null, myDoc={};', 'let sharedRows=nu
 
 # 3) Offline-Speicher registrieren
 rep('\nplayCine(()=>birthdayShow(', """
-if ('serviceWorker' in navigator && location.protocol!=='file:'){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+if ('serviceWorker' in navigator && location.protocol!=='file:'){
+  // Updates zuverlässig holen: bei jeder Rückkehr in die App nach neuer Version fragen
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{
+    document.addEventListener('visibilitychange',()=>{ if (!document.hidden) reg.update().catch(()=>{}); });
+  }).catch(()=>{}); });
+  let hadCtl=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if (!hadCtl){ hadCtl=true; return; }          // erste Installation: nichts tun
+    window.__jemrixUpdate=true;                     // neue Version: beim nächsten Start-Bildschirm neu laden
+    if (document.getElementById('cine')) location.reload();
+  });
+}
 playCine(()=>birthdayShow(""")
+
+# 3b) Versionsstempel (deutsche Zeit) für die Anzeige auf der Modusauswahl
+try:
+    from zoneinfo import ZoneInfo; import datetime
+    STAMP = datetime.datetime.now(ZoneInfo('Europe/Berlin')).strftime('%d.%m.%Y, %H:%M')
+except Exception:
+    STAMP = time.strftime('%d.%m.%Y, %H:%M')
+rep("const APP_VERSION='';", f"const APP_VERSION='{STAMP}';")
 
 # 4) Vollständiges Dokument
 FONTS = '''@font-face{font-family:"Fredoka";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/fredoka-latin-500-normal.woff2) format("woff2")}
