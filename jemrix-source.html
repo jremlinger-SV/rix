@@ -848,14 +848,15 @@ function curDiff(){
   return {d, a, grace:false};
 }
 const LAND=matchMedia('(orientation: landscape) and (max-height: 560px)');
-const IDLE_LIMIT=60; let idleTime=0;
+const IDLE_LIMIT=180; let idleTime=0;   // erst nach 3 Minuten ohne jede Berührung endet die Partie
+['pointerdown','touchstart','keydown','wheel'].forEach(ev=>window.addEventListener(ev,()=>{ idleTime=0; },{capture:true,passive:true}));
 function gameActive(){ return grid && !document.hidden && !wrongOrient() && !MP.done && $('mpscreen').hidden && $('mpcount').hidden && $('over').hidden && $('reg').hidden && !$('cine') && !document.querySelector('.bday'); }
 setInterval(()=>{
   const now=performance.now();
   if (tickLast && gameActive()){
     const dt=Math.min(2,(now-tickLast)/1000);
     playTime+=dt;
-    // Unsichtbarer Inaktivitäts-Timeout: 60 s ohne Spielzug beendet die Partie
+    // Unsichtbarer Inaktivitäts-Timeout: 3 Minuten ohne Berührung beenden die Partie
     idleTime+=dt;
     if (idleTime>=IDLE_LIMIT && !drag){ idleTime=0; finishGame('Zeit abgelaufen'); }
   }
@@ -1535,7 +1536,7 @@ function checkOver(){
   }
   finishGame('Kein Platz mehr');
 }
-/* Spiel beenden (kein Platz mehr oder 60 s ohne Zug): Ergebnis zählen, Highscore zeigen */
+/* Spiel beenden (kein Platz mehr oder 3 Minuten ohne Berührung): Ergebnis zählen, Highscore zeigen */
 function finishGame(title){
   if (MP.on){ mpFinish(); return; }
   pauseMode=false; $('resume').hidden=true; $('overtitle').textContent=title;
