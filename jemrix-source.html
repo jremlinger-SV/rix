@@ -1,7 +1,7 @@
 <title>Jemrix</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Unbounded:wght@400;600;800&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700&display=swap">
 <style>
 /* Layout: one-screen spielfeld — logo + score strip, 8×8 board, three-piece tray. Deep-navy tray, seven separable blues; turbo swaps to a violet/teal set. */
 :root{
@@ -9,14 +9,17 @@
   --b1:#2f6bff; --b2:#1d4ed8; --b3:#38bdf8; --b4:#9fd8ff; --b5:#22b8cf; --b6:#6c7dff; --b7:#c9e3ff;
   --t1:#a855f7; --t2:#d946ef; --t3:#2dd4bf; --t4:#34d399; --t5:#f472b6; --t6:#818cf8; --t7:#5eead4;
   --ok:rgba(255,255,255,.35); --bad:rgba(255,92,122,.42);
+  --score-fill:#2563eb; --score-edge:#ffffff; --score-shadow:#16306f; --score-hot:#f5b700;
   --display:"Fredoka", "Trebuchet MS", system-ui, sans-serif;
   --body:"Nunito", system-ui, -apple-system, sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0c1328; --panel:#152043; --board:#111a36; --well:#1e2b52; --fg:#e8f0ff; --muted:#93a6d4; --accent:#4d9bff; color-scheme:dark;
+  --score-fill:#9fd8ff; --score-edge:#0c1328; --score-shadow:#2f6bff; --score-hot:#ffd84d;
 }}
 :root[data-theme="dark"]{
   --bg:#0c1328; --panel:#152043; --board:#111a36; --well:#1e2b52; --fg:#e8f0ff; --muted:#93a6d4; --accent:#4d9bff; color-scheme:dark;
+  --score-fill:#9fd8ff; --score-edge:#0c1328; --score-shadow:#2f6bff; --score-hot:#ffd84d;
 }
 [hidden]{display:none!important}
 html{box-sizing:border-box}   /* Ränder von Statusleiste/Home-Balken zählen zur Höhe, nichts scrollt */
@@ -48,8 +51,14 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .stat b{font-family:var(--display);font-size:clamp(1rem,4.6vw,1.25rem);font-weight:600;line-height:1.1}
 .scoreline{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-block:-6px -4px;font-variant-numeric:tabular-nums}
 .scoreline small{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
-.scoreline b{font-family:var(--display);font-weight:700;font-size:clamp(2.3rem,11.5vw,2.9rem);line-height:1;letter-spacing:.01em;background:linear-gradient(180deg,var(--fg),color-mix(in srgb,var(--accent) 70%,var(--fg)));-webkit-background-clip:text;background-clip:text;color:transparent}
-#score{display:inline-block;transition:transform .15s}
+.scoreline b{font-family:"Lilita One",var(--display);font-weight:400;font-size:clamp(2.6rem,13vw,3.3rem);line-height:1;letter-spacing:0;color:var(--score-fill);-webkit-text-stroke:.09em var(--score-edge);paint-order:stroke fill;text-shadow:0 .07em 0 var(--score-shadow);display:inline-flex;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* Zählwerk: jede Ziffer ist eine Rolle, die hochläuft */
+.od{display:inline-block;height:1.2em;overflow:hidden;position:relative;padding:0 .05em;margin:0 -.05em}
+.odc{display:block;will-change:transform}
+.odc>span{display:block;height:1.2em;line-height:1.2em;text-align:center;letter-spacing:0}
+.odp{display:inline-block;height:1.2em;line-height:1.2em;letter-spacing:0;margin:0 -.01em}
+#score.hot{color:var(--score-hot)}
+#score{display:inline-flex;align-items:flex-start;transition:transform .15s}
 #score.bump{transform:scale(1.18)}
 .boardwrap{position:relative;flex:none;width:min(100cqw,calc(100cqh - var(--tb,140px) - 54px))}
 /* Effekte ab 2 Linien */
@@ -392,7 +401,7 @@ body.skin-geburtstag .cell[data-c],body.skin-geburtstag .blk{background:var(--sy
   .app{gap:8px;padding-block:12px 2px}
   .boardslot{gap:8px}
   .logo{width:30px;height:30px}.wordmark{font-size:1.4rem}
-  .scoreline{margin-block:-4px -6px}.scoreline b{font-size:clamp(2rem,10vw,2.5rem)}
+  .scoreline{margin-block:-4px -6px}.scoreline b{font-size:clamp(2.3rem,11vw,2.8rem)}
   .tray{padding:8px}
 }
 /* Spielende aufgeräumt */
@@ -420,7 +429,7 @@ body.gameover .over button{font-size:1.1rem;padding:12px 26px;margin-top:6px}
   .boardslot{gap:14px}
   .logo{width:42px;height:42px}.wordmark{font-size:1.9rem}
   .stat b{font-size:1.45rem}
-  .scoreline b{font-size:3.3rem}
+  .scoreline b{font-size:3.7rem}
   .top2 .chip{font-size:.9rem;padding:5px 12px 5px 9px}
   .family{font-size:.76rem;padding-bottom:10px}
 }
@@ -844,14 +853,39 @@ const SHOW_BASE=50000, SHOW_MUL=10;
 const showPts=v=>(SHOW_BASE+Math.round(v)*SHOW_MUL).toLocaleString('de-DE');
 const showGain=g=>(Math.round(g)*SHOW_MUL).toLocaleString('de-DE');
 let shownScore=0, countRaf=0;
+/* Zählwerk-Anzeige: Ziffern als Rollen; bei Überträgen rollt die nächste Stelle weich mit */
+let odoLen=-1, odoCols=[];
+function renderOdo(v){
+  const el=$('score'); const N=SHOW_BASE+v*SHOW_MUL;
+  const txt=Math.round(N).toLocaleString('de-DE');
+  if (txt.length!==odoLen){
+    el.textContent=''; odoCols=[];
+    [...txt].forEach(ch=>{
+      if (/\d/.test(ch)){ const o=document.createElement('span'); o.className='od'; const c=document.createElement('span'); c.className='odc';
+        for (let d=0; d<=10; d++){ const x=document.createElement('span'); x.textContent=d%10; c.appendChild(x); }
+        o.appendChild(c); el.appendChild(o); odoCols.push(c); }
+      else { const p=document.createElement('span'); p.className='odp'; p.textContent=ch; el.appendChild(p); }
+    });
+    odoLen=txt.length; el.setAttribute('aria-label',txt+' Punkte');
+  }
+  const n=odoCols.length;
+  for (let i=0;i<n;i++){
+    const p=n-1-i, pow=Math.pow(10,p);
+    let pos=Math.floor(N/pow)%10;
+    if (p>0){ const rest=(N%pow)/pow; if (rest>0.85) pos+= (rest-0.85)/0.15; } else pos+=N%1;
+    odoCols[i].style.transform=`translateY(${-pos*1.2}em)`;
+  }
+  el.setAttribute('aria-label',Math.round(N).toLocaleString('de-DE')+' Punkte');
+}
 function countTo(target){
-  const el=$('score'), from=shownScore, t0=performance.now(), dur=Math.min(900,250+Math.abs(target-from)*4);
+  const el=$('score'), from=shownScore, t0=performance.now(), dur=Math.min(1400,450+Math.abs(target-from)*6);
   cancelAnimationFrame(countRaf);
-  if (target<=from || matchMedia('(prefers-reduced-motion: reduce)').matches){ shownScore=target; el.textContent=showPts(target); $('best').textContent=showPts(best); return; }
+  if (target<=from || matchMedia('(prefers-reduced-motion: reduce)').matches){ shownScore=target; renderOdo(target); $('best').textContent=showPts(best); return; }
+  el.classList.add('hot');
   const step=now=>{ const k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3);
-    shownScore=from+(target-from)*e; el.textContent=showPts(shownScore);
+    shownScore=from+(target-from)*e; renderOdo(shownScore);
     if (shownScore>bestAtStart) $('best').textContent=showPts(Math.max(shownScore, bestAtStart));
-    if (k<1) countRaf=requestAnimationFrame(step); else { shownScore=target; $('best').textContent=showPts(best); } };
+    if (k<1) countRaf=requestAnimationFrame(step); else { shownScore=target; renderOdo(target); el.classList.remove('hot'); $('best').textContent=showPts(best); } };
   countRaf=requestAnimationFrame(step);
 }
 let level_prev=1;
@@ -1621,7 +1655,7 @@ function newGame(){
   const op=opening(); grid=op.grid;
   stars=new Set(); skinOrder=shuffleSkins(); skinBump=0; curSkin=null; playTime=0; profile=newProfile(); setsSinceGift=0;
   pieces=op.pieces||newSet();
-  cancelAnimationFrame(countRaf); shownScore=0; $('score').textContent=showPts(0); liveCrownOn=false; $('livecrown').hidden=true; setLevel(true); $('over').hidden=true; leaveGameOver();
+  cancelAnimationFrame(countRaf); shownScore=0; $('score').classList.remove('hot'); renderOdo(0); liveCrownOn=false; $('livecrown').hidden=true; setLevel(true); $('over').hidden=true; leaveGameOver();
   renderBoard(); renderTray(true); persist();
 }
 
@@ -1684,7 +1718,7 @@ try{
     stars=new Set((saved.stars||[]).filter(k=>grid[k])); skinOrder=saved.skinOrder||null; skinBump=saved.skinBump||0; curSkin=null; playTime=saved.playTime||0; profile=saved.profile||newProfile();
     bestAtStart=Math.max(0,best-0); if (saved.bestAtStart!=null) bestAtStart=saved.bestAtStart;
     if (pieces.every(p=>!p)) pieces=newSet();
-    shownScore=score; $('score').textContent=showPts(score); setLevel(true); renderBoard(); renderTray(true); updateLiveCrown();
+    shownScore=score; renderOdo(score); setLevel(true); renderBoard(); renderTray(true); updateLiveCrown();
     if (saved.turboLeft>0) resumeTurbo={left:saved.turboLeft, mul:saved.turboMul||2, total:saved.turboTotal};
     checkOver();
   } else newGame();

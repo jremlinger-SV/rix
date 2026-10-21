@@ -1,10 +1,10 @@
 /* Jemrix · Offline-Speicher. Die Version wird beim Bauen automatisch gesetzt. */
-const CACHE = 'jemrix-4a6c40126c';
+const CACHE = 'jemrix-f2255fb2da';
 const SHELL = [
   './', 'index.html', 'config.js', 'manifest.webmanifest',
   'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png',
   'fonts/fredoka-latin-500-normal.woff2', 'fonts/fredoka-latin-600-normal.woff2', 'fonts/fredoka-latin-700-normal.woff2',
-  'fonts/nunito-latin-500-normal.woff2', 'fonts/nunito-latin-700-normal.woff2', 'fonts/unbounded-latin-wght-normal.woff2'
+  'fonts/nunito-latin-500-normal.woff2', 'fonts/nunito-latin-700-normal.woff2', 'fonts/unbounded-latin-wght-normal.woff2', 'fonts/lilita-one-latin-400-normal.woff2'
 ];
 
 self.addEventListener('install', e => {
