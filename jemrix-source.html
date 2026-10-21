@@ -26,7 +26,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);
   padding-left:max(12px, env(safe-area-inset-left, 0px));padding-right:max(12px, env(safe-area-inset-right, 0px));
   user-select:none;-webkit-user-select:none;touch-action:manipulation;overflow-x:hidden}
 .app{--bw:min(100%,360px);max-width:440px;margin:0 auto;padding-block:18px 4px;display:flex;flex-direction:column;gap:10px;height:100%;min-height:560px;box-sizing:border-box}
-.boardslot{flex:1 1 auto;min-height:250px;container-type:size;display:grid;place-items:center}
+.boardslot{flex:1 1 auto;min-height:250px;container-type:size;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;padding-top:4px;box-sizing:border-box}
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 h1{font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0;letter-spacing:.01em;line-height:1}
 h1{display:flex;align-items:center;gap:9px}
@@ -48,10 +48,10 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .stat b{font-family:var(--display);font-size:clamp(1rem,4.6vw,1.25rem);font-weight:600;line-height:1.1}
 .scoreline{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-block:-6px -4px;font-variant-numeric:tabular-nums}
 .scoreline small{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
-.scoreline b{font-family:var(--display);font-weight:700;font-size:clamp(1.9rem,9.5vw,2.5rem);line-height:1;letter-spacing:.01em;background:linear-gradient(180deg,var(--fg),color-mix(in srgb,var(--accent) 70%,var(--fg)));-webkit-background-clip:text;background-clip:text;color:transparent}
+.scoreline b{font-family:var(--display);font-weight:700;font-size:clamp(2.3rem,11.5vw,2.9rem);line-height:1;letter-spacing:.01em;background:linear-gradient(180deg,var(--fg),color-mix(in srgb,var(--accent) 70%,var(--fg)));-webkit-background-clip:text;background-clip:text;color:transparent}
 #score{display:inline-block;transition:transform .15s}
 #score.bump{transform:scale(1.18)}
-.boardwrap{position:relative;width:min(100cqw,100cqh)}
+.boardwrap{position:relative;flex:none;width:min(100cqw,calc(100cqh - var(--tb,140px) - 14px))}
 /* Effekte ab 2 Linien */
 .fx{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;border-radius:14px}
 .fx .beam{position:absolute;border-radius:6px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95) 45%,#9fd8ff 55%,transparent);box-shadow:0 0 18px 4px rgba(125,200,255,.7);animation:beam .34s cubic-bezier(.3,0,.2,1) var(--bd,0ms) both}
@@ -82,7 +82,7 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .combo.show{animation:float 1s ease-out}
 @keyframes float{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-110%) scale(1)}}
 .tray{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--board);border-radius:14px;padding:10px 10px;width:var(--bw);box-sizing:border-box;align-self:center}
-.foot{width:var(--bw);align-self:center}
+.foot{width:var(--bw);align-self:center;margin-top:2px}
 .slot{display:flex;align-items:center;justify-content:center;min-height:var(--th,60px);padding-block:4px;border-radius:10px;touch-action:none;cursor:grab}
 .slot:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .slot.dead .mini{opacity:.3;filter:grayscale(.7)}
@@ -391,7 +391,7 @@ body.skin-geburtstag .cell[data-c],body.skin-geburtstag .blk{background:var(--sy
 @media (max-height: 800px){
   .app{gap:8px;padding-block:12px 2px}
   .logo{width:30px;height:30px}.wordmark{font-size:1.4rem}
-  .scoreline{margin-block:-4px -6px}.scoreline b{font-size:clamp(1.7rem,8.4vw,2.1rem)}
+  .scoreline{margin-block:-4px -6px}.scoreline b{font-size:clamp(2rem,10vw,2.5rem)}
   .tray{padding:8px}
 }
 /* Spielende aufgeräumt */
@@ -407,7 +407,7 @@ body.gameover .hs li{font-size:1.12rem;padding-block:5px;padding-inline:10px}
 body.gameover .hs li b{font-size:1.15rem}
 body.gameover .hs .crown{width:1.15em;height:1.15em}
 body.gameover .over button{font-size:1.1rem;padding:12px 26px;margin-top:6px}
-.sndbtn{margin-left:auto;margin-right:2px;align-self:center;width:34px;height:34px;padding:6px;border-radius:50%;background:transparent;border:1.5px solid color-mix(in srgb,var(--muted) 35%,transparent);color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.sndbtn{display:none!important;margin-left:auto;margin-right:2px;align-self:center;width:34px;height:34px;padding:6px;border-radius:50%;background:transparent;border:1.5px solid color-mix(in srgb,var(--muted) 35%,transparent);color:var(--muted);display:grid;place-items:center;cursor:pointer}
 .sndbtn svg{width:18px;height:18px}
 .sndbtn.off{opacity:.55}
 .sndbtn.off svg path:nth-child(2){display:none}
@@ -418,12 +418,12 @@ body.gameover .over button{font-size:1.1rem;padding:12px 26px;margin-top:6px}
   .app{gap:14px;padding-top:26px}
   .logo{width:42px;height:42px}.wordmark{font-size:1.9rem}
   .stat b{font-size:1.45rem}
-  .scoreline b{font-size:2.9rem}
+  .scoreline b{font-size:3.3rem}
   .top2 .chip{font-size:.9rem;padding:5px 12px 5px 9px}
   .family{font-size:.76rem;padding-bottom:10px}
 }
 .scoreline{position:relative}
-.livecrown{display:inline-block;width:1.9rem;height:1.9rem;align-self:center;filter:drop-shadow(0 0 6px rgba(255,216,77,.8));animation:lcin .7s cubic-bezier(.2,.9,.3,1.5) both}
+.livecrown{position:absolute;margin-left:8px;align-self:center;width:1.9rem;height:1.9rem;filter:drop-shadow(0 0 6px rgba(255,216,77,.8));animation:lcin .7s cubic-bezier(.2,.9,.3,1.5) both}
 .livecrown svg{width:100%;height:100%}
 @keyframes lcin{0%{opacity:0;transform:translateY(-14px) scale(.3) rotate(-25deg)}100%{opacity:1;transform:none}}
 @media (min-height: 900px){.livecrown{width:2.3rem;height:2.3rem}}
@@ -511,7 +511,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
       <div class="stat"><small>Rekord</small><b id="best">50.000</b></div>
     </div>
   </header>
-  <div class="scoreline"><small>Punkte</small><b id="score">50.000</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></div>
+  <div class="scoreline" aria-label="Punkte"><b id="score">50.000</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></div>
   <div class="turbobar off" id="turbobar" aria-hidden="true"><span class="x2" id="turbomul">×2</span><div class="track"><div class="fill" id="turbofill"></div></div><span class="sec" id="turbosec">15 s</span></div>
   <div class="boardslot" id="boardslot">
   <div class="boardwrap">
@@ -539,8 +539,8 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
       </form>
     </div>
   </div>
-  </div>
   <div class="tray" id="tray"></div>
+  </div>
   <div class="netline" id="netline" hidden></div>
   <div class="foot">
     <div class="top2" id="top2" aria-label="Highscores Platz 1 und 2"></div>
@@ -797,9 +797,12 @@ const syncBW=()=>{ const w=boardEl.parentElement.getBoundingClientRect().width; 
 try{ new ResizeObserver(syncBW).observe(boardEl.parentElement); }catch(_){ window.addEventListener('resize',syncBW); }
 function renderTray(fresh){
   trayEl.innerHTML='';
-  const m = Math.max(12, Math.min(innerHeight>=900?28:24, Math.floor((trayEl.clientWidth||330)/3/5.0)));
+  const slotW=($('boardslot')&&$('boardslot').clientWidth)||330;
+  const m = Math.max(12, Math.min(innerHeight>=900?28:24, Math.floor(Math.min(slotW,430)/3/5.0)));
   trayH=4*m+3*2;   // feste Höhe für 4 Steine, damit sich das Layout nie verschiebt
   trayEl.style.setProperty('--th', trayH+'px');
+  const tp=parseFloat(getComputedStyle(trayEl).paddingTop)||10;
+  document.querySelector('.app').style.setProperty('--tb',(trayH+2*tp+8)+'px');   // Platz, den die Ablage unter dem Brett braucht
   pieces.forEach((p,i)=>{
     const slot=document.createElement('div'); slot.className='slot';
     if (p){
@@ -1006,7 +1009,7 @@ let sinceClear=9, lastMove=0, turboUntil=0, turboTimer=null, turboMul=1, turboTo
 const TURBO_MS=15000;   // Multiplikator gilt 15 Sekunden: 2 Reihen ×2, 3 Reihen ×3 …
 /* ===== Klang: sanft, leise, nie nervig. Alles per Web Audio erzeugt (keine Dateien). ===== */
 const SND=(()=>{
-  let ctx=null, master=null, comp=null, on=load('jemrix-sound',true), lastPlop=0;
+  let ctx=null, master=null, comp=null, on=true, lastPlop=0;   // Ton immer an, Lautstärke über die Tasten am iPhone
   const ok=()=>on && ctx && ctx.state==='running';
   function unlockTick(){ try{ const b=ctx.createBuffer(1,1,22050), src=ctx.createBufferSource(); src.buffer=b; src.connect(ctx.destination); src.start(0); }catch(_){} }
   function init(){
