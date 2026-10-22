@@ -431,7 +431,7 @@ body.gameover .hs li{font-size:1.12rem;padding-block:5px;padding-inline:10px}
 body.gameover .hs li b{font-size:1.15rem}
 body.gameover .hs .crown{width:1.15em;height:1.15em}
 body.gameover .over button{font-size:1.1rem;padding:12px 26px;margin-top:6px}
-.sndbtn{display:none!important;margin-left:auto;margin-right:2px;align-self:center;width:34px;height:34px;padding:6px;border-radius:50%;background:transparent;border:1.5px solid color-mix(in srgb,var(--muted) 35%,transparent);color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.sndbtn{margin-left:auto;margin-right:2px;align-self:center;width:34px;height:34px;padding:6px;border-radius:50%;background:transparent;border:1.5px solid color-mix(in srgb,var(--muted) 35%,transparent);color:var(--muted);display:grid;place-items:center;cursor:pointer}
 .sndbtn svg{width:18px;height:18px}
 .sndbtn.off{opacity:.55}
 .sndbtn.off svg path:nth-child(2){display:none}
@@ -1262,7 +1262,7 @@ let sinceClear=9, lastMove=0, turboUntil=0, turboTimer=null, turboMul=1, turboTo
 const TURBO_MS=15000;   // Multiplikator gilt 15 Sekunden: 2 Reihen ×2, 3 Reihen ×3 …
 /* ===== Klang: sanft, leise, nie nervig. Alles per Web Audio erzeugt (keine Dateien). ===== */
 const SND=(()=>{
-  let ctx=null, master=null, comp=null, on=true, lastPlop=0;   // Ton immer an, Lautstärke über die Tasten am iPhone
+  let ctx=null, master=null, comp=null, on=load('jemrix-sound',true)!==false, lastPlop=0;   // Ton-Einstellung wird gemerkt
   const ok=()=>on && ctx && ctx.state==='running';
   function unlockTick(){ try{ const b=ctx.createBuffer(1,1,22050), src=ctx.createBufferSource(); src.buffer=b; src.connect(ctx.destination); src.start(0); }catch(_){} }
   function init(){
