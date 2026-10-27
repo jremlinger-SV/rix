@@ -1122,7 +1122,7 @@ const SKINS=[['klassik','Klassik'],['glas','Glas'],['neon','Neon'],['pixel','Pix
   ['halloween','Halloween'],['weihnachten','Weihnachten'],['ostern','Ostern'],['fruehling','Frühling'],['sommer','Sommer'],['herbst','Herbst'],['winter','Winter'],['geburtstag','Geburtstag'],
   ['dreieck','Dreiecke'],['torte','Torte']];
 // Grund-Looks (immer dabei); alles andere sind Saison- und Ereignis-Looks. Neue Grund-Looks hinten anhängen – gespeicherte Reihenfolgen nutzen die Positionen.
-const BASE_SET=new Set(['klassik','glas','neon','pixel','gem','eis','symbol','blasen','nacht','dreieck']);
+const BASE_SET=new Set(['klassik','glas','neon','pixel','gem','eis','symbol','blasen','nacht']);   // 'dreieck' entfernt (bleibt in SKINS nur als Platzhalter für gespeicherte Positionen)
 const isBaseSkin=i=>BASE_SET.has((SKINS[i]||[])[0]);
 /* Saison-Looks: nur im passenden Zeitraum, je eine Woche Puffer davor und danach */
 function easterSunday(y){ const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1; return new Date(y,mo-1,da); }
@@ -1977,7 +1977,7 @@ try{
   const okPieces = saved && Array.isArray(saved.pieces) && saved.pieces.length===3 && saved.pieces.every(p=>p===null || (p && Array.isArray(p.shape) && p.shape.length && typeof p.color==='string'));
   if (saved && Array.isArray(saved.grid) && saved.grid.length===N*N && okPieces){
     grid=saved.grid.map(v=>typeof v==='string'?v:null); pieces=saved.pieces; score=+saved.score||0; combo=saved.combo||0; sinceClear=saved.sinceClear??9;
-    stars=new Set((saved.stars||[]).filter(k=>grid[k])); skinOrder=saved.skinOrder||null; skinBump=saved.skinBump||0; curSkin=null; playTime=saved.playTime||0; profile=saved.profile||newProfile();
+    stars=new Set((saved.stars||[]).filter(k=>grid[k])); skinOrder=saved.skinOrder?saved.skinOrder.filter(i=>(SKINS[i]||[])[0]!=='dreieck'):null; skinBump=saved.skinBump||0; curSkin=null; playTime=saved.playTime||0; profile=saved.profile||newProfile();
     bestAtStart=Math.max(0,best-0); if (saved.bestAtStart!=null) bestAtStart=saved.bestAtStart;
     bdayNext=Array.isArray(saved.bdayNext) ? saved.bdayNext.filter(x=>typeof x==='number') : [];
     if (pieces.every(p=>!p)) pieces=newSet();
