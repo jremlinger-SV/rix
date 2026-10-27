@@ -869,6 +869,7 @@ function stressNow(){
 /* Zeitbasierte Schwierigkeit: 30 s Schonzeit, danach je Partie unterschiedlich */
 const GRACE=30;
 let playTime=0, profile=null, tickLast=0;
+let bdayNext=[];   // ausstehende Geburtstags-Turbos (Spielzeit in s)
 function newProfile(){
   const r=Math.random();
   const ramp = r<0.15 ? 0.3+Math.random()*0.15      // Glückspartie: lange leicht
@@ -1142,7 +1143,7 @@ function birthdayNow(now){
   if (pv) return pv;
   return BIRTHDAYS.find(b=>now.getMonth()+1===b.m && now.getDate()===b.d) || null;
 }
-function isBirthdayKid(n){ const b=birthdayNow(); return !!(b && n && b.name.toLowerCase()===String(n).toLowerCase()); }
+function isBirthdayKid(n){ const b=BIRTHDAYS.find(x=>{ const d=new Date(); return d.getMonth()+1===x.m && d.getDate()===x.d; }); return !!(b && n && b.name.toLowerCase()===String(n).toLowerCase()); }
 function seasonalNow(now){
   now=now||new Date(); const y=now.getFullYear(), D=864e5;
   const dn=d=>Math.round(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/D);   // Kalendertag, unabhängig von Sommerzeit
@@ -1175,7 +1176,7 @@ function shuffleSkins(){
   const order=[0]; let sp=0;
   base.forEach((r,j)=>{ order.push(r); if (special.length && j%3===1) order.push(special[sp++%special.length]); });
   if (special.length) special.forEach(x=>{ if (!order.includes(x)) order.splice(2+Math.floor(Math.random()*(order.length-2)),0,x); });
-  if (preview>=0) return [preview, ...order];
+  if (preview>=0) return [preview, ...(events.includes('geburtstag')?[idx('torte')]:[]), ...order];
   if (events.includes('geburtstag')) return [idx('geburtstag'), idx('torte'), ...order];   // am Geburtstag: erst Party-Look, dann Torte – für alle Spieler
   return order;
 }
@@ -1665,13 +1666,12 @@ function askName(){
   if (!player) setTimeout(()=>{ try{$('regname').focus();}catch(e){} },50);
 }
 function setPlayer(n){ idleTime=0; player=n; save('jemrix-name',n); $('reg').hidden=true; showPlayer(); SND.start();
-  if (isBirthdayKid(n) && !document.querySelector('.bday')){
-    // Gratulation nur für das Geburtstagskind selbst – bei jedem Spielstart
-    tickLast=0; birthdayShow(()=>{ idleTime=0; tickLast=performance.now(); });
-  }
-  if (isBirthdayKid(n) && score===0){ bdayNext=[60,120]; bdayTurbo(); persist(); } }
+  if (!isBirthdayKid(n)) return;
+  // Geburtstags-Turbo erst starten, wenn die Gratulation geschlossen ist – sonst läuft er unter dem Konfetti ab
+  const go=()=>{ idleTime=0; if (score===0 && playTime<60 && $('over').hidden){ bdayNext=[60,120].filter(x=>x>playTime); bdayTurbo(); persist(); } };
+  if (!document.querySelector('.bday')) birthdayShow(go);   // Gratulation nur für das Geburtstagskind – bei jedem Spielstart
+}
 /* Geburtstags-Turbo: ×5 für 30 s – dreimal in den ersten Minuten (Start, nach 1 und nach 2 Minuten Spielzeit) */
-let bdayNext=[];
 function bdayTurbo(){
   startTurbo(30000,5);
   const t=$('lvl'); t.textContent='Geburtstags-Turbo ×5 für 30 s'; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
@@ -2363,7 +2363,7 @@ $('mpquit').onclick=()=>mpReload(true);
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden){ mpTick(true); mpPollLobby(true); } });
 
 let resumeTurbo=null;   // gespeicherter Turbo startet erst, wenn das Spiel wirklich losgeht
-playCine(()=>showModes(()=>{ familyIntro(); if (resumeTurbo){ const r=resumeTurbo; resumeTurbo=null; startTurbo(r.left, r.mul); turboTotal=Math.max(r.left, r.total||r.left); tickTurbo(); persist(); } }));
+playCine(()=>showModes(()=>{ familyIntro(); if (player && $('reg').hidden && isBirthdayKid(player) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; }); if (resumeTurbo){ const r=resumeTurbo; resumeTurbo=null; startTurbo(r.left, r.mul); turboTotal=Math.max(r.left, r.total||r.left); tickTurbo(); persist(); } }));
 const saved=load("jemrix-game",load("achtfeld-game",null));
 try{
   const okPieces = saved && Array.isArray(saved.pieces) && saved.pieces.length===3 && saved.pieces.every(p=>p===null || (p && Array.isArray(p.shape) && p.shape.length && typeof p.color==='string'));
