@@ -610,6 +610,8 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .pk-go{position:absolute;right:16px;top:50%;width:26px;height:26px;margin-top:-13px;opacity:.65}
 .pk-foot{position:relative;display:flex;align-items:center;gap:9px;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#93a6d4;font-weight:700;animation:pkin .7s ease-out .35s both}
 .pk-foot b{font-family:var(--display);font-weight:600;letter-spacing:.06em;color:#4d9bff}
+.gamepick.leaving .pk-card,.gamepick.leaving .pk-pre,.gamepick.leaving .pk-foot{transition:opacity .2s ease,transform .2s ease;opacity:0;transform:scale(.97)}
+.gamepick.leaving{pointer-events:none}
 .gamepick.out{animation:pkout .42s cubic-bezier(.6,0,.4,1) forwards;pointer-events:none}
 @keyframes pkin{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes pkout{to{opacity:0;transform:scale(1.06)}}
@@ -734,7 +736,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 22:27';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 22:31';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -2123,7 +2125,8 @@ function showModes(cont){
     setTimeout(()=>{ pk.classList.add('out'); setTimeout(()=>{ pk.remove(); if (cont) cont(); },420); },160); };
   $('pickMah').onclick=()=>{ if (chosen) return; chosen=true; $('pickMah').classList.add('go'); SND.plop(2);
     try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
-    setTimeout(()=>{ pk.classList.add('out'); setTimeout(()=>{ location.href='jenmah.html'; },300); },160); };
+    // Hintergrund bleibt stehen (sonst blitzt kurz JJE_blocks darunter auf), nur die Karten blenden aus
+    setTimeout(()=>{ pk.classList.add('leaving'); setTimeout(()=>{ location.href='jenmah.html'; },220); },160); };
 }
 // Zurück aus jenMah (Safari stellt die Seite aus dem Zwischenspeicher wieder her): frisch laden, sonst bleibt die Auswahl unbedienbar
 window.addEventListener('pageshow',e=>{ if (e.persisted) location.reload(); });
