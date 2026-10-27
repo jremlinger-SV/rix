@@ -1037,7 +1037,8 @@ function askName(){
   markLeader();
 }
 function setPlayer(n){ idleTime=0; player=n; save('jenmah-name',n); $('reg').hidden=true; SND.start(); lastProgress=performance.now();
-  if (owner!==n.toLowerCase() || lvl!==getProgress(n)) startLevel(getProgress(n)); else showLevelUI();
+  const want=hashWanted||getProgress(n); hashWanted=0;
+  if (owner!==n.toLowerCase() || lvl!==want) startLevel(want); else { owner=n.toLowerCase(); showLevelUI(); persist(); }
   if (isBirthdayKid(n) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; lastProgress=performance.now(); }); }
 $('regform').addEventListener('submit',e=>{ e.preventDefault(); const n=clean($('regname').value);
   if (n.length<2){ $('regerr').textContent='Bitte mindestens 2 Buchstaben eingeben.'; return; }
@@ -1197,7 +1198,12 @@ try{
     if (!T.some(t=>t.alive) && !park.length){ busy=true; setTimeout(levelClear,600); } else if (stuckNow()){ busy=true; setTimeout(stuck,900); }
   } else newGame();
 }catch(err){ newGame(); }
-const hashLv=()=>{ const m=/^#(?:stufe|level)-(\d+)$/.exec(location.hash); if (m) startLevel(+m[1]); };
+// Level-Link: nur neu aufbauen, wenn man nicht schon in diesem Level spielt; aufgedeckte Steine bleiben aufgedeckt
+let hashWanted=0;
+const hashLv=()=>{ const m=/^#(?:stufe|level)-(\d+)$/.exec(location.hash); if (!m) return;
+  hashWanted=+m[1];
+  if (+m[1]!==lvl || !T.some(t=>t.alive)) startLevel(+m[1]);
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} };
 window.addEventListener('hashchange',hashLv); hashLv();
 })();
 </script>
