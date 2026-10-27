@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Jemrix</title>
-<meta name="description" content="Jemrix – das Block-Puzzle nur für die Remlingers">
+<title>JJE_blocks</title>
+<meta name="description" content="JJE_blocks – das Block-Puzzle nur für die Remlingers">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Jemrix">
@@ -576,7 +576,11 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .overbtns button{min-width:10em;box-sizing:border-box}
 .ghostbtn.light{color:#dfe6fb;border-color:rgba(223,230,251,.45)}
 @media (prefers-reduced-motion: reduce){.cell.burst::after{animation-name:fadeout;animation-duration:.4s}.cell.land,.floating.pick,.slot.enter .mini,.celebrate .spark{animation:none}.celebrate .ch{animation:none}.celebrate.on::before{animation:none}.combo.show{animation-duration:.01s}#score{transition:none}}
-/* ===== Spielauswahl nach dem Intro: Jemrix oder jenMah ===== */
+/* ===== Spielauswahl nach dem Intro: JJE_blocks oder JJE_mahjong ===== */
+/* Wortmarke JJE_…: „JJE“ in Schriftfarbe, Rest in Akzentblau */
+.wordmark.jje{background:none;color:var(--fg);-webkit-background-clip:border-box;background-clip:border-box;letter-spacing:-.02em}
+.wordmark.jje i{font-style:normal;color:var(--accent)}
+
 .pick{position:fixed;inset:0;z-index:285;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.6vh,22px);
   padding:calc(env(safe-area-inset-top,0px) + 24px) 18px calc(env(safe-area-inset-bottom,0px) + 22px);box-sizing:border-box;overflow:hidden;
   background:radial-gradient(ellipse at 50% 38%,#1a3a8a 0%,#0b1a45 34%,#050a1c 66%,#02040b 92%);color:#e8f0ff}
@@ -593,7 +597,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .pk-art{flex:none;width:clamp(78px,24vw,96px);aspect-ratio:1;border-radius:20px;background:#0f1d3d;display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(159,216,255,.18),0 0 26px rgba(47,107,255,.35)}
 .pk-art svg{width:84%;height:84%}
 .pk-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
-.pk-name{font-family:"Unbounded",var(--display);font-weight:800;font-size:clamp(1.45rem,7vw,1.8rem);line-height:1.05;background:linear-gradient(180deg,#ffffff 0%,#e3f0ff 45%,#8fc2ff 75%,#4d8dff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pk-name{font-family:"Unbounded",var(--display);font-weight:800;font-size:clamp(1.05rem,5.2vw,1.35rem);letter-spacing:-.01em;white-space:nowrap;line-height:1.05;background:linear-gradient(180deg,#ffffff 0%,#e3f0ff 45%,#8fc2ff 75%,#4d8dff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .pk-txt small{font-family:var(--display);font-weight:600;font-size:.95rem;color:#9fc4ff;letter-spacing:.02em}
 .pk-rec{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:.82rem;font-weight:700;color:#dfe9ff;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pk-rec .crown{width:1.05em;height:1.05em;flex:none}
@@ -609,7 +613,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 
 <div class="app">
   <header>
-    <h1 aria-label="Jemrix">
+    <h1 aria-label="JJE_blocks">
       <svg class="logo" viewBox="0 0 36 36" aria-hidden="true">
         <rect width="36" height="36" rx="10" fill="#0f1d3d"/>
         <circle cx="26" cy="9.5" r="3.6" fill="#9fd8ff"/>
@@ -618,7 +622,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
         <rect x="11.5" y="23" width="9" height="9" rx="2.4" fill="#1d4ed8"/>
         <rect x="4" y="19" width="6.5" height="6.5" rx="2" fill="#6c7dff" opacity=".85"/>
       </svg>
-      <span class="wordmark">jemrix</span>
+      <span class="wordmark jje">JJE<i>_blocks</i></span>
     </h1>
     <button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
     <div class="stats">
@@ -664,20 +668,20 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
   <div class="netline" id="netline" hidden></div>
   <div class="player" id="playerline" hidden>Spieler: <b id="pname"></b> <button class="linkbtn" id="changename" type="button">Wechseln</button></div>
 
-  <div class="rotate" id="rotate" aria-live="polite"><div class="rot-ph" aria-hidden="true"><i></i></div><b>Bitte hochkant halten</b><span>Jemrix ist fürs Hochformat gemacht. Das Spiel pausiert so lange.</span></div>
+  <div class="rotate" id="rotate" aria-live="polite"><div class="rot-ph" aria-hidden="true"><i></i></div><b>Bitte hochkant halten</b><span>JJE_blocks ist fürs Hochformat gemacht. Das Spiel pausiert so lange.</span></div>
   <div class="pick" id="pick" role="dialog" aria-label="Spiel wählen">
     <div class="pk-pre">Was spielen wir?</div>
     <button class="pk-card" id="pickJemrix" type="button">
       <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="26" cy="9.5" r="3.6" fill="#9fd8ff"/><rect x="21.5" y="15" width="9" height="9" rx="2.4" fill="#38bdf8"/><rect x="21.5" y="23" width="9" height="9" rx="2.4" fill="#2f6bff"/><rect x="11.5" y="23" width="9" height="9" rx="2.4" fill="#1d4ed8"/><rect x="4" y="19" width="6.5" height="6.5" rx="2" fill="#6c7dff" opacity=".85"/><rect x="11.5" y="13" width="9" height="9" rx="2.4" fill="#22b8cf" opacity=".55"/></svg></span>
-      <span class="pk-txt"><b class="pk-name">jemrix</b><small>Block-Puzzle</small><span class="pk-rec" id="recJemrix"></span></span>
+      <span class="pk-txt"><b class="pk-name">JJE_blocks</b><small>Block-Puzzle</small><span class="pk-rec" id="recJemrix"></span></span>
     </button>
     <button class="pk-card" id="pickMah" type="button">
       <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><rect x="5.6" y="9.6" width="12" height="16" rx="2.6" fill="#1d4ed8"/><rect x="4" y="8" width="12" height="16" rx="2.6" fill="#eef4ff"/><circle cx="10" cy="16" r="3.4" fill="#2f6bff"/><circle cx="10" cy="16" r="1.4" fill="#eef4ff"/><rect x="20.6" y="15.6" width="12" height="16" rx="2.6" fill="#1d4ed8"/><rect x="19" y="14" width="12" height="16" rx="2.6" fill="#eef4ff"/><rect x="21.8" y="17" width="2.4" height="10" rx="1.2" fill="#22b8cf"/><rect x="25.8" y="17" width="2.4" height="10" rx="1.2" fill="#38bdf8"/><rect x="12.6" y="3.6" width="10" height="7" rx="2" fill="#2f6bff"/><rect x="11.6" y="2.6" width="10" height="7" rx="2" fill="#9fd8ff"/></svg></span>
-      <span class="pk-txt"><b class="pk-name">jenmah</b><small>Mahjong</small><span class="pk-rec" id="recMah"></span></span>
+      <span class="pk-txt"><b class="pk-name">JJE_mahjong</b><small>Mahjong</small><span class="pk-rec" id="recMah"></span></span>
     </button>
     <div class="pk-foot"><span>Achtung: nur für <b>Remlingers</b></span></div>
   </div>
-  <div class="cine" id="cine" role="button" tabindex="0" aria-label="Jemrix – nur für die Remlingers">
+  <div class="cine" id="cine" role="button" tabindex="0" aria-label="JJE – nur für die Remlingers">
     <canvas class="cine-stars" id="cineStars" aria-hidden="true"></canvas>
     <div class="cine-rays" aria-hidden="true"></div>
     <div class="cine-cam">
@@ -725,7 +729,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 21:18';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 21:40';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }

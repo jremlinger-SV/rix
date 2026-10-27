@@ -1,4 +1,4 @@
-<title>jenMah</title>
+<title>JJE_mahjong</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Unbounded:wght@400;600;800&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700&display=swap">
@@ -222,7 +222,11 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .overbtns{display:flex;flex-direction:column;align-items:center;gap:10px}
 .overbtns button{min-width:10em;box-sizing:border-box}
 .ghostbtn.light{color:#dfe6fb;border-color:rgba(223,230,251,.45)}
-/* ===== jenMah: Spieltisch und Steine ===== */
+/* ===== JJE_mahjong: Spieltisch und Steine ===== */
+/* Wortmarke JJE_…: „JJE“ in Schriftfarbe, Rest in Akzentblau */
+.wordmark.jje{background:none;color:var(--fg);-webkit-background-clip:border-box;background-clip:border-box;letter-spacing:-.02em}
+.wordmark.jje i{font-style:normal;color:var(--accent)}
+
 .boardslot{gap:6px}
 .app{gap:6px}
 .scoreline b{font-size:clamp(2.1rem,10vw,2.6rem)}
@@ -307,7 +311,7 @@ body{padding-left:max(2px,env(safe-area-inset-left,0px))!important;padding-right
 .app{padding-block:max(6px,env(safe-area-inset-top,0px)) 2px!important;max-width:none!important}
 header.mh{padding-inline:6px!important}
 header.mh .logo{width:26px;height:26px}
-header.mh .wordmark{font-size:1.1rem}
+header.mh .wordmark{font-size:clamp(.82rem,3.9vw,1rem)}
 header.mh .sndbtn{width:30px;height:30px}
 .family{padding-block:0 2px;font-size:.62rem}
 .bbtn{width:46px!important;height:46px!important}
@@ -348,7 +352,7 @@ body.gameover .over{bottom:0}
 
 <div class="app">
   <header class="mh">
-    <h1 aria-label="jenMah">
+    <h1 aria-label="JJE_mahjong">
       <svg class="logo" viewBox="0 0 36 36" aria-hidden="true">
         <rect width="36" height="36" rx="10" fill="#0f1d3d"/>
         <rect x="6.5" y="11" width="11" height="15" rx="2.6" fill="#1d4ed8"/><rect x="5" y="9.5" width="11" height="15" rx="2.6" fill="#eef4ff"/>
@@ -357,7 +361,7 @@ body.gameover .over{bottom:0}
         <rect x="21.2" y="16.5" width="2" height="9" rx="1" fill="#22b8cf"/><rect x="24.6" y="16.5" width="2" height="9" rx="1" fill="#38bdf8"/>
         <rect x="13" y="3.5" width="9" height="5" rx="1.8" fill="#9fd8ff" opacity=".9"/>
       </svg>
-      <span class="wordmark">jenmah</span>
+      <span class="wordmark jje">JJE<i>_mahjong</i></span>
     </h1>
     <div class="mscore" aria-label="Punkte">
       <span class="scorewrap"><b id="score">Level 1</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
@@ -408,7 +412,7 @@ body.gameover .over{bottom:0}
   </div>
   <div class="netline" id="netline" hidden></div>
   <div class="fx fxfix" id="fxfix" aria-hidden="true"></div>
-  <div class="rotate" id="rotate" aria-live="polite"><div class="rot-ph" aria-hidden="true"><i></i></div><b>Bitte hochkant halten</b><span>jenMah ist fürs Hochformat gemacht. Das Spiel pausiert so lange.</span></div>
+  <div class="rotate" id="rotate" aria-live="polite"><div class="rot-ph" aria-hidden="true"><i></i></div><b>Bitte hochkant halten</b><span>JJE_mahjong ist fürs Hochformat gemacht. Das Spiel pausiert so lange.</span></div>
   <footer class="family" id="family"><span class="bits" aria-hidden="true"><i></i><i></i><i></i></span><span>Achtung: nur für <b>Remlingers</b></span><span class="bits r" aria-hidden="true"><i></i><i></i><i></i></span></footer>
 </div>
 <script>

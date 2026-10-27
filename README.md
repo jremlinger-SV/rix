@@ -1,7 +1,7 @@
 # Jemrix – nur für Remlingers
 
 Das Block-Puzzle der Familie Remlinger als Web-App fürs iPhone (ab iPhone 15, Hochformat).
-Nach dem Intro wählt man **Jemrix** (Block-Puzzle) oder **jenMah** (Mahjong mit dem Original-Satz von 144 Steinen).
+Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix) oder **JJE_mahjong** (Mahjong mit dem Original-Satz von 144 Steinen, früher jenMah).
 
 ## Spielen
 1. Link in **Safari** öffnen: `https://jremlinger-sv.github.io/rix/`

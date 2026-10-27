@@ -19,7 +19,7 @@ def rep(a, b, count=1):
     s = s.replace(a, b)
 
 # 1) Kopf: Claude-spezifische Zeilen und Google-Fonts raus
-rep('<title>Jemrix</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n', '')
+rep('<title>JJE_blocks</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n', '')
 s = re.sub(r'<link rel="preconnect" href="https://fonts.googleapis.com">\n', '', s)
 s = re.sub(r'<link rel="stylesheet" href="https://fonts.googleapis.com/[^"]*">\n', '', s)
 
@@ -156,7 +156,7 @@ FONTS = '''@font-face{font-family:"Fredoka";font-style:normal;font-weight:500;fo
 SPLASH = '\n'.join(
     f'<link rel="apple-touch-startup-image" media="(device-width: {w}px) and (device-height: {h}px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-{w*3}x{h*3}.png">'
     for w, h in [(393, 852), (402, 874), (430, 932), (440, 956)])
-def head(title, desc):
+def head(title, desc, app='Jemrix'):   # app = Name unter dem Icon auf dem Home-Bildschirm
     return f'''<!doctype html>
 <html lang="de">
 <head>
@@ -166,7 +166,7 @@ def head(title, desc):
 <meta name="description" content="{desc}">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Jemrix">
+<meta name="apple-mobile-web-app-title" content="{app}">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0c1328">
 <meta name="format-detection" content="telephone=no">
@@ -193,7 +193,7 @@ img{{max-width:100%}}
 </head>
 <body>
 '''
-s = head('Jemrix', 'Jemrix – das Block-Puzzle nur für die Remlingers') + s.rstrip() + '\n</body>\n</html>\n'
+s = head('JJE_blocks', 'JJE_blocks – das Block-Puzzle nur für die Remlingers') + s.rstrip() + '\n</body>\n</html>\n'
 
 assert 'window.claude' not in s, 'Claude-Laufzeitaufruf übrig'
 assert 'fonts.googleapis' not in s
@@ -201,13 +201,13 @@ assert 'fonts.googleapis' not in s
 
 # 4b) jenMah (Mahjong) aus jenmah-source.html: gleicher Kopf, gleiche Schriften, gleicher Offline-Speicher
 m = (HERE / 'jenmah-source.html').read_text(encoding='utf-8')
-assert m.count('<title>jenMah</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n') == 1
-m = m.replace('<title>jenMah</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n', '')
+assert m.count('<title>JJE_mahjong</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n') == 1
+m = m.replace('<title>JJE_mahjong</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n', '')
 m = re.sub(r'<link rel="preconnect" href="https://fonts.googleapis.com">\n', '', m)
 m = re.sub(r'<link rel="stylesheet" href="https://fonts.googleapis.com/[^"]*">\n', '', m)
 assert m.count("const APP_VERSION='';") == 1
 m = m.replace("const APP_VERSION='';", f"const APP_VERSION='{STAMP}';")
-m = head('jenMah', 'jenMah – Mahjong nur für die Remlingers') + m.rstrip() + '\n</body>\n</html>\n'
+m = head('JJE_mahjong', 'JJE_mahjong – Mahjong nur für die Remlingers') + m.rstrip() + '\n</body>\n</html>\n'
 assert 'fonts.googleapis' not in m
 (HERE / 'jenmah.html').write_text(m, encoding='utf-8')
 
