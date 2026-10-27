@@ -369,7 +369,7 @@ header.mh{padding-inline:2px!important}
           <li><b>Tippen</b><span>drehen</span></li>
           <li><b>Wischen ← →</b><span>verschieben</span></li>
           <li><b>Langsam runter</b><span>schneller fallen</span></li>
-          <li><b>Schnell runter</b><span>sofort ablegen</span></li>
+          <li><b>Doppeltippen / schnell runter</b><span>fallen lassen</span></li>
           <li><b>Halten-Feld / nach oben</b><span>beiseitelegen</span></li>
         </ul>
         <div class="overbtns"><button type="button" id="helpok">Los geht's</button></div>
@@ -835,7 +835,7 @@ function riseRow(){   // Schwer: alle 40 s schiebt sich unten eine Reihe herein
 }
 
 /* ===================== Bedienung wie im Original: tippen, wischen, schnell nach unten wischen ===================== */
-let tp=null;
+let tp=null, lastTap=null;
 cv.addEventListener('pointerdown',e=>{
   if (!canPlay()) return; e.preventDefault();
   try{ cv.setPointerCapture(e.pointerId); }catch(_){}
@@ -861,7 +861,18 @@ cv.addEventListener('pointermove',e=>{
 function endTouch(e){
   if (!tp || e.pointerId!==tp.id) return;
   const quick=performance.now()-tp.t0<350, still=Math.hypot(e.clientX-tp.x0,e.clientY-tp.y0)<C*.6;
-  if (!tp.moved && quick && still && e.type==='pointerup') rotate(1);   // Tippen = drehen
+  if (!tp.moved && quick && still && e.type==='pointerup'){
+    // Doppeltippen = fallen lassen: die Drehung vom ersten Tipp wird zurückgenommen
+    const now=performance.now(), lt=lastTap;
+    if (lt && cur && now-lt.t<300 && lt.n===pieces && lt.k===cur.k && Math.hypot(e.clientX-lt.x,e.clientY-lt.y)<C*1.5){
+      lastTap=null;
+      if (fits(cur,lt.r,lt.px,lt.py)){ cur.r=lt.r; cur.x=lt.px; cur.y=lt.py; }
+      hardDrop();
+    } else {
+      lastTap=cur ? {t:now,x:e.clientX,y:e.clientY,n:pieces,k:cur.k,r:cur.r,px:cur.x,py:cur.y} : null;
+      rotate(1);   // Tippen = drehen
+    }
+  }
   else if (!tp.dropped && e.type==='pointerup'){   // schneller Abwärts-Wisch am Ende
     const [t1,y1]=tp.hist[0], v=(e.clientY-y1)/Math.max(1,performance.now()-t1);
     if (!tp.soft && v>1.4 && e.clientY-tp.y0>C*2 && Math.abs(e.clientX-tp.x0)<Math.abs(e.clientY-tp.y0)) hardDrop();   // nach langsamem Ziehen nie sofort ablegen
