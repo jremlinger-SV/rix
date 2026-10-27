@@ -563,6 +563,11 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .celebrate .spark{position:absolute;width:8px;height:8px;border-radius:2px;background:var(--c);opacity:0;animation:spark 1.1s ease-out var(--sd) both}
 @keyframes spark{0%{opacity:0;transform:translate(0,0) rotate(0)}10%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(220deg)}}
 .combo.high{top:76%}
+.celebrate .cbonus{position:absolute;left:50%;top:66%;transform:translate(-50%,-50%);font-family:"Lilita One",var(--display);font-size:clamp(2rem,11vw,3rem);line-height:1;color:#ffd84d;-webkit-text-stroke:.06em #7a4a00;paint-order:stroke fill;text-shadow:0 0 18px rgba(255,216,77,.7);white-space:nowrap;animation:cbonus 1.6s cubic-bezier(.2,.9,.3,1.3) .25s both}
+@keyframes cbonus{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}35%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1;transform:translate(-50%,-60%) scale(1)}100%{opacity:0;transform:translate(-50%,-95%) scale(.9)}}
+.celebrate .cwave2{position:absolute;left:50%;top:50%;width:20%;aspect-ratio:1;margin:-10% 0 0 -10%;border-radius:50%;border:3px solid #ffd84d;box-shadow:0 0 18px rgba(255,216,77,.8),inset 0 0 12px rgba(255,216,77,.5);opacity:0;animation:cwave2 1s ease-out .1s both}
+@keyframes cwave2{0%{opacity:0;transform:scale(.2)}15%{opacity:1}100%{opacity:0;transform:scale(5.5)}}
+@media (prefers-reduced-motion: reduce){.celebrate .cbonus{animation-duration:1.6s;animation-name:fadeout2}.celebrate .cwave2{display:none}}
 .hs .crown{width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:4px}
 .hs li.first{background:rgba(255,255,255,.08)}
 .hs li.first.me{background:color-mix(in srgb, var(--accent) 30%, transparent)}
@@ -678,7 +683,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 12:54';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 14:04';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -746,7 +751,7 @@ function rateSet(set){
     let g=grid.slice(), lines=0, placed=0;
     for (const i of o){ const b=bestPlacement(g,set[i].shape); if(!b) break; g=b.g; lines+=b.n; placed++; }
     const v=lines*12+placed*4+(placed===3?6:0);
-    if (v>best){ best=v; lastRate={placed, lines}; }
+    if (v>best){ best=v; lastRate={placed, lines, left:g.reduce((n,x)=>n+(x?1:0),0)}; }
   }
   const size=set.reduce((a,p)=>a+p.shape.length,0);
   return best+size*0.35;
@@ -836,7 +841,49 @@ function shapeWeight(id,d){ const w=poolWeights(d); const k=poolOf(id); let x=(k
 function pickWeighted(list,wf){ let tot=0; const ws=list.map(x=>{const w=Math.max(0.0001,wf(x)); tot+=w; return w;}); let r=Math.random()*tot; for (let i=0;i<list.length;i++){ r-=ws[i]; if (r<=0) return list[i]; } return list[list.length-1]; }
 function mkPiece(id,d){ const piece={shape:SHAPES[id], color:pick(COLORS)}; if (d>=1 && Math.random()<0.13) piece.star=Math.floor(Math.random()*piece.shape.length); return piece; }
 function pockets(g){ let p=0; for (let k=0;k<N*N;k++){ if (g[k]) continue; const r=k/N|0, c=k%N; let open=0; DIRS4.forEach(([a,b])=>{ const y=r+a,x=c+b; if (y>=0&&x>=0&&y<N&&x<N&&!g[y*N+x]) open++; }); if (open<=1) p++; } return p; }
+/* Feld-leer-Chance: bei wenigen Steinen auf dem Feld nach bis zu drei Formen suchen, die das Feld komplett leeren */
+function clearPlacements(g,shape){            // alle Lagen einer Form, die mindestens eine Linie räumen
+  const out=[];
+  for (let r=0;r<N;r++) for (let c=0;c<N;c++){
+    if (!fitsIn(g,shape,r,c)) continue;
+    const t=g.slice(); shape.forEach(([dr,dc])=>t[(r+dr)*N+c+dc]=1);
+    const {rows,cols}=linesIn(t); if (!rows.length && !cols.length) continue;
+    rows.forEach(rr=>{for(let x=0;x<N;x++) t[rr*N+x]=null;}); cols.forEach(cc=>{for(let y=0;y<N;y++) t[y*N+cc]=null;});
+    out.push(t);
+  }
+  return out;
+}
+function findClearSet(g){
+  const cnt=x=>x.reduce((n,v)=>n+(v?1:0),0);
+  const order=SHAPES.map((_,i)=>i).sort(()=>Math.random()-.5);
+  let budget=1500;                                 // begrenzt die Rechenzeit (wenige Millisekunden)
+  // Wenige Steine übrig: der erste Stein darf auch nur auffüllen (ohne zu räumen), danach räumt der zweite alles ab
+  if (cnt(g)<=10){
+    budget=500;
+    for (const a of order){ const sh=SHAPES[a]; for (let r=0;r<N;r++) for (let c=0;c<N;c++){
+      if (!fitsIn(g,sh,r,c)) continue;
+      const t=g.slice(); sh.forEach(([dr,dc])=>t[(r+dr)*N+c+dc]=1);
+      if (linesIn(t).n) continue;                  // räumende Lagen prüft die Suche unten
+      for (const b of order){ if (b===a) continue; if (--budget<0) return null; for (const gb of clearPlacements(t,SHAPES[b])) if (!cnt(gb)) return [a,b]; }
+    } }
+    budget=1500;
+  }
+  for (const a of order){ for (const ga of clearPlacements(g,SHAPES[a])){
+    if (!cnt(ga)) return [a];
+    if (cnt(ga)>12) continue;
+    for (const b of order){ if (b===a) continue; for (const gb of clearPlacements(ga,SHAPES[b])){
+      if (--budget<0) return null;
+      const k=cnt(gb); if (!k) return [a,b];
+      if (k>8) continue;
+      for (const c of order){ if (c===a||c===b) continue; if (SHAPES[c].length<k) continue;
+        for (const gc of clearPlacements(gb,SHAPES[c])) if (!cnt(gc)) return [a,b,c]; }
+    } }
+  } }
+  return null;
+}
+let lastClearOffer=-99, setNo=0;
 function newSet(){
+  setNo++;
   let {d,a}=curDiff();
   const stress=playTime<GRACE ? 0 : stressNow();
   const gift=giftDue(stress);
@@ -848,6 +895,19 @@ function newSet(){
   const dn=Math.max(0.55*dnT, Math.min(1, 0.55*dnT+0.7*sk));   // starke Spieler werden früher gefordert, schwache länger getragen
   const A=analyzeShapes(grid);
   if (!A.length) return [randPiece(0),randPiece(0),randPiece(0)];
+  // Ab und an: Steine anbieten, mit denen sich das ganze Feld leeren lässt (+25.000)
+  const nFilled=grid.reduce((x,v)=>x+(v?1:0),0);
+  if (nFilled>0 && nFilled<=30 && setNo-lastClearOffer>=2 && Math.random()<(gift?0.9:0.7)){
+    const cs=findClearSet(grid);
+    if (cs){
+      lastClearOffer=setNo;
+      const ids=cs.slice();
+      while (ids.length<3){ const pool=A.filter(x=>!ids.includes(x.id)); ids.push(pickWeighted(pool, x=>shapeWeight(x.id,0)).id); }
+      const set=ids.map(id=>mkPiece(id,d)).sort(()=>Math.random()-.5);
+      recentShapes=ids.concat(recentShapes).slice(0,6);
+      return set;
+    }
+  }
   const filled=grid.reduce((x,v)=>x+(v?1:0),0), frag=pockets(grid);
   const tight = filled>=36 || frag>=6;
   // Wahrscheinlichkeiten je nach Lage
@@ -905,6 +965,7 @@ function newSet(){
     if (!(lastRate.placed===3 || (deadJoker && lastRate.placed>=2))) continue;
     found++;
     if (lastRate.lines>=2) v+=35;                   // Satz mit Zweifach-Chance
+    if (filled<=30 && lastRate.left!=null) v+=Math.max(0,filled-lastRate.left)*1.2;   // Aufräumen lohnt – in der Aufräum-Phase stark
     if (closer && closer.n>=2) v+=30;
     if (v>setV){ setV=v; set=cand; }
   }
@@ -934,7 +995,7 @@ function opening(){
     if (!ok || rows.size>6 || rows.size<3) continue;
     rows.forEach(r=>{ const col=pick(COLORS); for (let c=0;c<N;c++){ const k=r*N+c; if(!occ.has(k)) g[k]= Math.random()<0.8?col:pick(COLORS); } });
     // Deko-Steine in freien Reihen, ohne Linien zu schließen
-    const deco=Math.floor(Math.random()*9);
+    const deco=3+Math.floor(Math.random()*7);   // immer ein paar Deko-Steine: das leere Feld (+25.000) muss man sich erspielen
     for (let k=0;k<deco;k++){ const r=Math.floor(Math.random()*N), c=Math.floor(Math.random()*N), i=r*N+c;
       if (rows.has(r) || occ.has(i) || g[i]) continue; g[i]=pick(COLORS); if (linesIn(g).n) g[i]=null; }
     if (linesIn(g).n) continue;
@@ -1341,6 +1402,10 @@ function tickTurbo(){
   $('turbosec').textContent=Math.ceil(left/1000)+' s';
 }
 const QUICK_MS=2500;
+/* Punkte für geräumte Linien: jede weitere Linie im selben Zug zählt deutlich mehr */
+const LINE_PTS=[0,10,50,150,300,500,750,1050];   // ersetzt den früheren Zeit-Booster: Mehrfach-Räumungen zahlen sich sofort aus
+function linePoints(n){ return n<LINE_PTS.length ? LINE_PTS[n] : LINE_PTS[LINE_PTS.length-1]+300*(n-LINE_PTS.length+1); }
+const CLEAR_BONUS=2500;                    // komplett leeres Feld: +25.000 in der Anzeige
 function place(i,r,c){
   idleTime=0;
   const p=pieces[i];
@@ -1363,7 +1428,7 @@ function place(i,r,c){
     // Serie: Linien innerhalb von 3 Zügen hintereinander
     combo = sinceClear<3 ? combo+1 : 1;
     sinceClear=0;
-    const base=5*n*(n+1);                 // 1:10, 2:30, 3:60, 4:100 …
+    const base=linePoints(n);             // 1:10, 2:50, 3:150, 4:300, 5:500, 6:750 … (Anzeige ×10)
     const comboMul=1+0.5*(combo-1);       // ×1, ×1.5, ×2 …
     const quickMul=quick?1.5:1;
     gain += Math.round(base*comboMul*quickMul);
@@ -1374,16 +1439,10 @@ function place(i,r,c){
     lines.push(n>=2 ? (names[Math.min(n,5)]) : 'Reihe!');
     if (combo>1) lines.push('Serie ×'+comboMul.toString().replace('.',','));
     if (quick) lines.push('Blitz ×1,5');
-    if (grid.every(v=>v===null)){ gain+=500; lines.push(`Feld leer! +${showGain(500)}`); boardCleared=true; skinBump++; applySkin(true); }
+    if (grid.every(v=>v===null)){ gain+=CLEAR_BONUS; lines.push(`Feld leer! +${showGain(CLEAR_BONUS)}`); boardCleared=true; skinBump++; applySkin(true); }
   }
   if (turbo){ gain*=turboMul; if (n) lines.push('Turbo ×'+turboMul); }
-  if (n>=2){
-    const m=Math.max(n, turbo?turboMul:0);   // ein laufender höherer Faktor bleibt erhalten
-    const keep = turbo ? turboUntil-now : 0;
-    startTurbo(Math.max(TURBO_MS, keep), m);
-    lines.push(`×${m} für 15 s`);
-    setTimeout(()=>SND.turbo(m),330);
-  }
+  if (n>=2) setTimeout(()=>SND.turbo(Math.min(n,5)),330);   // Mehrfach-Räumung: Punkte stecken direkt in der Linienwertung
   if (!n){ sinceClear++; if (sinceClear>=3) combo=0; }
   recentLines.push(n); if (recentLines.length>15) recentLines.shift();
   pieces[i]=null;
@@ -1514,7 +1573,18 @@ function celebrate(){
     sp.style.setProperty('--c',cols[k%cols.length]); sp.style.setProperty('--sd','120ms');
     box.appendChild(sp);
   }
-  celebTimer=setTimeout(()=>{ box.classList.remove('on'); nm.classList.remove('go'); nm.innerHTML=''; box.querySelectorAll('.spark').forEach(e=>e.remove()); },1250);
+  // Bonus-Schriftzug und goldene Welle über das leere Feld
+  box.querySelectorAll('.cbonus,.cwave2').forEach(e=>e.remove());
+  const bn=document.createElement('div'); bn.className='cbonus'; bn.textContent='+'+showGain(CLEAR_BONUS); box.appendChild(bn);
+  const wv=document.createElement('i'); wv.className='cwave2'; box.appendChild(wv);
+  for (let k=0;k<10;k++){
+    const sp=document.createElement('i'); sp.className='spark gold';
+    const a=(k/10)*Math.PI*2+.3, d=110+Math.random()*50;
+    sp.style.setProperty('--dx',Math.cos(a)*d+'px'); sp.style.setProperty('--dy',Math.sin(a)*d+'px');
+    sp.style.setProperty('--c',k%2?'#ffd84d':'#fff3b0'); sp.style.setProperty('--sd','380ms');
+    box.appendChild(sp);
+  }
+  celebTimer=setTimeout(()=>{ box.classList.remove('on'); nm.classList.remove('go'); nm.innerHTML=''; box.querySelectorAll('.spark,.cbonus,.cwave2').forEach(e=>e.remove()); },1700);
 }
 let pauseMode=false;
 function showStanding(){
@@ -1883,7 +1953,7 @@ function newGame(){
   idleTime=0;
   familyIntro();
   if (typeof askName==='function') setTimeout(askName,0);
-  score=0; combo=0; sinceClear=9; lastMove=0; level=1; endTurbo(); bestAtStart=best; recentLines=[]; recentShapes=[];
+  score=0; combo=0; sinceClear=9; lastMove=0; level=1; endTurbo(); bestAtStart=best; recentLines=[]; recentShapes=[]; setNo=0; lastClearOffer=-99;
   const op=opening(); grid=op.grid;
   bdayNext=[];
   stars=new Set(); skinOrder=shuffleSkins(); skinBump=0; curSkin=null; playTime=0; profile=newProfile(); setsSinceGift=0;
