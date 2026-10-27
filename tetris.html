@@ -271,9 +271,10 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .wordmark.jje i{font-style:normal;color:var(--accent)}
 /* Hintergrund wie JJE_mahjong: ganz dunkel, Feld frei darauf */
 :root:root:root{--bg:#0f1b3f;--panel:#16244d;--board:#0f1b3f;--well:#1e2b52;--fg:#e8f0ff;--muted:#8fa3d1;--accent:#4d9bff;--score-mix:#ffffff;--score-edge:#0c1328;color-scheme:dark}
-html,body{background:radial-gradient(ellipse at 50% 30%,#1b2f66 0%,#0f1b3f 58%,#0a1330 100%) fixed!important}
+html{background:#0f1b3f!important}
+body{background:radial-gradient(ellipse at 50% 30%,#1b2f66 0%,#0f1b3f 58%,#0a1330 100%)!important}
 body{padding-left:max(4px,env(safe-area-inset-left,0px))!important;padding-right:max(4px,env(safe-area-inset-right,0px))!important}
-.app{padding-block:max(6px,env(safe-area-inset-top,0px)) 2px!important;max-width:none!important;gap:6px}
+.app{padding-block:4px 0!important;max-width:none!important;gap:4px}   /* Statusleiste ist schon über :root abgezogen – nicht doppelt */
 header.mh{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding-inline:6px}
 header.mh h1{justify-self:start}
 header.mh .logo{width:26px;height:26px}
@@ -284,7 +285,7 @@ header.mh .sndbtn{justify-self:end;margin:0;width:30px;height:30px}
 .mscore .livecrown{width:1.5rem;height:1.5rem;top:calc(50% - .75rem)}
 .msub{font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:.03em;white-space:nowrap;margin-top:-1px}
 .msub b{font-family:var(--display);font-weight:600;color:var(--fg)}
-.boardslot{gap:8px;padding:2px 0 4px;min-height:0}
+.boardslot{gap:5px;padding:2px 0 2px;min-height:0}
 .play{position:relative;flex:1 1 auto;width:100%;min-height:0;display:flex;justify-content:center;align-items:flex-start;gap:var(--gap,8px)}
 .wellwrap{position:relative;flex:none;border-radius:12px}
 #cv{display:block;border-radius:12px;box-shadow:0 0 0 2px rgba(159,216,255,.32),0 10px 30px rgba(1,4,16,.45);touch-action:none;cursor:pointer}
@@ -314,11 +315,7 @@ body.gameover .over{bottom:0}
 .family{padding-block:0 2px;font-size:.62rem}
 @media (min-height: 900px){.family{font-size:.7rem}}
 /* Leiste über dem Feld: Halten links, Werte, Nächster rechts (wie das Original) */
-.topbar{flex:none;display:flex;align-items:stretch;justify-content:space-between;gap:8px;width:var(--fw,100%);align-self:center}
-.topbar .box{flex:none;justify-content:flex-start}
 .tstats{flex:1;display:grid;grid-template-columns:repeat(3,auto);justify-content:space-evenly;align-items:center;column-gap:6px;min-width:0}
-.topbar .box{justify-content:center}
-.topbar .box small{align-self:center}
 .box{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 6px 5px;border-radius:12px;background:rgba(3,8,26,.5);box-shadow:inset 0 0 0 1.5px rgba(159,216,255,.26)}
 .box small,.sstat small{font-size:.56rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;line-height:1.2}
 .box canvas{display:block}
@@ -329,9 +326,30 @@ body.gameover .over{bottom:0}
 .sstat b{font-family:var(--display);font-weight:600;font-size:1.1rem;line-height:1.1;color:var(--fg)}
 .sstat b.mode{font-size:.88rem;color:#9fd8ff}
 .hbtns{justify-self:end;display:flex;gap:6px}
-header.mh .hbtns .sndbtn{margin:0;width:30px;height:30px}
+header.mh .hbtns .sndbtn{margin:0;width:36px;height:36px}
+.hbtns{gap:10px!important}
 .pausebtn svg{width:14px!important;height:14px!important}
-body.gameover .topbar,body.gameover .wellwrap{visibility:hidden}
+body.gameover .wellwrap,body.gameover .tinfo{visibility:hidden}
+/* Halten und Nächster liegen halbtransparent in den oberen Feldecken (wie im Original) */
+.ovl{position:absolute;top:5px;z-index:3;padding:3px 4px 4px;border-radius:10px;background:rgba(3,8,26,.5);box-shadow:inset 0 0 0 1.5px rgba(159,216,255,.24);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);transition:opacity .25s}
+#holdbox{left:5px}
+.nextbox{right:5px}
+.ovl small{font-size:.56rem!important;letter-spacing:.06em!important;color:#a9b8e0!important}
+.ovl.dim{opacity:.32}
+/* Ergebnis-Fenster: alles muss ohne Scrollen sichtbar sein */
+.play>.over{padding:12px 14px!important;gap:5px!important}
+#over .overbtns{flex-direction:row;gap:10px;width:100%;max-width:320px;margin-top:4px}
+#over .overbtns button{flex:1;min-width:0;padding:12px 8px!important;margin-top:0!important;font-size:1.05rem!important}
+#over .modes button{padding:5px 11px;font-size:.88rem}
+#over .mlabel{margin-top:2px}
+body.gameover .play>.over{gap:5px!important;padding:12px 14px!important}
+body.gameover .hs li{padding-block:4px}
+/* Zeile unter dem Feld: Stufe, Reihen, Modus und Platz 1 */
+.tfoot{width:var(--fw,100%)!important;justify-content:space-between!important;gap:8px!important;flex:none;padding:0 2px;box-sizing:border-box}
+.tinfo{display:flex;gap:10px;align-items:baseline;font-size:.78rem;color:var(--muted);font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tinfo b{font-family:var(--display);font-weight:600;color:var(--fg);font-size:.95rem}
+.msub b.mode{color:#9fd8ff}
+.tfoot .top2{flex-wrap:nowrap;justify-content:flex-end;min-width:0}
 .howto{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;width:min(100%,270px)}
 .howto li{display:flex;justify-content:space-between;gap:12px;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.07);font-size:.95rem}
 .howto b{font-family:var(--display);font-weight:600;color:#9fd8ff}
@@ -350,23 +368,16 @@ body.gameover .topbar,body.gameover .wellwrap{visibility:hidden}
     </h1>
     <div class="mscore" aria-label="Punkte">
       <span class="scorewrap"><b id="score">0</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
-      <span class="msub">Rekord <b id="best">–</b></span>
+      <span class="msub"><b class="mode" id="modelbl">Leicht</b> · Rekord <b id="best">–</b></span>
     </div>
     <div class="hbtns"><button class="sndbtn pausebtn" id="pausebtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button><button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button></div>
   </header>
   <div class="boardslot" id="boardslot">
-    <div class="topbar" id="topbar">
-      <div class="box" id="holdbox" role="button" tabindex="0" aria-label="Halten: Stein zur Seite legen"><small>Halten</small><canvas id="cvHold" aria-hidden="true"></canvas></div>
-      <div class="tstats">
-        <div class="sstat"><small>Stufe</small><b id="level">1</b></div>
-        <div class="sstat"><small>Reihen</small><b id="lines">0</b></div>
-        <div class="sstat"><small>Modus</small><b class="mode" id="modelbl">Leicht</b></div>
-      </div>
-      <div class="box nextbox"><small>Nächster</small><canvas id="cvNext" aria-hidden="true"></canvas></div>
-    </div>
     <div class="play" id="play">
       <div class="wellwrap" id="wellwrap">
         <canvas id="cv" role="img" aria-label="Spielfeld"></canvas>
+        <div class="box ovl" id="holdbox" role="button" tabindex="0" aria-label="Halten: Stein zur Seite legen"><small>Halten</small><canvas id="cvHold" aria-hidden="true"></canvas></div>
+        <div class="box ovl nextbox" id="nextbox"><small>Nächster</small><canvas id="cvNext" aria-hidden="true"></canvas></div>
         <div class="fx" id="fx"></div>
         <div class="celebrate" id="celebrate" aria-live="polite"><span class="nm" id="celebname"></span></div>
         <div class="lvl" id="lvl"></div>
@@ -374,7 +385,7 @@ body.gameover .topbar,body.gameover .wellwrap{visibility:hidden}
       <div class="pause" id="pause" hidden role="dialog" aria-labelledby="pauseT">
         <h2 id="pauseT">Pause</h2>
         <p id="pauseMsg">Antippen zum Weiterspielen.</p>
-        <div class="overbtns"><button type="button" id="resume">Weiter</button><button class="ghostbtn light" id="pquit" type="button">Beenden</button></div>
+        <div class="overbtns"><button type="button" id="resume">Weiter</button><button class="ghostbtn light" id="phelp" type="button">So geht's</button><button class="ghostbtn light" id="pquit" type="button">Beenden</button></div>
       </div>
       <div class="pause help" id="help" hidden role="dialog" aria-labelledby="helpT">
         <h2 id="helpT">So geht's</h2>
@@ -410,8 +421,9 @@ body.gameover .topbar,body.gameover .wellwrap{visibility:hidden}
         </form>
       </div>
     </div>
-    <div class="foot">
-      <div class="top2" id="top2" aria-label="Highscores Platz 1 und 2"></div>
+    <div class="foot tfoot">
+      <div class="tinfo"><span>Stufe <b id="level">1</b></span><span><b id="lines">0</b> Reihen</span></div>
+      <div class="top2" id="top2" aria-label="Highscore Platz 1"></div>
     </div>
   </div>
   <div class="netline" id="netline" hidden></div>
@@ -423,7 +435,7 @@ body.gameover .topbar,body.gameover .wellwrap{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='27.10.2026, 22:40';   // wird beim Bauen gefüllt
+const APP_VERSION='27.10.2026, 22:48';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -784,10 +796,19 @@ function draw(dt){
     cellsOf(cur).forEach(([x,y])=>{ if (y>=HID) drawBlock(ctx,x*C,(y-HID)*C,C,col,a); });
   }
   drawParts(ctx,dt);
+  dimCorners();
+}
+let dimH=null, dimN=null;
+function dimCorners(){
+  const busy=(x0,x1,rows)=>{ for (let y=HID;y<HID+rows;y++) for (let x=x0;x<=x1;x++) if (grid[idx(x,y)]) return true;
+    if (cur) return cellsOf(cur).some(([x,y])=>x>=x0 && x<=x1 && y>=HID && y<HID+rows); return false; };
+  const h=busy(0,2,2), n=busy(7,9,MODES[mode].next>1?3:2);
+  if (h!==dimH){ dimH=h; $('holdbox').classList.toggle('dim',h); }
+  if (n!==dimN){ dimN=n; $('nextbox').classList.toggle('dim',n); }
 }
 function drawMini(c,cvs,kinds,slotH){
   const w=cvs.width/DPR, h=cvs.height/DPR; c.setTransform(DPR,0,0,DPR,0,0); c.clearRect(0,0,w,h);
-  kinds.forEach((k,i)=>{ if (!k) return; const s=Math.min(w/4.4, slotH/2.6)*(i===0?1:.82), cs=ROT[k][0];
+  kinds.forEach((k,i)=>{ if (!k) return; const s=Math.min(w/4.6, slotH/2.3)*(i===0?1:.82), cs=ROT[k][0];
     const xs=cs.map(a=>a[0]), ys=cs.map(a=>a[1]), bw=(Math.max(...xs)-Math.min(...xs)+1)*s, bh=(Math.max(...ys)-Math.min(...ys)+1)*s;
     const ox=(w-bw)/2-Math.min(...xs)*s, oy=i*slotH+(slotH-bh)/2-Math.min(...ys)*s;
     cs.forEach(([x,y])=>drawBlock(c,ox+x*s,oy+y*s,s,colorOf(KINDS.indexOf(k)+1))); });
@@ -891,20 +912,17 @@ window.addEventListener('keyup',e=>{ if (e.key==='ArrowDown') softHeld=false; })
 /* ===================== Größe: Feld so groß wie möglich ===================== */
 function layout(){
   DPR=Math.min(3,window.devicePixelRatio||1);
-  const play=$('play'), tb=$('topbar');
-  const aw=play.clientWidth, ah=play.clientHeight; if (!aw || !ah) return;
+  const play=$('play'), aw=play.clientWidth, ah=play.clientHeight; if (!aw || !ah) return;
   const c=Math.max(14,Math.floor(Math.min(aw/W, ah/H)*4)/4);
   C=c; cv.width=Math.round(W*C*DPR); cv.height=Math.round(H*C*DPR); cv.style.width=W*C+'px'; cv.style.height=H*C+'px';
   document.documentElement.style.setProperty('--fw',W*C+'px');
-  const n=MODES[mode].next, mini=Math.max(11,Math.min(aw/W*.6,16));
-  const nw=Math.round(mini*4.6), slot=mini*2.5;
-  const nh=n>1 ? slot/0.6 : slot;
-  cvN.width=Math.round(nw*DPR); cvN.height=Math.round(nh*DPR); cvN.style.width=nw+'px'; cvN.style.height=nh+'px';
-  cvH.width=Math.round(nw*DPR); cvH.height=Math.round(slot*DPR); cvH.style.width=nw+'px'; cvH.style.height=slot+'px';
+  // Ecken-Kästen: knapp 3 Spalten breit, damit der Stein in der Mitte frei erscheint
+  const n=MODES[mode].next, bw=Math.round(C*2.75-8), hh=Math.round(C*1.45), nh=Math.round(n>1 ? C*2.35 : C*1.45);
+  cvN.width=Math.round(bw*DPR); cvN.height=Math.round(nh*DPR); cvN.style.width=bw+'px'; cvN.style.height=nh+'px';
+  cvH.width=Math.round(bw*DPR); cvH.height=Math.round(hh*DPR); cvH.style.width=bw+'px'; cvH.style.height=hh+'px';
   spriteCache.clear(); bgCanvas=null; miniKey='';
 }
-let lastTopH=0;
-function relayout(){ layout(); const tb=$('topbar'); if (tb.offsetHeight!==lastTopH){ lastTopH=tb.offsetHeight; layout(); } }
+function relayout(){ layout(); }
 new ResizeObserver(()=>relayout()).observe($('boardslot'));
 window.addEventListener('resize',relayout);
 
@@ -1056,6 +1074,7 @@ function setPlayer(n){
   if (isBirthdayKid(n) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; lastFrame=0; go(); }); else go();
 }
 $('helpok').onclick=()=>{ save('jjetet-help-seen',true); $('help').hidden=true; lastFrame=0; };
+$('phelp').onclick=()=>{ $('help').hidden=false; };
 $('regform').addEventListener('submit',e=>{ e.preventDefault(); const n=clean($('regname').value);
   if (n.length<2){ $('regerr').textContent='Bitte mindestens 2 Buchstaben eingeben.'; return; }
   if (!NAME_OK.test(n)){ $('regerr').textContent='Bitte nur Buchstaben verwenden.'; return; }
@@ -1172,8 +1191,8 @@ function markLeader(){
 function renderTop2(){
   if ($('over').hidden) updateLiveCrown();
   const box=$('top2'); box.innerHTML='';
-  const rows=topList().rows.slice(0,2);
-  if (!rows.length){ const e=document.createElement('span'); e.className='empty'; e.textContent='Noch keine Highscores · '+MODES[mode].label; box.appendChild(e); return; }
+  const rows=topList().rows.slice(0,1);
+  if (!rows.length){ const e=document.createElement('span'); e.className='empty'; e.textContent='Noch kein Highscore'; box.appendChild(e); return; }
   rows.forEach((r,i)=>{ const c=document.createElement('span'); c.className='chip';
     const pl=document.createElement('span'); pl.className='pl'; if (i===0) pl.innerHTML=CROWN; else pl.textContent='2.';
     const nm=document.createElement('span'); nm.className='nmx'; nm.textContent=r.name;
@@ -1182,7 +1201,7 @@ function renderTop2(){
 }
 function renderScores(){
   renderTop2();
-  const tl=topList(), rows=tl.rows.slice(0, Math.max(3, Math.min(10, Math.floor((($('over').offsetHeight||300)-300)/44)))); $('hstitle').textContent=tl.title;
+  const tl=topList(), rows=tl.rows.slice(0,10); $('hstitle').textContent=tl.title;
   const ol=$('hslist'); ol.innerHTML='';
   if (!rows.length){ const li=document.createElement('li'); li.style.gridTemplateColumns='1fr'; li.textContent='Noch keine Einträge.'; li.style.counterIncrement='none'; ol.appendChild(li); return; }
   let marked=false;
@@ -1194,6 +1213,7 @@ function renderScores(){
     const b=document.createElement('b'); b.textContent=fmt(r.score); li.append(n,b);
     if (!marked && lastRun && lastRun.mode===mode && r.name.toLowerCase()===lastRun.name.toLowerCase() && r.score===lastRun.score){ li.classList.add('me'); marked=true; }
     ol.appendChild(li); });
+  const ov=$('over'); while (ol.children.length>1 && ov.scrollHeight>ov.clientHeight+1) ol.lastElementChild.remove();
 }
 
 /* ===================== Geburtstage (wie JJE_blocks) ===================== */
