@@ -204,6 +204,15 @@ body.skin-blasen .board{background:linear-gradient(180deg,#0d2c63,#071737)}
 body.skin-blasen .cell{border-radius:50%;background:rgba(120,180,255,.1)}
 body.skin-blasen .cell[data-c],body.skin-blasen .blk{border-radius:50%;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.9) 0 11%,color-mix(in srgb,var(--col) 65%,#fff) 13%,var(--col) 55%,color-mix(in srgb,var(--col) 75%,#000) 100%);box-shadow:0 2px 4px rgba(0,0,0,.25)}
 /* Sternennacht */
+/* Torte (Geburtstag, Look 2): jeder Stein ein Tortenstück mit Cremeschichten, Glasur und einer Kerze */
+body.skin-torte:not(.turbo){--b1:#f472b6;--b2:#c084fc;--b3:#60a5fa;--b4:#34d399;--b5:#fbbf24;--b6:#fb7185;--b7:#f9a8d4}
+body.skin-torte .board{background:repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 10px,transparent 10px 20px),repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 10px,transparent 10px 20px),linear-gradient(180deg,#3b1d4e,#24122f)}
+body.skin-torte .cell{background:rgba(255,255,255,.08);border-radius:40% 40% 8px 8px / 30% 30% 8px 8px}
+body.skin-torte .cell[data-c],body.skin-torte .blk{border-radius:40% 40% 8px 8px / 30% 30% 8px 8px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.22),0 2px 4px rgba(0,0,0,.25);
+  background:linear-gradient(180deg,#fff7fb 0 26%,color-mix(in srgb,var(--col) 55%,#fff) 26% 30%,var(--col) 30% 46%,color-mix(in srgb,var(--col) 40%,#fff) 46% 56%,var(--col) 56% 74%,color-mix(in srgb,var(--col) 40%,#fff) 74% 84%,color-mix(in srgb,var(--col) 70%,#000) 84%)}
+body.skin-torte .cell[data-c]::before,body.skin-torte .blk::before{inset:-16% 42% auto 42%;height:46%;border-radius:2px;background:radial-gradient(ellipse 50% 28% at 50% 12%,#fde047 0 55%,rgba(253,224,71,0) 62%),repeating-linear-gradient(180deg,transparent 0 30%,#fff 30% 100%),repeating-linear-gradient(180deg,#f43f5e 0 3px,#fff 3px 6px);background-blend-mode:normal,normal,normal;box-shadow:0 1px 1px rgba(0,0,0,.2)}
+body.skin-torte .cell[data-c]::after{content:"";position:absolute;left:50%;top:-6%;width:16%;height:14%;margin-left:-8%;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;background:radial-gradient(circle at 50% 70%,#fff7ae 0 30%,#f97316 70%);pointer-events:none}
+body.skin-torte .cell.burst::after{left:0;top:0;width:auto;height:auto;margin:0;border-radius:inherit;opacity:1}
 /* Dreiecke: Steine als Dreiecke, im Schachbrett abwechselnd nach oben und unten */
 body.skin-dreieck .board{background:linear-gradient(135deg,#132150,#0b1536 60%,#0e1a44)}
 body.skin-dreieck .cell{border-radius:0;background:rgba(140,180,255,.09);clip-path:polygon(50% 3%,98% 95%,2% 95%)}
@@ -817,7 +826,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 05:34';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 05:40';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 const MP={on:false, used:false, done:false, room:null, seed:0, size:0, setIdx:0, players:[], prev:{}, lastSent:'', offset:0, roomInfo:null,
   device:(()=>{ let d=load('jemrix-device',''); if (typeof d!=='string' || d.length<8){ d=(window.crypto&&crypto.randomUUID) ? 'd'+crypto.randomUUID().replace(/-/g,'') : 'd'+Math.random().toString(36).slice(2,12)+Date.now().toString(36); save('jemrix-device',d); } return d; })()};
 
@@ -1162,7 +1171,7 @@ function persist(){ if (MP.on || MP.used || endHold) return; const tl=turboUntil
 /* Looks */
 const SKINS=[['klassik','Klassik'],['glas','Glas'],['neon','Neon'],['pixel','Pixel'],['gem','Edelstein'],['eis','Eis'],['symbol','Symbole'],['blasen','Blasen'],['nacht','Sternennacht'],
   ['halloween','Halloween'],['weihnachten','Weihnachten'],['ostern','Ostern'],['fruehling','Frühling'],['sommer','Sommer'],['herbst','Herbst'],['winter','Winter'],['geburtstag','Geburtstag'],
-  ['dreieck','Dreiecke']];
+  ['dreieck','Dreiecke'],['torte','Torte']];
 // Grund-Looks (immer dabei); alles andere sind Saison- und Ereignis-Looks. Neue Grund-Looks hinten anhängen – gespeicherte Reihenfolgen nutzen die Positionen.
 const BASE_SET=new Set(['klassik','glas','neon','pixel','gem','eis','symbol','blasen','nacht','dreieck']);
 const isBaseSkin=i=>BASE_SET.has((SKINS[i]||[])[0]);
@@ -1210,7 +1219,7 @@ function shuffleSkins(){
   base.forEach((r,j)=>{ order.push(r); if (special.length && j%3===1) order.push(special[sp++%special.length]); });
   if (special.length) special.forEach(x=>{ if (!order.includes(x)) order.splice(2+Math.floor(Math.random()*(order.length-2)),0,x); });
   if (preview>=0) return [preview, ...order];
-  if (events.includes('geburtstag')) return [idx('geburtstag'), ...order];   // am Geburtstag startet die Partie festlich
+  if (events.includes('geburtstag')) return [idx('geburtstag'), idx('torte'), ...order];   // am Geburtstag: erst Party-Look, dann Torte – für alle Spieler
   return order;
 }
 function applySkin(announce){
