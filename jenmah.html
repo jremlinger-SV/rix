@@ -456,7 +456,7 @@ body.gameover .over{bottom:0}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='27.10.2026, 16:03';   // wird beim Bauen gefüllt
+const APP_VERSION='27.10.2026, 16:36';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JENMAH_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 const pick=a=>a[rnd(a.length)];
@@ -702,7 +702,7 @@ function startLevel(n, quiet){
     if (c.hide>0){ const k=Math.round(T.length*Math.min(.45,Math.max(0,c.hide+(Math.random()-.5)*.06))); shuffle(T.map((_,i)=>i)).slice(0,k).forEach(i=>T[i].h=true); }
   });
   $('over').hidden=true; leaveGameOver();
-  boost={undo:c.b[0],hint:c.b[1],mix:c.b[2]}; $('rescue').hidden=true;
+  peek=-1; boost={undo:c.b[0],hint:c.b[1],mix:c.b[2]}; $('rescue').hidden=true;
   mixLeft=c.mix; park=[]; renderPark(); parkEl.classList.remove('jam'); combo=0; lastProgress=performance.now(); lastHint=0;
   showLevelUI();
   renderAll(true);
@@ -741,7 +741,8 @@ function onTap(i){
   if (busy || endHold || !$('over').hidden || !$('reg').hidden || document.querySelector('.bday') || !T[i] || !T[i].alive) return;
   idleTime=0;
   if (!isFree(i)){ nope(tileEls[i]); return; }
-  if (T[i].h){ reveal(i); return; }
+  if (T[i].h && peek!==i){ reveal(i); return; }
+  if (T[i].h){ T[i].h=false; peek=-1; }   // aufgedeckter Stein wird genutzt: bleibt ab jetzt offen
   const pi=parkKeyIdx(T[i].f);
   if (pi>=0){ pairWithPark(i,pi); return; }
   if (park.length>=PARK_N){ nope(tileEls[i]); return; }
@@ -775,14 +776,23 @@ function pairWithPark(i,pi){
   lastProgress=now; lastHint=0;
   refreshFree(); persist();
 }
-function reveal(i){
-  const t=T[i], el=tileEls[i]; t.h=false;
-  if (el){ el.style.setProperty('--dl','0ms'); el.classList.remove('flip'); void el.offsetWidth; el.classList.add('flip');
-    setTimeout(()=>{ el.classList.remove('back'); el.innerHTML=faceSVG(t.f); el.setAttribute('aria-label',FACE_NAME(t.f)); },210);
-    setTimeout(()=>el.classList.remove('flip'),460); }
-  SND.plop(3); lastHint=0; persist();
-  setTimeout(checkState,470);
+/* Verdeckte Steine: erstes Antippen zeigt das Bild. Wird der Stein nicht gleich genutzt,
+   dreht er sich bei der nächsten Berührung irgendwo anders wieder um. */
+let peek=-1;
+function flipTo(i, open){
+  const t=T[i], el=tileEls[i]; if (!el) return;
+  el.style.setProperty('--dl','0ms'); el.classList.remove('flip'); void el.offsetWidth; el.classList.add('flip');
+  setTimeout(()=>{ if (!el.isConnected) return; el.classList.toggle('back',!open); el.innerHTML=open?faceSVG(t.f):BACK_SVG; el.setAttribute('aria-label',open?FACE_NAME(t.f):'verdeckter Stein'); },210);
+  setTimeout(()=>el.classList.remove('flip'),460);
 }
+function reveal(i){ peek=i; flipTo(i,true); SND.plop(3); }
+function coverPeek(){ const i=peek; peek=-1; if (i>=0 && T[i] && T[i].alive && T[i].h) flipTo(i,false); }
+document.addEventListener('pointerdown',e=>{
+  if (peek<0) return;
+  const el=e.target && e.target.closest ? e.target.closest('#tiles .tile') : null;
+  if (el && +el.dataset.i===peek) return;   // derselbe Stein: wird gleich genutzt
+  coverPeek();
+},true);
 function stuckNow(){ return park.length>=PARK_N; }
 function checkState(){
   if (busy) return;
@@ -825,6 +835,7 @@ $('bHint').onclick=()=>{ if (!canAct() || boost.hint<=0) return; if (showHint())
 $('bMix').onclick=()=>{ if (!canAct() || boost.mix<=0) return; boost.mix--; busy=true; reshuffle(); };
 /* Mischen: die Steine im Feld tauschen ihre Bilder (Ablage und verdeckte Plätze bleiben) */
 function reshuffle(){
+  coverPeek();
   const ids=T.map((t,i)=>t.alive?i:-1).filter(i=>i>=0);
   const al=T.map(t=>t.alive), fr=ids.filter(i=>freeIn(i,al) && !T[i].h);
   const all=ids.map(i=>T[i].f); let faces=null, last=null;
