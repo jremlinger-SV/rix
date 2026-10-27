@@ -16,6 +16,8 @@ Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix) oder **J
 
 Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine eigene Liste.
 
+**Aktueller Datenbank-Stand** (in dieser Reihenfolge ausgeführt): `supabase-setup.sql` → `supabase-jenmah.sql` → `supabase-spielzeit.sql` → `supabase-haertung.sql`. Ältere Dateien (`supabase-update-2.sql`, `supabase-multiplayer.sql`) nicht mehr ausführen – sie würden neuere Funktionen überschreiben.
+
 **jenMah-Liste:** einmalig `supabase-jenmah.sql` im SQL Editor ausführen (eigene Liste, gleicher Familien-Code). Zurücksetzen mit `select reset_scores_mah();`.
 
 **Liste zurücksetzen:** Im Supabase SQL Editor `select reset_scores();` ausführen. Die Geräte leeren ihre lokalen Listen beim nächsten Start automatisch mit.
