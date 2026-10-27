@@ -734,9 +734,12 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 22:00';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 22:04';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
-function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
+  // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
+  if (d!==null && d!==undefined && (typeof r!==typeof d || Array.isArray(r)!==Array.isArray(d) || r===null)) return d;
+  return r; } catch(e){ return d; } }
 function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 /* Highscore-Reset: Erhöht man SCORE_EPOCH, werden lokale Listen, Rekord und Warteschlange einmalig geleert */
 const SCORE_EPOCH=3;
@@ -844,7 +847,7 @@ setInterval(()=>{
   const now=performance.now();
   if (tickLast && gameActive()){
     const dt=Math.min(2,(now-tickLast)/1000);
-    playTime+=dt; addPlaySecs(dt);
+    playTime+=dt; if (idleTime<20) addPlaySecs(dt);   // nur aktive Zeit: nach 20 s ohne Berührung zählt nichts mehr
     // Unsichtbarer Inaktivitäts-Timeout: 3 Minuten ohne Berührung beenden die Partie
     idleTime+=dt;
     if (idleTime>=IDLE_LIMIT && !drag){ idleTime=0; finishGame('Zeit abgelaufen'); }
@@ -976,7 +979,7 @@ function newSet(){
   const K = 2+Math.round(3*(1-dn))+Math.round(3*warm);   // mehrere Vorschläge, der beste gewinnt – je leichter, desto mehr Auswahl
   let tries=0, set=null, setV=-1, found=0;
   const t0=performance.now();
-  while (tries++<(warm>0?13:10) && found<K && !(found>=1 && performance.now()-t0>30)){   // Zeitbudget: nie spürbar warten
+  while (tries++<(warm>0?13:10) && found<K && !(found>=1 && performance.now()-t0>30) && performance.now()-t0<70){   // Zeitbudget: nie spürbar warten
     const ids=[]; let gAfter=grid;
     // 1) Vollender
     const closers=A.filter(x=>x.n>=1);
@@ -1320,7 +1323,7 @@ function startDrag(e,i){
   const lift = touch ? ph/2 + g.size*1.2 : 0;
   // Teil bewegt sich schneller als der Finger: weniger Weg, flotteres Spiel
   const gainF = touch ? 1.45 : 1.15;
-  drag={i,p,fl,g,pw,ph,lift,gainF,sx:e.clientX,sy:e.clientY,pos:null,lr:null,lc:null};
+  drag={i,p,fl,g,pw,ph,lift,gainF,sx:e.clientX,sy:e.clientY,pos:null,lr:null,lc:null,pid:e.pointerId};
   fl.classList.add('pick');
   trayEl.children[i].style.visibility='hidden';
   moveDrag(e);
@@ -1330,6 +1333,7 @@ function startDrag(e,i){
 }
 function moveDrag(e){
   if (!drag) return;
+  if (e && e.pointerId!=null && drag.pid!=null && e.pointerId!==drag.pid) return;   // nur der Finger, der den Stein hält
   const {g,pw,ph,lift,fl,p,gainF,sx,sy}=drag;
   const px=sx+(e.clientX-sx)*gainF, py=sy+(e.clientY-sy)*gainF;
   const x=Math.max(-pw/2, Math.min(innerWidth-pw/2, px-pw/2)), y=Math.max(-ph/2, Math.min(innerHeight-ph/2, py-ph/2-lift));
@@ -1354,9 +1358,11 @@ function moveDrag(e){
     }
   } else drag.pos=null;
 }
-function endDrag(){
+function endDrag(e){
   idleTime=0;
   if (!drag) return;
+  if (e && e.pointerId!=null && drag.pid!=null && e.pointerId!==drag.pid) return;
+  if (e && e.type==='pointercancel') drag.pos=null;
   window.removeEventListener('pointermove',moveDrag);
   window.removeEventListener('pointerup',endDrag);
   window.removeEventListener('pointercancel',endDrag);
@@ -1374,6 +1380,7 @@ function endDrag(){
   setTimeout(()=>{ d.fl.remove(); slot.style.visibility=''; },170);
 }
 
+document.addEventListener('visibilitychange',()=>{ if (document.hidden && drag){ drag.pos=null; endDrag(); } });
 let sinceClear=9, lastMove=0, turboUntil=0, turboTimer=null, turboMul=1, turboTotal=15000;
 const TURBO_MS=15000;   // Multiplikator gilt 15 Sekunden: 2 Reihen ×2, 3 Reihen ×3 …
 /* ===== Klang: sanft, leise, nie nervig. Alles per Web Audio erzeugt (keine Dateien). ===== */
@@ -1751,6 +1758,7 @@ function clean(n){ return String(n||'').replace(/\s+/g,' ').trim().slice(0,20); 
 
 /* Spielzeit je Spieler seit dem letzten Zurücksetzen der Highscore-Liste (nur aktive Spielzeit) */
 const PT_KEY='jemrix';
+function newId(){ try{ return crypto.randomUUID(); }catch(e){ return Date.now().toString(36)+Math.random().toString(36).slice(2,12); } }   // Kennung je Meldung: Server zählt Spielzeit nur einmal
 let unsentSecs=load(PT_KEY+'-unsent-secs',{}), localTime=load(PT_KEY+'-time-local',{}), ptSaveAt=0;
 function ptSave(){ save(PT_KEY+'-unsent-secs',unsentSecs); save(PT_KEY+'-time-local',localTime); }
 function addPlaySecs(dt){ if (!player || !(dt>0)) return; const k=clean(player).toLowerCase(); unsentSecs[k]=(unsentSecs[k]||0)+dt; localTime[k]=(localTime[k]||0)+dt; const n=Date.now(); if (n-ptSaveAt>10000){ ptSaveAt=n; ptSave(); } }
@@ -1807,12 +1815,12 @@ async function api(fn, body){
 }
 let listSeq=0, listApplied=0;   // ältere Antworten dürfen eine neuere Liste nicht überschreiben
 let pending=load('jemrix-pending',[]);
-let sharedCache=load('jemrix-shared-cache',null); // letzte bekannte gemeinsame Liste
+let sharedCache=load('jemrix-shared-cache',null); if (!Array.isArray(sharedCache)) sharedCache=null; // letzte bekannte gemeinsame Liste
 let syncing=false, netOk=null, fetching=false;
 function recordTime(){   // nur Spielzeit nachmelden (ohne neues Ergebnis)
   if (!player || !ONLINE) { ptSave(); return; }
   const secs=takeSecs(); if (secs<=0) return;
-  pending.push({name:player, score:0, secs, at:Date.now()}); save('jemrix-pending',pending); updateNet(); trySync();
+  pending.push({name:player, score:0, secs, id:newId(), at:Date.now()}); save('jemrix-pending',pending); updateNet(); trySync();
 }
 function recordScore(s){
   if (!player) return;
@@ -1821,7 +1829,7 @@ function recordScore(s){
   localScores.push({name:player, score:s, at:Date.now()});
   localScores.sort((a,b)=>b.score-a.score); localScores=localScores.slice(0,20);
   save('jemrix-scores',localScores);
-  pending.push({name:player, score:s, secs:ONLINE?takeSecs():0, at:Date.now()}); save('jemrix-pending',pending);
+  pending.push({name:player, score:s, secs:ONLINE?takeSecs():0, id:newId(), at:Date.now()}); save('jemrix-pending',pending);
   updateNet(); trySync(); renderTop2();
 }
 function takeList(j, seq){
@@ -1832,7 +1840,9 @@ function takeList(j, seq){
   if (typeof j.epoch==='number' && j.epoch>load('jemrix-server-epoch',0)){
     // Liste wurde auf dem Server zurückgesetzt: lokale Listen ebenfalls leeren
     save('jemrix-server-epoch',j.epoch);
-    if (load('jemrix-server-epoch-seen',0)){ localScores=[]; save('jemrix-scores',localScores); best=0; save('jemrix-best',0); $('best').textContent=showPts(0); pending=[]; save('jemrix-pending',pending); clearTimes(); }
+    if (load('jemrix-server-epoch-seen',0)){ localScores=[]; save('jemrix-scores',localScores); best=0; save('jemrix-best',0); $('best').textContent=showPts(0);
+      // nur Meldungen von vor dem Zurücksetzen verwerfen – danach gespielte bleiben
+      pending = typeof j.reset==='number' ? pending.filter(e=>e && (e.at||0)>j.reset) : []; save('jemrix-pending',pending); clearTimes(); }
     save('jemrix-server-epoch-seen',1);
   }
 }
@@ -1852,7 +1862,7 @@ async function trySync(){
   const batch=pending.slice(0,50);
   try{
     const seq=++listSeq;
-    const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score), secs:Math.round(e.secs||0)}))});
+    const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score), secs:Math.round(e.secs||0), id:e.id||''}))});
     // Antwort vom Server (auch eine Ablehnung): Stapel ist erledigt und blockiert die Warteschlange nicht
     pending=pending.slice(batch.length); save('jemrix-pending',pending);
     if (j && j.ok!==false){ if (takeList(j, seq)===false) setTimeout(fetchScores,300); }   // ältere Antwort verworfen: Liste frisch holen
@@ -2118,7 +2128,7 @@ function showModes(cont){
 // Zurück aus jenMah (Safari stellt die Seite aus dem Zwischenspeicher wieder her): frisch laden, sonst bleibt die Auswahl unbedienbar
 window.addEventListener('pageshow',e=>{ if (e.persisted) location.reload(); });
 function wrongOrient(){ return LAND.matches; }
-let resumeTurbo=null;   // gespeicherter Turbo startet erst, wenn das Spiel wirklich losgeht
+let resumeTurbo=null, resumeCheck=false;   // gespeicherter Turbo startet erst, wenn das Spiel wirklich losgeht
 if ('serviceWorker' in navigator && location.protocol!=='file:'){
   // Updates zuverlässig holen: bei jeder Rückkehr in die App nach neuer Version fragen
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{
@@ -2128,10 +2138,11 @@ if ('serviceWorker' in navigator && location.protocol!=='file:'){
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
     if (!hadCtl){ hadCtl=true; return; }          // erste Installation: nichts tun
     window.__jemrixUpdate=true;                     // neue Version: beim nächsten Start-Bildschirm neu laden
-    if (document.getElementById('cine')) location.reload();
+    const cine=document.getElementById('cine');   // nur neu laden, solange niemand am Intro-Schloss ist
+    if (cine && !cine.classList.contains('ready')) location.reload();
   });
 }
-playCine(()=>showModes(()=>{ familyIntro(); if (player && $('reg').hidden && isBirthdayKid(player) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; }); if (resumeTurbo){ const r=resumeTurbo; resumeTurbo=null; startTurbo(r.left, r.mul); turboTotal=Math.max(r.left, r.total||r.left); tickTurbo(); persist(); } }));
+playCine(()=>showModes(()=>{ if (resumeCheck){ resumeCheck=false; setTimeout(checkOver,300); } familyIntro(); if (player && $('reg').hidden && isBirthdayKid(player) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; }); if (resumeTurbo){ const r=resumeTurbo; resumeTurbo=null; startTurbo(r.left, r.mul); turboTotal=Math.max(r.left, r.total||r.left); tickTurbo(); persist(); } }));
 const saved=load("jemrix-game",load("achtfeld-game",null));
 try{
   const okPieces = saved && Array.isArray(saved.pieces) && saved.pieces.length===3 && saved.pieces.every(p=>p===null || (p && Array.isArray(p.shape) && p.shape.length && typeof p.color==='string'));
@@ -2144,7 +2155,7 @@ try{
     shownScore=score; renderOdo(score); setLevel(true); renderBoard(); renderTray(true); updateLiveCrown();
     // Zeit-Booster gibt es nicht mehr – gespeicherte aus älteren Versionen werden ignoriert
 
-    checkOver();
+    resumeCheck=true;   // Spielende erst prüfen, wenn das Intro vorbei ist
   } else newGame();
 }catch(err){ newGame(); }
 applyPreview();

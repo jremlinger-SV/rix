@@ -42,12 +42,12 @@ async function api(fn, body){
 }
 let listSeq=0, listApplied=0;   // ältere Antworten dürfen eine neuere Liste nicht überschreiben
 let pending=load('jemrix-pending',[]);
-let sharedCache=load('jemrix-shared-cache',null); // letzte bekannte gemeinsame Liste
+let sharedCache=load('jemrix-shared-cache',null); if (!Array.isArray(sharedCache)) sharedCache=null; // letzte bekannte gemeinsame Liste
 let syncing=false, netOk=null, fetching=false;
 function recordTime(){   // nur Spielzeit nachmelden (ohne neues Ergebnis)
   if (!player || !ONLINE) { ptSave(); return; }
   const secs=takeSecs(); if (secs<=0) return;
-  pending.push({name:player, score:0, secs, at:Date.now()}); save('jemrix-pending',pending); updateNet(); trySync();
+  pending.push({name:player, score:0, secs, id:newId(), at:Date.now()}); save('jemrix-pending',pending); updateNet(); trySync();
 }
 function recordScore(s){
   if (!player) return;
@@ -56,7 +56,7 @@ function recordScore(s){
   localScores.push({name:player, score:s, at:Date.now()});
   localScores.sort((a,b)=>b.score-a.score); localScores=localScores.slice(0,20);
   save('jemrix-scores',localScores);
-  pending.push({name:player, score:s, secs:ONLINE?takeSecs():0, at:Date.now()}); save('jemrix-pending',pending);
+  pending.push({name:player, score:s, secs:ONLINE?takeSecs():0, id:newId(), at:Date.now()}); save('jemrix-pending',pending);
   updateNet(); trySync(); renderTop2();
 }
 function takeList(j, seq){
@@ -67,7 +67,9 @@ function takeList(j, seq){
   if (typeof j.epoch==='number' && j.epoch>load('jemrix-server-epoch',0)){
     // Liste wurde auf dem Server zurückgesetzt: lokale Listen ebenfalls leeren
     save('jemrix-server-epoch',j.epoch);
-    if (load('jemrix-server-epoch-seen',0)){ localScores=[]; save('jemrix-scores',localScores); best=0; save('jemrix-best',0); $('best').textContent=showPts(0); pending=[]; save('jemrix-pending',pending); clearTimes(); }
+    if (load('jemrix-server-epoch-seen',0)){ localScores=[]; save('jemrix-scores',localScores); best=0; save('jemrix-best',0); $('best').textContent=showPts(0);
+      // nur Meldungen von vor dem Zurücksetzen verwerfen – danach gespielte bleiben
+      pending = typeof j.reset==='number' ? pending.filter(e=>e && (e.at||0)>j.reset) : []; save('jemrix-pending',pending); clearTimes(); }
     save('jemrix-server-epoch-seen',1);
   }
 }
@@ -87,7 +89,7 @@ async function trySync(){
   const batch=pending.slice(0,50);
   try{
     const seq=++listSeq;
-    const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score), secs:Math.round(e.secs||0)}))});
+    const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score), secs:Math.round(e.secs||0), id:e.id||''}))});
     // Antwort vom Server (auch eine Ablehnung): Stapel ist erledigt und blockiert die Warteschlange nicht
     pending=pending.slice(batch.length); save('jemrix-pending',pending);
     if (j && j.ok!==false){ if (takeList(j, seq)===false) setTimeout(fetchScores,300); }   // ältere Antwort verworfen: Liste frisch holen
@@ -140,7 +142,8 @@ if ('serviceWorker' in navigator && location.protocol!=='file:'){
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
     if (!hadCtl){ hadCtl=true; return; }          // erste Installation: nichts tun
     window.__jemrixUpdate=true;                     // neue Version: beim nächsten Start-Bildschirm neu laden
-    if (document.getElementById('cine')) location.reload();
+    const cine=document.getElementById('cine');   // nur neu laden, solange niemand am Intro-Schloss ist
+    if (cine && !cine.classList.contains('ready')) location.reload();
   });
 }
 playCine(()=>showModes(""")
