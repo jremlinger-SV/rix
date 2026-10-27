@@ -349,6 +349,12 @@ header.mh .sndbtn{width:30px;height:30px}
 body.gameover .tiles,body.gameover .boost{visibility:hidden}
 body.gameover .over{bottom:0}
 .lvl{z-index:7}
+/* Booster-Abzeichen oben rechts (goldener Punkt mit Zahl) */
+.tile .bst{position:absolute;right:5%;top:3.5%;z-index:2;min-width:30%;height:22%;padding:0 4%;box-sizing:border-box;border-radius:999px;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,#fff7c2,#ffd84d 55%,#e6b800);color:#0f1d3d;font:700 calc(var(--tw,48px)*.21)/1 var(--display);
+  box-shadow:0 0 0 1.5px #fff,0 2px 4px rgba(15,29,61,.35),0 0 8px rgba(255,216,77,.6);pointer-events:none}
+.tile.back .bst{display:none}
+.bfly{position:fixed;margin:0;z-index:61;pointer-events:none}
 /* Steine: Farben passend zu Jemrix */
 .f-cjk{font-family:"PingFang SC","Hiragino Sans GB","Heiti SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;font-weight:700}
 .f-idx{font-family:var(--display);font-weight:700}
@@ -468,6 +474,8 @@ function bird(){
 }
 const BACK_SVG=`<svg viewBox="0 0 60 80" aria-hidden="true"><rect x="7" y="9" width="46" height="62" rx="7" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="1.6"/><path d="M30 18 L44 40 L30 62 L16 40Z" fill="none" stroke="#9fd8ff" stroke-opacity=".55" stroke-width="1.6"/><rect x="19.5" y="35.5" width="6" height="6" rx="1.6" fill="#9fd8ff"/><rect x="27" y="35.5" width="6" height="6" rx="1.6" fill="#38bdf8"/><rect x="34.5" y="35.5" width="6" height="6" rx="1.6" fill="#ffffff" fill-opacity=".85"/></svg>`;
 const FACE_CACHE={};
+function tileHTML(i){ const t=T[i]; return faceSVG(t.f)+(t.bo?`<b class="bst" aria-hidden="true">${t.bo}</b>`:''); }
+function tileLabel(i){ const t=T[i]; return FACE_NAME(t.f)+(t.bo?`, Booster ${t.bo}`:''); }
 function faceSVG(f){
   if (FACE_CACHE[f]) return FACE_CACHE[f];
   const s=f[0], n=+f.slice(1); let b='';
@@ -604,7 +612,7 @@ let boost={undo:0,hint:0,mix:0}, busy=false, lastProgress=0, lastHint=0;
 const parkEl=$('park'), tilesEl=$('tiles'), tableEl=$('table'), wrapEl=$('tablewrap'), fxEl=$('fx'), fxFix=$('fxfix');
 let tileEls=[];
 function cfg(){ return levelCfg(lvl); }
-function persist(){ if (endHold || ended) return; save('jenmah-game',{who:owner,lvl,layId,score,combo:0,mixLeft,playTime,bestAtStart,boost,park,t:T.map(t=>[t.x,t.y,t.z,t.f,t.alive?1:0,t.h?1:0])}); }
+function persist(){ if (endHold || ended) return; save('jenmah-game',{who:owner,lvl,layId,score,combo:0,mixLeft,playTime,bestAtStart,boost,park,t:T.map(t=>[t.x,t.y,t.z,t.f,t.alive?1:0,t.h?1:0,t.bo||0])}); }
 
 /* ===================== Darstellung ===================== */
 let geo={tw:40,th:53,d:4,ox:0,oy:0};
@@ -640,8 +648,8 @@ function renderAll(anim){
   tilesEl.innerHTML=''; tileEls=[]; measure();
   // Einbau-Reihenfolge: Ebene für Ebene, innerhalb einer Ebene leicht zufällig
   T.forEach((t,i)=>{ if (!t.alive) return;
-    const el=document.createElement('div'); el.className='tile'+(t.h?' back':''); el.dataset.i=i; el.innerHTML=t.h?BACK_SVG:faceSVG(t.f);
-    el.setAttribute('role','gridcell'); el.setAttribute('aria-label',t.h?'verdeckter Stein':FACE_NAME(t.f));
+    const el=document.createElement('div'); el.className='tile'+(t.h?' back':''); el.dataset.i=i; el.innerHTML=t.h?BACK_SVG:tileHTML(i);
+    el.setAttribute('role','gridcell'); el.setAttribute('aria-label',t.h?'verdeckter Stein':tileLabel(i));
     if (anim){ el.classList.add('drop'); el.style.setProperty('--dl',(t.z*170+Math.random()*260|0)+'ms'); setTimeout(()=>el.classList.remove('drop'),t.z*170+800); }
     placeEl(el,t); tileEls[i]=el; tilesEl.appendChild(el);
   });
@@ -672,6 +680,9 @@ function startLevel(n, quiet){
     T.forEach((t,i)=>t.f=faces[i]);
     if (c.chaos>0){ const ch=Math.min(1,Math.max(0,c.chaos+(Math.random()-.5)*.1)); const ids=shuffle(T.map((_,i)=>i)).slice(0,Math.round(ch*T.length)); const fl=shuffle(ids.map(i=>T[i].f)); ids.forEach((i,k)=>T[i].f=fl[k]); }
     if (c.hide>0){ const k=Math.round(T.length*Math.min(.45,Math.max(0,c.hide+(Math.random()-.5)*.06))); shuffle(T.map((_,i)=>i)).slice(0,k).forEach(i=>T[i].h=true); }
+    // Booster-Steine: 1–2 je Level, Wert 2, 3 oder 4 (zieht so viele weitere Paare mit)
+    const nb = n<=2 ? 1 : 1+(Math.random()<.5?1:0);
+    shuffle(T.map((_,i)=>i)).slice(0,nb).forEach(i=>{ T[i].bo=[2,2,3,3,4][Math.floor(Math.random()*5)]; });
   });
   $('over').hidden=true; leaveGameOver();
   peek=-1; boost={undo:c.b[0],hint:c.b[1],mix:c.b[2]}; $('rescue').hidden=true;
@@ -691,7 +702,7 @@ function renderPark(){
   for (let k=0;k<PARK_N;k++){
     const s=document.createElement('div'); s.className='pslot';
     const i=park[k];
-    if (i!=null){ const t=document.createElement('div'); t.className='tile ptile'; t.dataset.i=i; t.innerHTML=faceSVG(T[i].f); t.setAttribute('aria-label',FACE_NAME(T[i].f)+' (abgelegt)'); s.appendChild(t); }
+    if (i!=null){ const t=document.createElement('div'); t.className='tile ptile'; t.dataset.i=i; t.innerHTML=tileHTML(i); t.setAttribute('aria-label',FACE_NAME(T[i].f)+' (abgelegt)'); s.appendChild(t); }
     else s.setAttribute('aria-label','freier Platz');
     parkEl.appendChild(s);
   }
@@ -735,9 +746,11 @@ function pairWithPark(i,pi){
   T[i].alive=false;
   const r=removeFieldEl(i);
   const slot=parkEl.children[pi], pt=slot.firstChild;
+  const bo=Math.max(T[i].bo||0, T[park[pi]].bo||0);
   park.splice(pi,1);   // Spielstand sofort richtig (auch wenn die App jetzt beendet wird)
+  const pulled = bo ? boostSelect(bo) : null;   // Booster: weitere Paare gleich mit aus dem Spielstand nehmen
   // Partner fliegt zum abgelegten Stein, dann verschwinden beide
-  const fly=document.createElement('div'); fly.className='tile ptile'; fly.innerHTML=faceSVG(T[i].f); slot.appendChild(fly);
+  const fly=document.createElement('div'); fly.className='tile ptile'; fly.innerHTML=tileHTML(i); slot.appendChild(fly);
   flyFrom(fly, r, 190);
   busy=true; SND.plop(1);
   later(()=>{
@@ -745,10 +758,54 @@ function pairWithPark(i,pi){
     [pt,fly].forEach(el=>{ el.classList.add('gone'); });
     fxShards([c], fxFix); if (combo>=1) showGainAt(c.x, c.y+sr.height*.9, 0, combo, fxFix);
     SND.swoosh(combo>=2?2:1);
-    later(()=>{ renderPark(); refreshFree(); busy=false; persist(); checkState(); },280);
+    const extra = pulled ? boostAnim(pulled, c, bo) : 0;
+    later(()=>{ renderPark(); refreshFree(); busy=false; persist(); checkState(); },280+extra);
   },200);
   lastProgress=now; lastHint=0;
   refreshFree(); persist();
+}
+/* Booster: ein Paar mit Booster-Stein (2/3/4) nimmt so viele weitere Paare mit.
+   Reihenfolge: zuerst Steine in der Ablage vervollständigen (macht Platz), dann freie Paare,
+   dann Paare möglichst weit oben (öffnet das Feld). Der Spielstand ändert sich sofort, die Animation folgt. */
+function boostSelect(n){
+  const out=[];
+  const sc=(x,al)=> (freeIn(x,al)?1000:0) + T[x].z*10 + (T[x].h?0:1);
+  for (const j of park.slice()){
+    if (out.length>=n) break;
+    const k=keyOf(T[j].f), al=T.map(t=>t.alive); let best=-1, bs=-1;
+    T.forEach((t,x)=>{ if (t.alive && keyOf(t.f)===k){ const v=sc(x,al); if (v>bs){ bs=v; best=x; } } });
+    if (best<0) continue;
+    T[best].alive=false; park.splice(park.indexOf(j),1); out.push({park:j, field:[best]});
+  }
+  while (out.length<n){
+    const al=T.map(t=>t.alive), by={};
+    T.forEach((t,x)=>{ if (t.alive){ const k=keyOf(t.f); (by[k]=by[k]||[]).push(x); } });
+    let best=null, bs=-1;
+    Object.keys(by).sort().forEach(k=>{ const l=by[k]; if (l.length<2) return; l.sort((a,b)=>sc(b,al)-sc(a,al)||a-b); const v=sc(l[0],al)+sc(l[1],al); if (v>bs){ bs=v; best=[l[0],l[1]]; } });
+    if (!best) break;
+    best.forEach(x=>T[x].alive=false); out.push({field:best});
+  }
+  if (peek>=0 && !T[peek].alive) peek=-1;
+  return out;
+}
+function boostAnim(pulled, c, n){
+  const els=[];
+  pulled.forEach(p=>{
+    if (p.park!=null){ const e=parkEl.querySelector(`.ptile[data-i="${p.park}"]`); if (e) els.push(e); }
+    p.field.forEach(x=>{ if (tileEls[x]){ els.push(tileEls[x]); tileEls[x]=null; } });
+  });
+  const tw=parseFloat(getComputedStyle(tilesEl).getPropertyValue('--tw'))||48, d=parseFloat(getComputedStyle(tilesEl).getPropertyValue('--d'))||4;
+  els.forEach((e,k)=>{
+    const r=e.getBoundingClientRect(); const fl=document.createElement('div'); fl.className='tile bfly'+(e.classList.contains('back')?' back':'');
+    fl.innerHTML=e.innerHTML; fl.style.cssText=`left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;--tw:${tw}px;--d:${d}px`;
+    fxFix.appendChild(fl); e.remove();
+    const dx=c.x-(r.left+r.width/2), dy=c.y-(r.top+r.height/2);
+    setTimeout(()=>{ fl.style.transition='transform .42s cubic-bezier(.5,0,.7,.4), opacity .42s ease-in'; fl.style.transform=`translate(${dx}px,${dy}px) scale(.35) rotate(${(k%2?1:-1)*20}deg)`; fl.style.opacity='0'; }, 30+k*35);
+    setTimeout(()=>fl.remove(), 520+k*35);
+  });
+  toast(`Booster: +${pulled.length} ${pulled.length===1?'Paar':'Paare'}`);
+  setTimeout(()=>{ fxShards([c,c], fxFix); SND.clear(); }, 380);
+  return 480+els.length*35;
 }
 /* Verdeckte Steine: erstes Antippen zeigt das Bild. Wird der Stein nicht gleich genutzt,
    dreht er sich bei der nächsten Berührung irgendwo anders wieder um. */
@@ -756,7 +813,7 @@ let peek=-1;
 function flipTo(i, open){
   const t=T[i], el=tileEls[i]; if (!el) return;
   el.style.setProperty('--dl','0ms'); el.classList.remove('flip'); void el.offsetWidth; el.classList.add('flip');
-  setTimeout(()=>{ if (!el.isConnected) return; el.classList.toggle('back',!open); el.innerHTML=open?faceSVG(t.f):BACK_SVG; el.setAttribute('aria-label',open?FACE_NAME(t.f):'verdeckter Stein'); },210);
+  setTimeout(()=>{ if (!el.isConnected) return; el.classList.toggle('back',!open); el.innerHTML=open?tileHTML(i):BACK_SVG; el.setAttribute('aria-label',open?tileLabel(i):'verdeckter Stein'); },210);
   setTimeout(()=>el.classList.remove('flip'),460);
 }
 function reveal(i){
@@ -784,18 +841,21 @@ function pairPeek(a,b){
   combo = now-lastMatch<COMBO_MS ? combo+1 : 0; lastMatch=now;
   T[a].h=false; peek=-1;
   T[a].alive=T[b].alive=false;
+  const bo=Math.max(T[a].bo||0, T[b].bo||0);
   const ra=removeFieldEl(a), rb=removeFieldEl(b);
   const slot=parkEl.children[park.length];
-  const fa=document.createElement('div'); fa.className='tile ptile'; fa.innerHTML=faceSVG(T[a].f);
-  const fb=document.createElement('div'); fb.className='tile ptile'; fb.innerHTML=faceSVG(T[b].f);
+  const fa=document.createElement('div'); fa.className='tile ptile'; fa.innerHTML=tileHTML(a);
+  const fb=document.createElement('div'); fb.className='tile ptile'; fb.innerHTML=tileHTML(b);
   slot.append(fa,fb); flyFrom(fa, ra, 190); flyFrom(fb, rb, 190);
+  const pulled = bo ? boostSelect(bo) : null;
   busy=true; SND.plop(1);
   later(()=>{
     const sr=slot.getBoundingClientRect(), c={x:sr.left+sr.width/2, y:sr.top+sr.height/2};
     [fa,fb].forEach(el=>el.classList.add('gone'));
     fxShards([c], fxFix); if (combo>=1) showGainAt(c.x, c.y+sr.height*.9, 0, combo, fxFix);
     SND.swoosh(combo>=2?2:1);
-    later(()=>{ renderPark(); refreshFree(); busy=false; persist(); checkState(); },280);
+    const extra = pulled ? boostAnim(pulled, c, bo) : 0;
+    later(()=>{ renderPark(); refreshFree(); busy=false; persist(); checkState(); },280+extra);
   },200);
   lastProgress=now; refreshFree(); persist();
 }
@@ -834,7 +894,7 @@ function doUndo(){
   if (boost.undo<=0 || !park.length) { if (!park.length) toast('Ablage ist leer'); return; }
   boost.undo--; const i=park.pop(); const slot=parkEl.children[park.length]; const r=slot && slot.firstChild ? slot.firstChild.getBoundingClientRect() : null;
   T[i].alive=true; renderPark(); parkEl.classList.remove('jam');
-  const el=document.createElement('div'); el.className='tile'; el.dataset.i=i; el.innerHTML=faceSVG(T[i].f); el.setAttribute('role','gridcell'); el.setAttribute('aria-label',FACE_NAME(T[i].f));
+  const el=document.createElement('div'); el.className='tile'; el.dataset.i=i; el.innerHTML=tileHTML(i); el.setAttribute('role','gridcell'); el.setAttribute('aria-label',tileLabel(i));
   placeEl(el,T[i]); tileEls[i]=el; tilesEl.appendChild(el); flyFrom(el, r, 300);
   SND.plop(2); lastProgress=performance.now(); refreshFree(); persist();
 }
@@ -851,7 +911,7 @@ function reshuffle(){
     const seen={}; if (fr.some(i=>parkKeyIdx(m[i])>=0) || fr.some(i=>{ const k=keyOf(m[i]); seen[k]=(seen[k]||0)+1; return seen[k]>=2; })) faces=m; }
   faces=faces||last||{};
   ids.forEach((i,k)=>{ const el=tileEls[i]; if (!el) return; el.style.setProperty('--dl',(k%12)*25+'ms'); el.classList.remove('flip'); void el.offsetWidth; el.classList.add('flip');
-    setTimeout(()=>{ if (!T[i].h){ el.innerHTML=faceSVG(faces[i]); el.setAttribute('aria-label',FACE_NAME(faces[i])); } },210+(k%12)*25);
+    setTimeout(()=>{ if (!T[i].h){ el.innerHTML=tileHTML(i); el.setAttribute('aria-label',tileLabel(i)); } },210+(k%12)*25);
     setTimeout(()=>el.classList.remove('flip'),520+(k%12)*25); });
   ids.forEach(i=>T[i].f=faces[i]);
   SND.swoosh(2);
@@ -1230,10 +1290,10 @@ updateNet(); renderTop2(); fetchScores();
 familyIntro();
 const saved=load('jenmah-game',null);
 try{
-  const ok=saved && Array.isArray(saved.t) && saved.t.length>=2 && LAYOUTS[saved.layId] && saved.t.every(a=>Array.isArray(a) && (a.length===5||a.length===6) && [a[0],a[1],a[2]].every(Number.isFinite) && typeof a[3]==='string' && /^[dbcwrfs][0-9A-Z]$/.test(a[3]));
+  const ok=saved && Array.isArray(saved.t) && saved.t.length>=2 && LAYOUTS[saved.layId] && saved.t.every(a=>Array.isArray(a) && a.length>=5 && a.length<=7 && [a[0],a[1],a[2]].every(Number.isFinite) && typeof a[3]==='string' && /^[dbcwrfs][0-9A-Z]$/.test(a[3]));
   if (ok && (saved.t.some(a=>a[4]) || (saved.park||[]).length) && (saved.who||'')===(player||'').toLowerCase()){
     lvl=saved.lvl||1; layId=saved.layId; owner=saved.who||''; score=lvl-1; preview=!!player && lvl>getProgress(player); mixLeft=saved.mixLeft??cfg().mix; playTime=saved.playTime||0; bestAtStart=saved.bestAtStart??best;
-    T=saved.t.map(a=>({x:a[0],y:a[1],z:a[2],f:a[3],alive:!!a[4],h:!!a[5]})); buildNB();
+    T=saved.t.map(a=>({x:a[0],y:a[1],z:a[2],f:a[3],alive:!!a[4],h:!!a[5],bo:[2,3,4].includes(a[6])?a[6]:0})); buildNB();
     if (saved.boost && typeof saved.boost==='object') boost={undo:+saved.boost.undo||0,hint:+saved.boost.hint||0,mix:+saved.boost.mix||0}; else { const b0=cfg().b; boost={undo:b0[0],hint:b0[1],mix:b0[2]}; }
     park=(Array.isArray(saved.park)?saved.park:[]).filter((i,k,arr)=>Number.isInteger(i) && T[i] && !T[i].alive && arr.indexOf(i)===k).slice(0,PARK_N); renderPark();
     showLevelUI(); updateLiveCrown();
