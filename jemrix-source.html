@@ -192,6 +192,26 @@ body.ending .tray .slot{cursor:default}
 /* Beim Spielende klar zeigen, warum: Steine gut sichtbar, die nicht passenden rot umrandet */
 body.ending .slot.dead .mini{opacity:.9;filter:grayscale(.15)}
 body.ending .slot.dead{box-shadow:inset 0 0 0 2px rgba(248,113,113,.7);background:rgba(248,113,113,.08)}
+/* Boost-Einblendung: der Punktefaktor blitzt kurz groß über dem Feld auf – durchsichtig, Spiel läuft weiter */
+.mulflash{position:absolute;inset:0;z-index:12;display:flex;align-items:center;justify-content:center;pointer-events:none;border-radius:14px;overflow:hidden}
+.mulflash b{font-family:"Lilita One",var(--display);font-weight:400;line-height:1;color:#fff;-webkit-text-stroke:.05em var(--t2);paint-order:stroke fill;text-shadow:0 0 .25em color-mix(in srgb,var(--t1) 70%,transparent),0 .06em 0 color-mix(in srgb,var(--t2) 60%,#000)}
+.mulflash small{display:block;font-family:var(--display);font-weight:700;font-size:.22em;letter-spacing:.14em;text-transform:uppercase;color:#fff;opacity:.9;text-align:center;-webkit-text-stroke:0;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+/* A – Stempel: knallt groß rein und verblasst */
+.mulflash.va{background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--t1) 28%,transparent),transparent 65%);animation:mfbg .9s ease-out both}
+.mulflash.va b{font-size:min(38cqw,9rem);animation:mfa .9s cubic-bezier(.2,.9,.3,1.2) both;opacity:.85}
+@keyframes mfa{0%{transform:scale(2.2) rotate(-8deg);opacity:0}22%{transform:scale(1) rotate(-6deg);opacity:.9}70%{transform:scale(1.05) rotate(-6deg);opacity:.85}100%{transform:scale(1.25) rotate(-6deg);opacity:0}}
+@keyframes mfbg{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+/* B – Lichtband: ein durchsichtiges Band zieht mit dem Faktor über das Feld */
+.mulflash.vb::before{content:"";position:absolute;left:-10%;right:-10%;top:38%;height:24%;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--t1) 55%,transparent) 20% 80%,transparent);transform:skewX(-14deg);animation:mfband .85s ease-in-out both}
+.mulflash.vb b{font-size:min(26cqw,6.5rem);animation:mfb .85s cubic-bezier(.3,.8,.3,1) both}
+@keyframes mfband{0%{transform:translateX(-110%) skewX(-14deg);opacity:0}25%{opacity:1}75%{opacity:1}100%{transform:translateX(110%) skewX(-14deg);opacity:0}}
+@keyframes mfb{0%{transform:translateX(-70%) scale(.7);opacity:0}25%{transform:translateX(0) scale(1);opacity:1}70%{transform:translateX(0) scale(1);opacity:.95}100%{transform:translateX(70%) scale(.9);opacity:0}}
+/* C – Aufsteiger: Faktor steigt mit Lichtring auf und verfliegt */
+.mulflash.vc::before{content:"";position:absolute;left:50%;top:50%;width:30%;aspect-ratio:1;margin:-15% 0 0 -15%;border-radius:50%;border:.5vmin solid color-mix(in srgb,var(--t1) 80%,#fff);box-shadow:0 0 24px color-mix(in srgb,var(--t2) 70%,transparent);animation:mfring .8s ease-out both}
+.mulflash.vc b{font-size:min(30cqw,7.5rem);animation:mfc 1s cubic-bezier(.2,.7,.3,1) both}
+@keyframes mfring{0%{transform:scale(.3);opacity:0}15%{opacity:1}100%{transform:scale(4);opacity:0}}
+@keyframes mfc{0%{transform:translateY(30%) scale(.6);opacity:0}20%{transform:translateY(0) scale(1);opacity:1}65%{transform:translateY(-10%) scale(1.05);opacity:.95}100%{transform:translateY(-45%) scale(1.2);opacity:0}}
+@media (prefers-reduced-motion: reduce){.mulflash,.mulflash b,.mulflash::before{animation-duration:.01s!important}}
 .board.skinglow{animation:skinglow .75s ease-out}
 @keyframes skinglow{0%{box-shadow:0 10px 30px rgba(20,26,50,.25),0 0 0 0 rgba(159,216,255,0)}35%{box-shadow:0 10px 30px rgba(20,26,50,.25),0 0 0 4px rgba(159,216,255,.75)}100%{box-shadow:0 10px 30px rgba(20,26,50,.25),0 0 0 0 rgba(159,216,255,0)}}
 @keyframes morph{0%{filter:brightness(1)}35%{filter:brightness(1.35) saturate(1.15)}100%{filter:brightness(1)}}
@@ -560,6 +580,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
     <div class="combo" id="combo"></div>
     <div class="fx" id="fx"></div>
     <div class="lvl" id="lvl"></div>
+    <div class="mulflash" id="mulflash" hidden aria-hidden="true"><b></b></div>
     <div class="endhold" id="endhold" hidden role="status" aria-live="polite"><b id="ehTitle">Kein Platz mehr</b><span aria-hidden="true">Ergebnis in <em id="ehSec">10</em> s</span><i class="ehbar"><i id="ehFill"></i></i></div>
     <div class="over" id="over" hidden>
       <h2 id="overtitle">Kein Platz mehr</h2>
@@ -1281,8 +1302,19 @@ const SND=(()=>{
 })();
 (function(){ const b=$('sndbtn'); const upd=()=>{ b.classList.toggle('off',!SND.on); b.setAttribute('aria-pressed',SND.on?'true':'false'); b.setAttribute('aria-label',SND.on?'Ton aus':'Ton an'); };
   b.addEventListener('click',()=>{ SND.set(!SND.on); upd(); if (SND.on) setTimeout(()=>SND.plop(2),30); }); upd(); })();
+let MULFLASH_VARIANT='va';
+function flashMul(m, label){
+  const el=$('mulflash'); if (!el) return;
+  el.className='mulflash '+MULFLASH_VARIANT; el.innerHTML='';
+  const b=document.createElement('b'); b.textContent='×'+m;
+  if (label){ const sm=document.createElement('small'); sm.textContent=label; b.appendChild(sm); }
+  el.appendChild(b); el.hidden=false;
+  clearTimeout(el._t); el._t=setTimeout(()=>{ el.hidden=true; },1100);
+}
 function startTurbo(ms,mul){
+  const was=turboUntil>performance.now() ? turboMul : 0;
   if (mul) turboMul=mul; else if (turboMul<2) turboMul=2;
+  if (turboMul>was) flashMul(turboMul, (ms||TURBO_MS)>=30000 ? 'Geburtstags-Boost' : 'Punkte-Boost');
   turboTotal=ms||TURBO_MS;
   turboUntil=performance.now()+turboTotal;
   $('turbomul').textContent='×'+turboMul;
