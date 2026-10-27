@@ -341,8 +341,15 @@ html,body{background:radial-gradient(ellipse at 50% 30%,#1b2f66 0%,#0f1b3f 58%,#
 html.intro-on,html.intro-on body{background:#0f1b3f!important}
 header.mh{padding-inline:4px}
 .boardslot{background:none!important;box-shadow:none!important;margin-inline:0!important;padding:4px 0 8px!important;gap:0!important}
-.park{margin-top:8px;margin-bottom:clamp(10px,3vh,28px);background:rgba(3,8,26,.55)!important;box-shadow:inset 0 0 0 2px rgba(159,216,255,.38),inset 0 3px 10px rgba(0,0,0,.5)!important;border-radius:12px!important;padding:5px 7px!important;gap:4px!important}
-.tablewrap{margin-bottom:clamp(8px,2.5vh,22px)}
+.park{margin-top:4px;margin-bottom:clamp(6px,1.8vh,18px);background:rgba(3,8,26,.55)!important;box-shadow:inset 0 0 0 2px rgba(159,216,255,.38),inset 0 3px 10px rgba(0,0,0,.5)!important;border-radius:12px!important;padding:5px 7px!important;gap:4px!important}
+.tablewrap{margin-bottom:clamp(6px,1.6vh,16px);width:100%}
+body{padding-left:max(2px,env(safe-area-inset-left,0px))!important;padding-right:max(2px,env(safe-area-inset-right,0px))!important}
+.app{padding-block:max(6px,env(safe-area-inset-top,0px)) 2px!important;max-width:none!important}
+header.mh{padding-inline:6px!important}
+header.mh .logo{width:26px;height:26px}
+header.mh .wordmark{font-size:1.1rem}
+header.mh .sndbtn{width:30px;height:30px}
+.family{padding-block:0 2px;font-size:.62rem}
 .bbtn{width:46px!important;height:46px!important}
 .bbtn svg{width:22px!important;height:22px!important}
 .bbtn .cnt{min-width:17px!important;height:17px!important;font-size:.66rem!important;line-height:17px!important;right:-4px!important;top:-4px!important}
@@ -439,7 +446,7 @@ body.gameover .over{bottom:0}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='27.10.2026, 15:37';   // wird beim Bauen gefüllt
+const APP_VERSION='27.10.2026, 15:42';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JENMAH_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 const pick=a=>a[rnd(a.length)];
@@ -616,13 +623,20 @@ function measure(){
   let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9,maxZ=0;
   alive.forEach(t=>{ minX=Math.min(minX,t.x); minY=Math.min(minY,t.y); maxX=Math.max(maxX,t.x+2); maxY=Math.max(maxY,t.y+2); maxZ=Math.max(maxZ,t.z); });
   const cols=(maxX-minX)/2, rows=(maxY-minY)/2;
-  const W=tableEl.clientWidth-8, H=tableEl.clientHeight-8;
+  const W=tableEl.clientWidth-2, H=tableEl.clientHeight-4;
   // wie im Vorbild: Stein 1:1,2, höhere Ebenen vor allem nach oben versetzt (leicht nach links), Dicke unten sichtbar
-  const RATIO=1.2, LY=.12, LX=.045, DK=.1;
-  const tw=Math.max(18, Math.min(74, W/(cols+LX*maxZ+.04), H/(rows*RATIO+(LY*maxZ+DK)*RATIO+.05)));
-  const th=tw*RATIO, ly=th*LY, lx=tw*LX, d=Math.max(3,th*DK);
+  // Breite hat Vorrang: das Feld nutzt immer die ganze Bildschirmbreite.
+  // Fehlt Höhe, werden die Steine etwas flacher (bis 1:1,04), erst danach schmaler.
+  const LY=.12, LX=.045, DK=.1, VR=rows+LY*maxZ+DK;
+  let tw=Math.min(74, W/(cols+LX*maxZ+.04)), ratio=1.2;
+  if (tw*(ratio*VR)+2>H){ ratio=Math.max(1.04,(H-2)/(tw*VR)); if (tw*ratio*VR+2>H) tw=(H-2)/(ratio*VR); }
+  tw=Math.max(18,tw);
+  const th=tw*ratio, ly=th*LY, lx=tw*LX, d=Math.max(3,th*DK);
   const usedW=cols*tw+lx*maxZ, usedH=rows*th+ly*maxZ+d;
-  geo={tw,th,d,lift:ly,lx,ly,minX,minY,ox:4+(W-usedW)/2+lx*maxZ, oy:4+(H-usedH)/2+ly*maxZ};
+  // exakt mittig nach den wirklichen Kanten aller Steine (inkl. Versatz der Ebenen und Kante unten)
+  let L=1e9,R=-1e9,Tp=1e9,B=-1e9;
+  T.forEach(t=>{ const x0=(t.x-minX)/2*tw-t.z*lx, y0=(t.y-minY)/2*th-t.z*ly; L=Math.min(L,x0); R=Math.max(R,x0+tw); Tp=Math.min(Tp,y0); B=Math.max(B,y0+th+d); });
+  geo={tw,th,d,lift:ly,lx,ly,minX,minY,ox:1+(W-(R-L))/2-L, oy:2+(H-(B-Tp))/2-Tp};
   tilesEl.style.setProperty('--tw',tw+'px'); tilesEl.style.setProperty('--d',d+'px');
   const sw=Math.min(tw*.92,54); parkEl.style.setProperty('--sw',sw+'px'); parkEl.style.setProperty('--tw',sw+'px'); parkEl.style.setProperty('--d',Math.max(3,sw*.1)+'px');
 }
