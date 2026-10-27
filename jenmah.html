@@ -355,6 +355,15 @@ header.mh .sndbtn{width:30px;height:30px}
 .bbtn .cnt{min-width:17px!important;height:17px!important;font-size:.66rem!important;line-height:17px!important;right:-4px!important;top:-4px!important}
 .boost{gap:clamp(30px,11vw,52px)!important}
 .family{padding-block:2px 4px}
+/* Ablage ganz oben direkt unter dem Kopf, genau 4 Felder in Steingröße */
+.boardslot{padding-top:0!important}
+.app{gap:2px!important}
+.park{margin-top:0!important;align-self:center;width:auto!important;display:inline-flex!important;padding:4px!important;gap:4px!important}
+.pslot{border-radius:calc(var(--sw,46px)*.13)!important;background:rgba(159,216,255,.07)!important;box-shadow:inset 0 0 0 1.5px rgba(159,216,255,.2)!important}
+.pslot:empty::after{display:none}
+.pslot .tile{height:calc(100% - var(--d))!important}
+.mscore{gap:0}
+.msub{margin-top:-1px}
 /* Netz-Hinweis oben, damit er die Hilfe-Knöpfe nicht verdeckt */
 .netline{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 6px);pointer-events:none;font-size:.72rem;padding:4px 12px}
 .boost{display:flex;justify-content:center;gap:10px;flex:none}
@@ -446,7 +455,7 @@ body.gameover .over{bottom:0}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='27.10.2026, 15:42';   // wird beim Bauen gefüllt
+const APP_VERSION='27.10.2026, 15:44';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JENMAH_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 const pick=a=>a[rnd(a.length)];
