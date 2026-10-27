@@ -576,6 +576,35 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .overbtns button{min-width:10em;box-sizing:border-box}
 .ghostbtn.light{color:#dfe6fb;border-color:rgba(223,230,251,.45)}
 @media (prefers-reduced-motion: reduce){.cell.burst::after{animation-name:fadeout;animation-duration:.4s}.cell.land,.floating.pick,.slot.enter .mini,.celebrate .spark{animation:none}.celebrate .ch{animation:none}.celebrate.on::before{animation:none}.combo.show{animation-duration:.01s}#score{transition:none}}
+/* ===== Spielauswahl nach dem Intro: Jemrix oder jenMah ===== */
+.pick{position:fixed;inset:0;z-index:285;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.6vh,22px);
+  padding:calc(env(safe-area-inset-top,0px) + 24px) 18px calc(env(safe-area-inset-bottom,0px) + 22px);box-sizing:border-box;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 38%,#1a3a8a 0%,#0b1a45 34%,#050a1c 66%,#02040b 92%);color:#e8f0ff}
+.pick::before{content:"";position:absolute;left:50%;top:38%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;background:repeating-conic-gradient(from 0deg,rgba(140,195,255,.08) 0deg 3deg,transparent 3deg 12deg);-webkit-mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.5) 22%,transparent 55%);mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.5) 22%,transparent 55%);animation:crayspin 90s linear infinite;pointer-events:none}
+.pk-pre{position:relative;font-family:"Unbounded",var(--display);font-weight:400;font-size:clamp(.72rem,3.2vw,.85rem);letter-spacing:.5em;margin-right:-.5em;text-transform:uppercase;color:#9fc4ff;animation:pkin .7s cubic-bezier(.2,.8,.2,1) both}
+.pk-card{position:relative;width:min(100%,380px);display:flex;align-items:center;gap:18px;padding:16px 18px;border-radius:22px;text-align:left;color:#fff;cursor:pointer;
+  background:linear-gradient(150deg,rgba(77,155,255,.24),rgba(21,32,67,.72) 55%,rgba(8,14,36,.85));
+  border:1px solid rgba(159,216,255,.28);box-shadow:0 14px 34px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);
+  animation:pkin .75s cubic-bezier(.2,.9,.3,1.15) both;transition:transform .15s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.pk-card:nth-of-type(1){animation-delay:.08s}.pk-card:nth-of-type(2){animation-delay:.2s}
+.pk-card:active{transform:scale(.97)}
+.pk-card:focus-visible{outline:3px solid #9fd8ff;outline-offset:3px}
+.pk-card.go{box-shadow:0 0 0 2px #9fd8ff,0 0 40px 6px rgba(56,189,248,.6);transform:scale(1.03)}
+.pk-art{flex:none;width:clamp(78px,24vw,96px);aspect-ratio:1;border-radius:20px;background:#0f1d3d;display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(159,216,255,.18),0 0 26px rgba(47,107,255,.35)}
+.pk-art svg{width:84%;height:84%}
+.pk-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pk-name{font-family:"Unbounded",var(--display);font-weight:800;font-size:clamp(1.45rem,7vw,1.8rem);line-height:1.05;background:linear-gradient(180deg,#ffffff 0%,#e3f0ff 45%,#8fc2ff 75%,#4d8dff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pk-txt small{font-family:var(--display);font-weight:600;font-size:.95rem;color:#9fc4ff;letter-spacing:.02em}
+.pk-rec{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:.82rem;font-weight:700;color:#dfe9ff;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-rec .crown{width:1.05em;height:1.05em;flex:none}
+.pk-rec:empty{display:none}
+.pk-go{position:absolute;right:16px;top:50%;width:26px;height:26px;margin-top:-13px;opacity:.65}
+.pk-foot{position:relative;display:flex;align-items:center;gap:9px;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#93a6d4;font-weight:700;animation:pkin .7s ease-out .35s both}
+.pk-foot b{font-family:var(--display);font-weight:600;letter-spacing:.06em;color:#4d9bff}
+.pick.out{animation:pkout .42s cubic-bezier(.6,0,.4,1) forwards;pointer-events:none}
+@keyframes pkin{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes pkout{to{opacity:0;transform:scale(1.06)}}
+@media (prefers-reduced-motion: reduce){.pick::before,.pk-card,.pk-pre,.pk-foot{animation:none}}
 </style>
 
 <div class="app">
@@ -636,6 +665,18 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
   <div class="player" id="playerline" hidden>Spieler: <b id="pname"></b> <button class="linkbtn" id="changename" type="button">Wechseln</button></div>
 
   <div class="rotate" id="rotate" aria-live="polite"><div class="rot-ph" aria-hidden="true"><i></i></div><b>Bitte hochkant halten</b><span>Jemrix ist fürs Hochformat gemacht. Das Spiel pausiert so lange.</span></div>
+  <div class="pick" id="pick" role="dialog" aria-label="Spiel wählen">
+    <div class="pk-pre">Was spielen wir?</div>
+    <button class="pk-card" id="pickJemrix" type="button">
+      <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="26" cy="9.5" r="3.6" fill="#9fd8ff"/><rect x="21.5" y="15" width="9" height="9" rx="2.4" fill="#38bdf8"/><rect x="21.5" y="23" width="9" height="9" rx="2.4" fill="#2f6bff"/><rect x="11.5" y="23" width="9" height="9" rx="2.4" fill="#1d4ed8"/><rect x="4" y="19" width="6.5" height="6.5" rx="2" fill="#6c7dff" opacity=".85"/><rect x="11.5" y="13" width="9" height="9" rx="2.4" fill="#22b8cf" opacity=".55"/></svg></span>
+      <span class="pk-txt"><b class="pk-name">jemrix</b><small>Block-Puzzle</small><span class="pk-rec" id="recJemrix"></span></span>
+    </button>
+    <button class="pk-card" id="pickMah" type="button">
+      <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><rect x="5.6" y="9.6" width="12" height="16" rx="2.6" fill="#1d4ed8"/><rect x="4" y="8" width="12" height="16" rx="2.6" fill="#eef4ff"/><circle cx="10" cy="16" r="3.4" fill="#2f6bff"/><circle cx="10" cy="16" r="1.4" fill="#eef4ff"/><rect x="20.6" y="15.6" width="12" height="16" rx="2.6" fill="#1d4ed8"/><rect x="19" y="14" width="12" height="16" rx="2.6" fill="#eef4ff"/><rect x="21.8" y="17" width="2.4" height="10" rx="1.2" fill="#22b8cf"/><rect x="25.8" y="17" width="2.4" height="10" rx="1.2" fill="#38bdf8"/><rect x="12.6" y="3.6" width="10" height="7" rx="2" fill="#2f6bff"/><rect x="11.6" y="2.6" width="10" height="7" rx="2" fill="#9fd8ff"/></svg></span>
+      <span class="pk-txt"><b class="pk-name">jenmah</b><small>Mahjong</small><span class="pk-rec" id="recMah"></span></span>
+    </button>
+    <div class="pk-foot"><span>Achtung: nur für <b>Remlingers</b></span></div>
+  </div>
   <div class="cine" id="cine" role="button" tabindex="0" aria-label="Jemrix – nur für die Remlingers">
     <canvas class="cine-stars" id="cineStars" aria-hidden="true"></canvas>
     <div class="cine-rays" aria-hidden="true"></div>
@@ -684,7 +725,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 15:32';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 21:18';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -789,7 +830,7 @@ function curDiff(){
 const LAND=matchMedia('(orientation: landscape) and (max-height: 560px)');
 const IDLE_LIMIT=180; let idleTime=0;   // erst nach 3 Minuten ohne jede Berührung endet die Partie
 ['pointerdown','touchstart','keydown','wheel'].forEach(ev=>window.addEventListener(ev,()=>{ idleTime=0; },{capture:true,passive:true}));
-function gameActive(){ return grid && !endHold && !document.hidden && !wrongOrient() && $('over').hidden && $('reg').hidden && !$('cine') && !document.querySelector('.bday'); }
+function gameActive(){ return grid && !endHold && !document.hidden && !wrongOrient() && $('over').hidden && $('reg').hidden && !$('cine') && !$('pick') && !document.querySelector('.bday'); }
 setInterval(()=>{
   const now=performance.now();
   if (tickLast && gameActive()){
@@ -2032,8 +2073,21 @@ window.addEventListener('hashchange',applyPreview);
 /* Start nach dem Intro: direkt ins Spiel (der Mehrspieler-Modus wurde wieder ausgebaut) */
 function showModes(cont){
   if (window.__jemrixUpdate){ window.__jemrixUpdate=false; location.reload(); return; }   // neue Version bereit: jetzt sauber laden
-  if (cont) cont();
+  try{ sessionStorage.setItem('remlinger-unlocked','1'); }catch(e){}   // jenMah darf nur nach dem Familien-Intro starten
+  const pk=$('pick'); if (!pk){ if (cont) cont(); return; }
+  // Spielauswahl: Jemrix oder jenMah, jeweils mit dem aktuellen Platz 1
+  const rec=(el,rows,fmt)=>{ el.innerHTML=''; const r=rows.find(x=>x && x.score>0); if (!r) return; el.insertAdjacentHTML('afterbegin',CROWN); el.append(clean(r.name)+' · '+(fmt||showPts)(r.score)); };
+  rec($('recJemrix'), topList().rows);
+  const mah=load('jenmah-lv-shared-cache',null)||load('jenmah-lv-scores',[]); rec($('recMah'), (Array.isArray(mah)?mah:[]).slice().sort((a,b)=>b.score-a.score), v=>'Level '+v);
+  let chosen=false;
+  $('pickJemrix').onclick=()=>{ if (chosen) return; chosen=true; $('pickJemrix').classList.add('go'); SND.plop(2);
+    setTimeout(()=>{ pk.classList.add('out'); setTimeout(()=>{ pk.remove(); if (cont) cont(); },420); },160); };
+  $('pickMah').onclick=()=>{ if (chosen) return; chosen=true; $('pickMah').classList.add('go'); SND.plop(2);
+    try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
+    setTimeout(()=>{ pk.classList.add('out'); setTimeout(()=>{ location.href='jenmah.html'; },300); },160); };
 }
+// Zurück aus jenMah (Safari stellt die Seite aus dem Zwischenspeicher wieder her): frisch laden, sonst bleibt die Auswahl unbedienbar
+window.addEventListener('pageshow',e=>{ if (e.persisted) location.reload(); });
 function wrongOrient(){ return LAND.matches; }
 let resumeTurbo=null;   // gespeicherter Turbo startet erst, wenn das Spiel wirklich losgeht
 if ('serviceWorker' in navigator && location.protocol!=='file:'){
