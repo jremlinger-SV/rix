@@ -684,7 +684,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 14:46';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 15:32';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -781,7 +781,7 @@ function inBreather(){ if (!profile || playTime<GRACE) return false; const t=(pl
 function curDiff(){
   if (playTime<GRACE) return {d:0, a:1, grace:true};
   if (!profile) profile=newProfile();
-  let d=profile.ramp*(playTime-GRACE)/27;   // etwas steiler, weil die Steine jetzt öfter passen – Spieldauer bleibt wie gehabt
+  let d=profile.ramp*(playTime-GRACE)/30;   // etwas steiler, weil die Steine jetzt öfter passen – Spieldauer bleibt wie gehabt
   let a=Math.max(0.08, Math.min(1, 1-d/7));
   if (inBreather()){ d*=0.35; a=Math.max(a,0.8); }
   return {d, a, grace:false};
@@ -893,11 +893,12 @@ function newSet(){
   const dnT=Math.min(1, d/3.5);                     // Zeit-Kurve: 0 = leicht … 1 = schwer
   const sk=skillNow();                              // 0 = tut sich schwer … 1 = räumt laufend
   let dn=Math.max(0.55*dnT, Math.min(1, 0.55*dnT+0.7*sk));   // starke Spieler werden früher gefordert, schwache länger getragen
-  // Aufwärmphase: in den ersten 75 s passt fast alles, bis 3 min wird sanft auf die normale Schwierigkeit übergeblendet
-  const warm = playTime<75 ? 1 : Math.max(0, 1-(playTime-75)/105);
+  // Aufwärmphase: in den ersten 2 min passt fast alles, bis 6 min wird sanft auf die normale Schwierigkeit übergeblendet
+  const warm = playTime<120 ? 1 : Math.max(0, 1-(playTime-120)/240);
   if (warm>0){ dn*=1-0.85*warm; d*=1-0.8*warm; }
   const A=analyzeShapes(grid);
   if (!A.length) return [randPiece(0),randPiece(0),randPiece(0)];
+  const Aid=new Set(A.map(x=>x.id));
   // Ab und an: Steine anbieten, mit denen sich das ganze Feld leeren lässt (+25.000)
   const nFilled=grid.reduce((x,v)=>x+(v?1:0),0);
   if (nFilled>0 && nFilled<=30 && setNo-lastClearOffer>=2 && Math.random()<(gift?0.9:0.7)){
@@ -933,7 +934,7 @@ function newSet(){
     if (closers.length && Math.random()<pClose){
       const two=closers.filter(x=>x.n>=2);
       const from = two.length && Math.random()<pCombo ? two : closers;
-      closer=pickWeighted(from, x=>shapeWeight(x.id,d)*(gift||playTime<GRACE ? x.size : 1)*(x.exact?1.6:1));
+      closer=pickWeighted(from, x=>shapeWeight(x.id,d)*(gift||playTime<GRACE||warm>0.4 ? x.size : 1)*(x.exact?1.6+1.4*warm:1.6));
       ids.push(closer.id); gAfter=closer.g;
     }
     // 2) Aufbauer – ohne fast volle Reihe: 2-Zug-Aufbau (Aufbauer, danach Vollender auf dem neuen Feld)
@@ -947,14 +948,14 @@ function newSet(){
       if (found!==false) for (const bl of cand){ const C=analyzeShapes(bl.g).filter(x=>x.n>=1 && x.id!==bl.id); if (C.length){ found={bl, cl:pickWeighted(C,x=>shapeWeight(x.id,d))}; break; } }
       if (found){ ids.push(found.bl.id, found.cl.id); gAfter=found.cl.g; builder=null; }
       else { builder=pickWeighted(B, x=>shapeWeight(x.id,d)*(x.exact?2:1)*(1+x.touch/Math.max(1,x.per))); ids.push(builder.id); gAfter=builder.g; }
-    } else if (Math.random()<pChain && (chainC=analyzeShapes(gAfter).filter(x=>x.n>=1 && !ids.includes(x.id))).length){
+    } else if (Math.random()<pChain && (chainC=analyzeShapes(gAfter).filter(x=>x.n>=1 && !ids.includes(x.id) && (!easyMode || Aid.has(x.id)))).length){
       // Kette: der Aufbauer räumt auf dem Feld nach dem Vollender selbst wieder eine Reihe
       const C=chainC;
       builder=pickWeighted(C, x=>shapeWeight(x.id,d)*(x.exact?1.8:1)*(x.n>=2?1.5:1)*x.size);
       ids.push(builder.id); gAfter=builder.g;
     } else {
       const wantBig=!tight && Math.random()<pBig;
-      builder=pickWeighted(B, x=>shapeWeight(x.id,d)*(x.exact?(tight?2.5:1.5):1)*(1+x.touch/Math.max(1,x.per))*(wantBig? (x.size>=4?2:0.6) : (tight? (x.size<=3?1.8:0.8):1))*(1+0.35*nearLines(x.g)));
+      builder=pickWeighted(B, x=>shapeWeight(x.id,d)*(x.exact?(tight?2.5:1.5+warm):1)*(1+x.touch/Math.max(1,x.per))*(wantBig? (x.size>=4?2:0.6) : (tight? (x.size<=3?1.8:0.8):1))*(1+0.35*nearLines(x.g)));
       ids.push(builder.id); gAfter=builder.g;
     }
     // 3) Joker – legbar jetzt oder spätestens nach den beiden anderen; mit steigender Schwierigkeit
@@ -970,7 +971,7 @@ function newSet(){
       if (!pool.length) break;
       if (warm>0 && Math.random()<pChain){
         // Aufwärmphase: Joker passt auf das Feld nach den anderen Steinen – am liebsten räumend oder genau in eine Lücke
-        const W=analyzeShapes(gAfter).filter(x=>!ids.includes(x.id));
+        const W=analyzeShapes(gAfter).filter(x=>!ids.includes(x.id) && Aid.has(x.id));   // passt auch sofort – egal in welcher Reihenfolge gelegt wird
         if (W.length){ const j=pickWeighted(W, x=>shapeWeight(x.id,d)*(x.n>=1?4:1)*(x.exact?2:1)*(1+x.touch/Math.max(1,x.per))); ids.push(j.id); gAfter=j.g; continue; }
       }
       ids.push(pickWeighted(pool, x=>shapeWeight(x.id,d)).id);
