@@ -678,7 +678,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 06:05';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 06:54';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -805,36 +805,112 @@ function giftDue(stress){
   const chance = setsSinceGift>=2 ? 1 : 0.2+0.2*setsSinceGift+0.4*(stress||0);
   return Math.random()<chance;
 }
+/* ===== Steingeber: liest das Spielfeld und stellt jedes Angebot gezielt zusammen =====
+   Drei Rollen:  Vollender  – schließt sofort eine Reihe (am Anfang fast immer, später seltener, nach Durststrecken garantiert)
+                 Aufbauer   – passt eng in eine Lücke oder bereitet die nächste Reihe vor
+                 Joker      – aus dem Schwierigkeits-Pool; mit steigender Schwierigkeit kantiger
+   Steigende Schwierigkeit heißt: weniger Vollender, seltener Zweifach-Räumer, kantigere Joker, weniger Punktlandungen –
+   aber nie drei tote Steine. Gibt es gerade keine fast volle Reihe, wird ein 2-Zug-Aufbau angeboten (Aufbauer + passender Vollender). */
+const DIRS4=[[1,0],[-1,0],[0,1],[0,-1]];
+function placeInfo(g,shape){                       // beste Lage einer Form: Linien, Außenkontakt, Punktlandung
+  let best=null; const own=new Set(shape.map(([r,c])=>r+','+c));
+  for (let r=0;r<N;r++) for (let c=0;c<N;c++){
+    if (!fitsIn(g,shape,r,c)) continue;
+    const t=g.slice(); shape.forEach(([dr,dc])=>t[(r+dr)*N+c+dc]=1);
+    const {rows,cols,n}=linesIn(t);
+    let touch=0, per=0;
+    shape.forEach(([dr,dc])=>DIRS4.forEach(([a,b])=>{ if (own.has((dr+a)+','+(dc+b))) return; per++; const y=r+dr+a, x=c+dc+b; if (y<0||x<0||y>=N||x>=N||g[y*N+x]!==null) touch++; }));
+    const exact=touch===per;
+    const val=n*100+touch*2+(exact?15:0);
+    if (!best||val>best.val){ rows.forEach(rr=>{for(let x=0;x<N;x++) t[rr*N+x]=null;}); cols.forEach(cc=>{for(let y=0;y<N;y++) t[y*N+cc]=null;}); best={val,n,touch,per,exact,g:t}; }
+  }
+  return best;
+}
+function analyzeShapes(g){ return SHAPES.map((shape,id)=>{ const b=placeInfo(g,shape); return b ? {id,shape,size:shape.length,n:b.n,touch:b.touch,per:b.per,exact:b.exact,g:b.g} : null; }).filter(Boolean); }
+function poolOf(id){ return POOLS.findIndex(p=>p.includes(id)); }
+let recentShapes=[];                                // zuletzt angebotene Formen (Abwechslung)
+let recentLines=[];                                 // geräumte Linien je Zug (letzte 15 Züge) – misst die aktuelle Spielstärke
+function skillNow(){ if (recentLines.length<6) return 0.3; const avg=recentLines.reduce((a,b)=>a+b,0)/recentLines.length; return Math.max(0, Math.min(1, (avg-0.3)/0.3)); }
+function nearLines(g){ let k=0; for (let r=0;r<N;r++){ let e=0; for (let c=0;c<N;c++) if (!g[r*N+c]) e++; if (e>0 && e<=2) k++; } for (let c=0;c<N;c++){ let e=0; for (let r=0;r<N;r++) if (!g[r*N+c]) e++; if (e>0 && e<=2) k++; } return k; }
+function shapeWeight(id,d){ const w=poolWeights(d); const k=poolOf(id); let x=(k>=0?w[k]/POOLS[k].length:1); if (recentShapes.includes(id)) x*=0.35; return x; }
+function pickWeighted(list,wf){ let tot=0; const ws=list.map(x=>{const w=Math.max(0.0001,wf(x)); tot+=w; return w;}); let r=Math.random()*tot; for (let i=0;i<list.length;i++){ r-=ws[i]; if (r<=0) return list[i]; } return list[list.length-1]; }
+function mkPiece(id,d){ const piece={shape:SHAPES[id], color:pick(COLORS)}; if (d>=1 && Math.random()<0.13) piece.star=Math.floor(Math.random()*piece.shape.length); return piece; }
+function pockets(g){ let p=0; for (let k=0;k<N*N;k++){ if (g[k]) continue; const r=k/N|0, c=k%N; let open=0; DIRS4.forEach(([a,b])=>{ const y=r+a,x=c+b; if (y>=0&&x>=0&&y<N&&x<N&&!g[y*N+x]) open++; }); if (open<=1) p++; } return p; }
 function newSet(){
   let {d,a}=curDiff();
   const stress=playTime<GRACE ? 0 : stressNow();
   const gift=giftDue(stress);
   if (gift){ d=Math.min(d,0.6); a=1; setsSinceGift=0; } else if (playTime>=GRACE) setsSinceGift++;
-  // Grundhilfe nie unter 30 %; wird es eng, steigt die Hilfe und die Steine werden einfacher
   a=Math.max(a, 0.3, stress);
   d=d*(1-0.7*stress);
-  const k=1+Math.round(a*13);         // je mehr Hilfe, desto mehr Kandidaten
-  const allFit=a>0.55;
-  const wantAll3=a>0.4;               // alle drei Steine sollen nacheinander legbar sein
-  // Erfolgserlebnis: möglichst ein Stein im Satz, der SOFORT eine Reihe schließt – nach zwei Zügen ohne Räumung
-  // oder in engen Lagen wird gezielt danach gesucht. Die Schwierigkeit steigt weiter über die Steinformen (d).
-  const wantLine = gift || sinceClear>=2 || stress>0.3 || playTime<GRACE;
-  const lineNow = s=>s.reduce((n,p)=>{ const b=bestPlacement(grid,p.shape); return n+(b && b.n>0 ? 1 : 0); },0);
-  let bestS=null, bestV=-1, bestOk=false, bestLn=0;
-  for (let t=0;t<70 && (t<k || !bestS || (wantAll3 && !bestOk && t<40) || (wantLine && !bestLn && t<70));t++){
-    const s=[randPiece(d),randPiece(d),randPiece(d)];
-    if (allFit ? !s.every(p=>canPlaceAnywhere(p.shape)) : !s.some(p=>canPlaceAnywhere(p.shape))) continue;
-    let v = rateSet(s);
-    const ok = lastRate.placed===3;
-    const ln = lineNow(s);
-    if (wantAll3 && ok) v+=40;        // komplett legbare Sätze klar bevorzugen
-    if (ln>0) v += wantLine ? 70 : 25; // Satz mit sofort passender Reihe
-    if (ln>1) v += 10;
-    if (stress>0.35 && lastRate.lines>0) v+=25;  // in engen Lagen: Satz mit Chance auf eine Reihe
-    if (stress>0.5) v-=s.reduce((a,p)=>a+p.shape.length,0)*0.8*stress;   // und eher handliche Steine
-    if (v>bestV){ bestV=v; bestS=s; bestOk=ok; bestLn=ln; }
+  const dnT=Math.min(1, d/3.5);                     // Zeit-Kurve: 0 = leicht … 1 = schwer
+  const sk=skillNow();                              // 0 = tut sich schwer … 1 = räumt laufend
+  const dn=Math.max(0.55*dnT, Math.min(1, 0.55*dnT+0.7*sk));   // starke Spieler werden früher gefordert, schwache länger getragen
+  const A=analyzeShapes(grid);
+  if (!A.length) return [randPiece(0),randPiece(0),randPiece(0)];
+  const filled=grid.reduce((x,v)=>x+(v?1:0),0), frag=pockets(grid);
+  const tight = filled>=36 || frag>=6;
+  // Wahrscheinlichkeiten je nach Lage
+  const late = Math.max(0, Math.min(1, (playTime-180)/600));   // nach 3 Minuten steigt der Druck langsam weiter (bis 13 min)
+  let pClose = gift||playTime<GRACE ? 1 : 0.92-0.5*dn-0.15*late;
+  if (sinceClear>=2) pClose=Math.max(pClose, 0.95-0.25*dn);
+  if (sinceClear>=4 || tight) pClose=Math.max(pClose, 1-0.35*dn);  // Rettung wird mit der Schwierigkeit seltener, bleibt aber
+  const pCombo = gift ? 0.7 : Math.max(0.2, 0.55-0.35*dn) + (combo>=2?0.15:0);   // Zweifach-Räumer sind die Höhepunkte – nie zu selten
+  const pBig   = Math.max(0.15, 0.6-0.4*dn);        // große Aufbauer bei viel Platz
+  const K = 2+Math.round(3*(1-dn));               // mehrere Vorschläge, der beste gewinnt – je leichter, desto mehr Auswahl
+  let tries=0, set=null, setV=-1, found=0;
+  while (tries++<10 && found<K){
+    const ids=[]; let gAfter=grid;
+    // 1) Vollender
+    const closers=A.filter(x=>x.n>=1);
+    let closer=null;
+    if (closers.length && Math.random()<pClose){
+      const two=closers.filter(x=>x.n>=2);
+      const from = two.length && Math.random()<pCombo ? two : closers;
+      closer=pickWeighted(from, x=>shapeWeight(x.id,d)*(gift||playTime<GRACE ? x.size : 1)*(x.exact?1.6:1));
+      ids.push(closer.id); gAfter=closer.g;
+    }
+    // 2) Aufbauer – ohne fast volle Reihe: 2-Zug-Aufbau (Aufbauer, danach Vollender auf dem neuen Feld)
+    const easyMode = sk<0.4 || dn<0.5;              // wer sich schwertut, bekommt nur Steine, die sofort passen
+    const B=(closer && easyMode ? A : analyzeShapes(gAfter)).filter(x=>!ids.includes(x.id));
+    if (!B.length) break;
+    let builder;
+    if (!closer){
+      let found=null; if (sk<0.3) found=false;   // Anfänger: kein 2-Zug-Rätsel
+      const cand=B.filter(x=>x.size<=5).sort(()=>Math.random()-.5).slice(0,7);
+      if (found!==false) for (const bl of cand){ const C=analyzeShapes(bl.g).filter(x=>x.n>=1 && x.id!==bl.id); if (C.length){ found={bl, cl:pickWeighted(C,x=>shapeWeight(x.id,d))}; break; } }
+      if (found){ ids.push(found.bl.id, found.cl.id); gAfter=found.cl.g; builder=null; }
+      else { builder=pickWeighted(B, x=>shapeWeight(x.id,d)*(x.exact?2:1)*(1+x.touch/Math.max(1,x.per))); ids.push(builder.id); gAfter=builder.g; }
+    } else {
+      const wantBig=!tight && Math.random()<pBig;
+      builder=pickWeighted(B, x=>shapeWeight(x.id,d)*(x.exact?(tight?2.5:1.5):1)*(1+x.touch/Math.max(1,x.per))*(wantBig? (x.size>=4?2:0.6) : (tight? (x.size<=3?1.8:0.8):1))*(1+0.35*nearLines(x.g)));
+      ids.push(builder.id); gAfter=builder.g;
+    }
+    // 3) Joker – legbar jetzt oder spätestens nach den beiden anderen; mit steigender Schwierigkeit
+    //    darf der Joker auch mal (noch) nicht passen – das ist die eigentliche Herausforderung
+    let deadJoker=false;
+    const pDead = (gift||tight||sinceClear>=3||playTime<GRACE||sk<0.25) ? 0 : Math.max(0, dn-0.3)*0.7+0.25*late;   // nie bei Spielern, die sich schwertun
+    while (ids.length<3){
+      // Joker: für Spieler, die sich schwertun, immer sofort legbar; sonst spätestens nach den beiden anderen
+      const J=(sk<0.4 || dn<0.5) ? A.filter(x=>!ids.includes(x.id)) : analyzeShapes(gAfter).filter(x=>!ids.includes(x.id));
+      const dead=SHAPES.map((sh,id)=>id).filter(id=>!ids.includes(id) && !A.some(x=>x.id===id));
+      if (dead.length && Math.random()<pDead){ ids.push(pickWeighted(dead, id=>shapeWeight(id,d))); deadJoker=true; continue; }
+      const pool = J.length ? J : A.filter(x=>!ids.includes(x.id));
+      if (!pool.length) break;
+      ids.push(pickWeighted(pool, x=>shapeWeight(x.id,d)).id);
+    }
+    if (ids.length<3) break;
+    const cand=ids.map(id=>mkPiece(id,d)).sort(()=>Math.random()-.5);
+    let v=rateSet(cand);
+    if (!(lastRate.placed===3 || (deadJoker && lastRate.placed>=2))) continue;
+    found++;
+    if (lastRate.lines>=2) v+=35;                   // Satz mit Zweifach-Chance
+    if (closer && closer.n>=2) v+=30;
+    if (v>setV){ setV=v; set=cand; }
   }
-  return bestS || [randPiece(0),randPiece(0),randPiece(0)];
+  if (!set){ set=[randPiece(d),randPiece(d),randPiece(d)]; let t=0; while (t++<40 && !set.every(p=>canPlaceAnywhere(p.shape))) set=[randPiece(d),randPiece(d),randPiece(d)]; }
+  recentShapes=set.map(p=>SHAPES.indexOf(p.shape)).concat(recentShapes).slice(0,6);
+  return set;
 }
 /* Eröffnung: Feld mit Lücken, in die genau die ersten drei Teile passen. Jeder Zug räumt Reihen. */
 function opening(){
@@ -1309,6 +1385,7 @@ function place(i,r,c){
     setTimeout(()=>SND.turbo(m),330);
   }
   if (!n){ sinceClear++; if (sinceClear>=3) combo=0; }
+  recentLines.push(n); if (recentLines.length>15) recentLines.shift();
   pieces[i]=null;
   renderBoard();
   SND.plop(p.shape.length);
@@ -1806,7 +1883,7 @@ function newGame(){
   idleTime=0;
   familyIntro();
   if (typeof askName==='function') setTimeout(askName,0);
-  score=0; combo=0; sinceClear=9; lastMove=0; level=1; endTurbo(); bestAtStart=best;
+  score=0; combo=0; sinceClear=9; lastMove=0; level=1; endTurbo(); bestAtStart=best; recentLines=[]; recentShapes=[];
   const op=opening(); grid=op.grid;
   bdayNext=[];
   stars=new Set(); skinOrder=shuffleSkins(); skinBump=0; curSkin=null; playTime=0; profile=newProfile(); setsSinceGift=0;
