@@ -817,7 +817,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 05:29';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 05:32';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 const MP={on:false, used:false, done:false, room:null, seed:0, size:0, setIdx:0, players:[], prev:{}, lastSent:'', offset:0, roomInfo:null,
   device:(()=>{ let d=load('jemrix-device',''); if (typeof d!=='string' || d.length<8){ d=(window.crypto&&crypto.randomUUID) ? 'd'+crypto.randomUUID().replace(/-/g,'') : 'd'+Math.random().toString(36).slice(2,12)+Date.now().toString(36); save('jemrix-device',d); } return d; })()};
 
@@ -1698,10 +1698,9 @@ function askName(){
   if (!player) setTimeout(()=>{ try{$('regname').focus();}catch(e){} },50);
 }
 function setPlayer(n){ idleTime=0; player=n; save('jemrix-name',n); $('reg').hidden=true; showPlayer(); SND.start();
-  if (isBirthdayKid(n)){
-    // Gratulation nur für das Geburtstagskind selbst – einmal am Tag auf diesem iPhone
-    const key=new Date().toDateString()+'|'+n.toLowerCase();
-    if (load('jemrix-bday-shown','')!==key){ save('jemrix-bday-shown',key); tickLast=0; birthdayShow(()=>{ idleTime=0; tickLast=performance.now(); }); }
+  if (isBirthdayKid(n) && !document.querySelector('.bday')){
+    // Gratulation nur für das Geburtstagskind selbst – bei jedem Spielstart
+    tickLast=0; birthdayShow(()=>{ idleTime=0; tickLast=performance.now(); });
   }
   if (isBirthdayKid(n) && score===0){ startTurbo(30000,2); const t=$('lvl'); t.textContent='Geburtstags-Turbo ×2 für 30 s'; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); } }
 $('regform').addEventListener('submit',e=>{

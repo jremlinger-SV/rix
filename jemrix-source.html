@@ -1658,10 +1658,9 @@ function askName(){
   if (!player) setTimeout(()=>{ try{$('regname').focus();}catch(e){} },50);
 }
 function setPlayer(n){ idleTime=0; player=n; save('jemrix-name',n); $('reg').hidden=true; showPlayer(); SND.start();
-  if (isBirthdayKid(n)){
-    // Gratulation nur für das Geburtstagskind selbst – einmal am Tag auf diesem iPhone
-    const key=new Date().toDateString()+'|'+n.toLowerCase();
-    if (load('jemrix-bday-shown','')!==key){ save('jemrix-bday-shown',key); tickLast=0; birthdayShow(()=>{ idleTime=0; tickLast=performance.now(); }); }
+  if (isBirthdayKid(n) && !document.querySelector('.bday')){
+    // Gratulation nur für das Geburtstagskind selbst – bei jedem Spielstart
+    tickLast=0; birthdayShow(()=>{ idleTime=0; tickLast=performance.now(); });
   }
   if (isBirthdayKid(n) && score===0){ startTurbo(30000,2); const t=$('lvl'); t.textContent='Geburtstags-Turbo ×2 für 30 s'; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); } }
 $('regform').addEventListener('submit',e=>{
