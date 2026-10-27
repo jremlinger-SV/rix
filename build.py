@@ -155,13 +155,14 @@ FONTS = '''@font-face{font-family:"Fredoka";font-style:normal;font-weight:500;fo
 SPLASH = '\n'.join(
     f'<link rel="apple-touch-startup-image" media="(device-width: {w}px) and (device-height: {h}px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-{w*3}x{h*3}.png">'
     for w, h in [(393, 852), (402, 874), (430, 932), (440, 956)])
-HEAD = f'''<!doctype html>
+def head(title, desc):
+    return f'''<!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Jemrix</title>
-<meta name="description" content="Jemrix – das Block-Puzzle nur für die Remlingers">
+<title>{title}</title>
+<meta name="description" content="{desc}">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Jemrix">
@@ -191,14 +192,26 @@ img{{max-width:100%}}
 </head>
 <body>
 '''
-s = HEAD + s.rstrip() + '\n</body>\n</html>\n'
+s = head('Jemrix', 'Jemrix – das Block-Puzzle nur für die Remlingers') + s.rstrip() + '\n</body>\n</html>\n'
 
 assert 'window.claude' not in s, 'Claude-Laufzeitaufruf übrig'
 assert 'fonts.googleapis' not in s
 (HERE / 'index.html').write_text(s, encoding='utf-8')
 
+# 4b) jenMah (Mahjong) aus jenmah-source.html: gleicher Kopf, gleiche Schriften, gleicher Offline-Speicher
+m = (HERE / 'jenmah-source.html').read_text(encoding='utf-8')
+assert m.count('<title>jenMah</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n') == 1
+m = m.replace('<title>jenMah</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n', '')
+m = re.sub(r'<link rel="preconnect" href="https://fonts.googleapis.com">\n', '', m)
+m = re.sub(r'<link rel="stylesheet" href="https://fonts.googleapis.com/[^"]*">\n', '', m)
+assert m.count("const APP_VERSION='';") == 1
+m = m.replace("const APP_VERSION='';", f"const APP_VERSION='{STAMP}';")
+m = head('jenMah', 'jenMah – Mahjong nur für die Remlingers') + m.rstrip() + '\n</body>\n</html>\n'
+assert 'fonts.googleapis' not in m
+(HERE / 'jenmah.html').write_text(m, encoding='utf-8')
+
 # 5) Service Worker mit Versionsstempel (neue Version = neuer Cache)
-h = hashlib.sha1(s.encode())
+h = hashlib.sha1(s.encode()); h.update(m.encode())
 for f in sorted([*(HERE/'fonts').glob('*'), *(HERE/'icons').glob('*'), HERE/'config.js', HERE/'manifest.webmanifest', HERE/'sw.template.js']):
     h.update(f.name.encode()); h.update(f.read_bytes())
 ver = h.hexdigest()[:10]
@@ -206,4 +219,4 @@ sw = (HERE / 'sw.template.js').read_text(encoding='utf-8').replace('__VERSION__'
 for f in re.findall(r"'([^']+\.(?:html|js|webmanifest|png|woff2))'", sw.split('];')[0]):
     assert (HERE / f).exists(), f'Offline-Datei fehlt: {f}'
 (HERE / 'sw.js').write_text(sw, encoding='utf-8')
-print('index.html und sw.js gebaut, Version', ver)
+print('index.html, jenmah.html und sw.js gebaut, Version', ver)
