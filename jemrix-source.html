@@ -735,7 +735,7 @@ function inBreather(){ if (!profile || playTime<GRACE) return false; const t=(pl
 function curDiff(){
   if (playTime<GRACE) return {d:0, a:1, grace:true};
   if (!profile) profile=newProfile();
-  let d=profile.ramp*(playTime-GRACE)/35;
+  let d=profile.ramp*(playTime-GRACE)/27;   // etwas steiler, weil die Steine jetzt öfter passen – Spieldauer bleibt wie gehabt
   let a=Math.max(0.08, Math.min(1, 1-d/7));
   if (inBreather()){ d*=0.35; a=Math.max(a,0.8); }
   return {d, a, grace:false};

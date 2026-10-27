@@ -678,7 +678,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 06:04';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 06:05';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -775,7 +775,7 @@ function inBreather(){ if (!profile || playTime<GRACE) return false; const t=(pl
 function curDiff(){
   if (playTime<GRACE) return {d:0, a:1, grace:true};
   if (!profile) profile=newProfile();
-  let d=profile.ramp*(playTime-GRACE)/35;
+  let d=profile.ramp*(playTime-GRACE)/27;   // etwas steiler, weil die Steine jetzt öfter passen – Spieldauer bleibt wie gehabt
   let a=Math.max(0.08, Math.min(1, 1-d/7));
   if (inBreather()){ d*=0.35; a=Math.max(a,0.8); }
   return {d, a, grace:false};
