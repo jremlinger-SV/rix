@@ -423,7 +423,7 @@ body.gameover .topbar,body.gameover .wellwrap{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='27.10.2026, 22:39';   // wird beim Bauen gefüllt
+const APP_VERSION='27.10.2026, 22:40';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -1133,7 +1133,7 @@ async function trySync(){
   syncing=true; const batch=pending.slice(0,50);
   try{ const seq=++listSeq;
     const j=await api('submit_scores_tet',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score), secs:Math.round(e.secs||0), mode:e.mode, id:e.id||''}))});
-    pending=pending.slice(batch.length); save('jjetet-pending',pending);
+    pending=pending.filter(e=>!batch.includes(e)); save('jjetet-pending',pending);
     if (j && j.ok!==false){ if (takeList(j,seq)===false) setTimeout(fetchScores,300); }
     netOk=true;
   }catch(e){ netOk=false; }

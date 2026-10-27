@@ -1093,7 +1093,7 @@ async function trySync(){
   syncing=true; const batch=pending.slice(0,50);
   try{ const seq=++listSeq;
     const j=await api('submit_scores_tet',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score), secs:Math.round(e.secs||0), mode:e.mode, id:e.id||''}))});
-    pending=pending.slice(batch.length); save('jjetet-pending',pending);
+    pending=pending.filter(e=>!batch.includes(e)); save('jjetet-pending',pending);
     if (j && j.ok!==false){ if (takeList(j,seq)===false) setTimeout(fetchScores,300); }
     netOk=true;
   }catch(e){ netOk=false; }
