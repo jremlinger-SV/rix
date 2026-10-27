@@ -230,25 +230,23 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .tablewrap{position:relative;flex:1 1 auto;width:100%;min-height:240px}
 .table{position:absolute;inset:0;z-index:0;isolation:isolate;background:radial-gradient(ellipse at 50% 0%,rgba(77,155,255,.22),transparent 60%),var(--board);border-radius:14px;box-shadow:0 10px 30px rgba(20,26,50,.25);overflow:hidden}
 .tiles{position:absolute;inset:0}
-.tile{position:absolute;box-sizing:border-box;border-radius:calc(var(--tw)*.16);
-  background:linear-gradient(160deg,#ffffff 0%,#f1f6ff 45%,#dce8ff 100%);
-  box-shadow:inset 0 0 0 1px rgba(47,107,255,.18),inset 0 calc(var(--d)*-.5) calc(var(--d)*.9) rgba(29,78,216,.10),
-    calc(var(--d)*.35) calc(var(--d)*.35) 0 #c9dcff, calc(var(--d)*.7) calc(var(--d)*.7) 0 #2f6bff, var(--d) var(--d) 0 #1d4ed8, calc(var(--d) + 1px) calc(var(--d) + 1px) 0 #14348f,
-    calc(var(--d) + 3px) calc(var(--d) + 5px) calc(var(--d) + 6px) rgba(3,8,26,.55);
+.tile{position:absolute;box-sizing:border-box;border-radius:calc(var(--tw)*.13);
+  background:linear-gradient(180deg,#ffffff 0%,#f6f9ff 62%,#e8eefa 100%);
+  box-shadow:inset 0 0 0 1px rgba(15,29,61,.10),inset 0 -1px 0 rgba(15,29,61,.06),
+    0 var(--d) 0 #d3dff3, 0 calc(var(--d) + 1.5px) 0 #8fa6d0, 1px calc(var(--d) + 4px) calc(var(--d) + 3px) rgba(1,4,16,.55);
   transition:transform .12s ease, filter .2s, box-shadow .12s;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.tile svg{position:absolute;inset:3.5% 4%;width:92%;height:93%;display:block;pointer-events:none;transition:opacity .2s}
-.tile{filter:brightness(calc(.93 + var(--z,0)*.025))}
+.tile svg{position:absolute;inset:4.5% 5%;width:90%;height:91%;display:block;pointer-events:none;transition:opacity .2s}
+.tile{filter:brightness(calc(.9 + var(--z,0)*.035))}
 .tile.sel{filter:none}
-.tile.back{background:linear-gradient(160deg,#5b9bff 0%,#2f6bff 45%,#1d4ed8 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),inset 0 2px 0 rgba(255,255,255,.3),
-    calc(var(--d)*.45) calc(var(--d)*.45) 0 #b9d2ff, var(--d) var(--d) 0 #eef4ff, calc(var(--d) + 1px) calc(var(--d) + 1px) 0 #c9daf8,
-    calc(var(--d) + 2px) calc(var(--d) + 4px) calc(var(--d) + 4px) rgba(3,8,26,.45)}
+.tile.back{background:linear-gradient(180deg,#5b9bff 0%,#2f6bff 55%,#2457dc 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),inset 0 2px 0 rgba(255,255,255,.3),
+    0 var(--d) 0 #1d4ed8, 0 calc(var(--d) + 1.5px) 0 #12317f, 1px calc(var(--d) + 4px) calc(var(--d) + 3px) rgba(1,4,16,.55)}
 .tile.sel{transform:translate(-2px,-4px);background:linear-gradient(160deg,#ffffff,#e3efff 50%,#bcd6ff);
   box-shadow:inset 0 0 0 2.5px #2563eb, 0 0 0 2px rgba(255,255,255,.9), 0 0 18px 4px rgba(56,189,248,.75),
     calc(var(--d) + 2px) calc(var(--d) + 4px) 0 #1d4ed8, calc(var(--d) + 3px) calc(var(--d) + 8px) calc(var(--d) + 6px) rgba(3,8,26,.5)}
 .tile.nope{animation:nope .28s ease}
 @keyframes nope{0%,100%{translate:0 0}25%{translate:-3px 0}75%{translate:3px 0}}
-.tile.hint{animation:hint 1.2s ease-in-out 2}
-@keyframes hint{0%,100%{filter:none}50%{filter:brightness(1.12) drop-shadow(0 0 7px #9fd8ff) drop-shadow(0 0 3px #fff)}}
+.tile.hint{animation:hint 1.1s ease-in-out 3}
+@keyframes hint{0%,100%{filter:none}50%{filter:brightness(1.08) drop-shadow(0 0 0 #2dd4bf) drop-shadow(0 0 9px #2dd4bf) drop-shadow(0 0 3px #5eead4)}}
 .tile.gone{animation:gone .34s cubic-bezier(.4,0,.2,1) forwards;pointer-events:none}
 @keyframes gone{0%{transform:translate(-2px,-4px) scale(1)}35%{transform:translate(-2px,-8px) scale(1.12);filter:brightness(1.35)}100%{transform:translate(-2px,-12px) scale(.55);opacity:0;filter:brightness(1.6)}}
 .tile.drop{animation:drop .42s cubic-bezier(.2,.9,.3,1.2) var(--dl,0ms) both}
@@ -297,6 +295,19 @@ header.mh .sndbtn{justify-self:end;margin:0}
 .bbtn:disabled .cnt{background:#5b6b95!important}
 #boardslot .foot{display:none}
 body.gameover .park{visibility:hidden}
+/* ===== Vorbild-Bildschirm: ganzer Hintergrund dunkel, Feld frei darauf ===== */
+:root:root:root{--bg:#0f1b3f;--panel:#16244d;--board:#0f1b3f;--well:#1e2b52;--fg:#e8f0ff;--muted:#8fa3d1;--accent:#4d9bff;--score-mix:#ffffff;--score-edge:#0c1328;color-scheme:dark}
+html,body{background:radial-gradient(ellipse at 50% 30%,#1b2f66 0%,#0f1b3f 58%,#0a1330 100%) fixed!important}
+html.intro-on,html.intro-on body{background:#0f1b3f!important}
+header.mh{padding-inline:4px}
+.boardslot{background:none!important;box-shadow:none!important;margin-inline:0!important;padding:4px 0 8px!important;gap:0!important}
+.park{margin-top:8px;margin-bottom:clamp(10px,3vh,28px);background:rgba(3,8,26,.55)!important;box-shadow:inset 0 0 0 2px rgba(159,216,255,.38),inset 0 3px 10px rgba(0,0,0,.5)!important;border-radius:12px!important;padding:5px 7px!important;gap:4px!important}
+.tablewrap{margin-bottom:clamp(8px,2.5vh,22px)}
+.bbtn{width:46px!important;height:46px!important}
+.bbtn svg{width:22px!important;height:22px!important}
+.bbtn .cnt{min-width:17px!important;height:17px!important;font-size:.66rem!important;line-height:17px!important;right:-4px!important;top:-4px!important}
+.boost{gap:clamp(30px,11vw,52px)!important}
+.family{padding-block:2px 4px}
 /* Netz-Hinweis oben, damit er die Hilfe-Knöpfe nicht verdeckt */
 .netline{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 6px);pointer-events:none;font-size:.72rem;padding:4px 12px}
 .boost{display:flex;justify-content:center;gap:10px;flex:none}
@@ -435,19 +446,19 @@ const FACE_CACHE={};
 function faceSVG(f){
   if (FACE_CACHE[f]) return FACE_CACHE[f];
   const s=f[0], n=+f.slice(1); let b='';
-  if (s==='d'){ const cols=[C.blue,C.teal,C.vio]; b=DOTS[n].map(([x,y],i)=>dot(x,y,DOT_R[n], n===1?C.blue:cols[(i+(n===5&&i===2?1:0))%3])).join('') + (n===1?`<circle cx="30" cy="40" r="20" fill="none" stroke="${C.sky}" stroke-width="2"/>`:'') + idx(n); }
+  if (s==='d'){ const cols=[C.blue,C.teal,C.vio]; b=DOTS[n].map(([x,y],i)=>dot(x,y,DOT_R[n], n===1?C.blue:cols[(i+(n===5&&i===2?1:0))%3])).join('') + (n===1?`<circle cx="30" cy="40" r="22" fill="none" stroke="${C.sky}" stroke-width="2.4"/>`:''); }
   else if (s==='b'){
-    if (n===1) b=bird()+idx(1);
+    if (n===1) b=bird();
     else { const rows=BAMBOO[n], r=rows.length, gap=5, h=(64-(r-1)*gap)/r;
       rows.forEach((xs,ri)=>xs.forEach((x,xi)=>{ const mid=(xs.length===1 && r===3) || (n===9 && xi===1) || (n===5 && ri===1); b+=stick(x, 8+ri*(h+gap), h, mid?C.blue:(ri%2?C.sky:C.teal)); }));
-      b+=idx(n); }
+    }
   }
   else if (s==='c'){ b=txt(30,36,CJK_NUM[n-1],32,C.navy)+txt(30,74,'萬',31,C.vio2)+idx(n); }
   else if (s==='w'){ const ch={O:'東',S:'南',W:'西',N:'北'}[f[1]]; b=txt(30,58,ch,46,C.navy)+idx(f[1]); }
   else if (s==='r'){ if (f[1]==='Z') b=txt(30,59,'中',48,C.vio2); else if (f[1]==='F') b=txt(30,59,'發',46,C.teal);
     else b=`<rect x="13" y="14" width="34" height="52" rx="5" fill="none" stroke="${C.blue}" stroke-width="4"/><rect x="19.5" y="20.5" width="21" height="39" rx="3" fill="none" stroke="${C.sky}" stroke-width="2"/>`; }
-  else if (s==='f') b=flower(n)+idx(n);
-  else if (s==='s') b=season(n)+idx(n);
+  else if (s==='f') b=flower(n);
+  else if (s==='s') b=season(n);
   return FACE_CACHE[f]=`<svg viewBox="0 0 60 80" aria-hidden="true">${b}</svg>`;
 }
 const FACE_NAME=f=>{ const s=f[0], n=f.slice(1);
@@ -465,7 +476,11 @@ const LAYOUTS={
   kreuz:{name:'Kreuz', r:[[2,0,3,9,0],[0,2.5,2,4,0],[5,2.5,2,4,0],[2,0.5,3,8,1],[0.5,3,1,3,1],[5.5,3,1,3,1],[2,1,3,7,2],[2.5,2,2,5,3]]},
   pagode:{name:'Pagode', r:[[0,0,7,9,0],[0.5,0.5,6,8,1],[1.5,1.5,4,6,2],[2,2.5,3,3,3]]},
   festung:{name:'Festung', r:[[0,0,7,9,0],[1,0,5,9,1],[1,1.5,5,6,2],[2,3,3,2,3]]},
-  tor:{name:'Tor', r:[[1,0,5,2,0],[0,2,7,2,0],[0,4,3,3,0],[4,4,3,3,0],[1.5,0.5,4,2,1],[0.5,2.5,6,1,1],[0.5,3.5,2,3,1],[4.5,3.5,2,3,1],[2.5,0.5,2,1,2],[1,4,1,2,2],[5,4,1,2,2],[1,4.5,1,1,3],[5,4.5,1,1,3]]},
+  tor:{name:'Tor', r:[
+    [1,0,5,2,0],[0,2,7,2,0],[0,4,3,3,0],[4,4,3,3,0],
+    [1.5,0,4,2,1],[1,2,1,1,1],[4.5,2,1,1,1],[0,2.5,1,1,1],[6,2.5,1,1,1],[3,2.5,1,1,1],[0.5,3.5,2,3,1],[4.5,3.5,2,3,1],
+    [2,1,3,1,2],[0.5,4,1,2,2],[5,4,1,2,2],
+    [2.5,0.5,2,1,3],[1,4.5,1,1,3],[5,4.5,1,1,3]]},
   tempel:{name:'Tempel', r:[[0,1,7,7,0],[1,0,5,1,0],[1,8,5,1,0],[0.5,0.5,6,8,1],[1,1.5,5,6,2],[2,2.5,3,2,3],[3,3,1,1,4]]}
 };
 function positionsOf(id){
@@ -562,18 +577,19 @@ function measure(){
   alive.forEach(t=>{ minX=Math.min(minX,t.x); minY=Math.min(minY,t.y); maxX=Math.max(maxX,t.x+2); maxY=Math.max(maxY,t.y+2); maxZ=Math.max(maxZ,t.z); });
   const cols=(maxX-minX)/2, rows=(maxY-minY)/2;
   const W=tableEl.clientWidth-8, H=tableEl.clientHeight-8;
-  const LIFT=.17, RATIO=1.26;   // Stein knapp 4:5, jede Ebene deutlich nach oben links versetzt
-  const tw=Math.max(18, Math.min(78, W/(cols+LIFT*maxZ+.14), H/(rows*RATIO+LIFT*maxZ+.16)));
-  const th=tw*RATIO, lift=tw*LIFT, d=Math.max(3,tw*.12);
-  const usedW=cols*tw+lift*maxZ+d, usedH=rows*th+lift*maxZ+d;
-  geo={tw,th,d,lift,minX,minY,ox:4+(W-usedW)/2+lift*maxZ, oy:4+(H-usedH)/2+lift*maxZ};
+  // wie im Vorbild: Stein 1:1,2, höhere Ebenen vor allem nach oben versetzt (leicht nach links), Dicke unten sichtbar
+  const RATIO=1.2, LY=.12, LX=.045, DK=.1;
+  const tw=Math.max(18, Math.min(74, W/(cols+LX*maxZ+.04), H/(rows*RATIO+(LY*maxZ+DK)*RATIO+.05)));
+  const th=tw*RATIO, ly=th*LY, lx=tw*LX, d=Math.max(3,th*DK);
+  const usedW=cols*tw+lx*maxZ, usedH=rows*th+ly*maxZ+d;
+  geo={tw,th,d,lift:ly,lx,ly,minX,minY,ox:4+(W-usedW)/2+lx*maxZ, oy:4+(H-usedH)/2+ly*maxZ};
   tilesEl.style.setProperty('--tw',tw+'px'); tilesEl.style.setProperty('--d',d+'px');
   const sw=Math.min(tw*.92,54); parkEl.style.setProperty('--sw',sw+'px'); parkEl.style.setProperty('--tw',sw+'px'); parkEl.style.setProperty('--d',Math.max(3,sw*.1)+'px');
 }
 function placeEl(el,t){
   el.style.width=geo.tw+'px'; el.style.height=geo.th+'px';
-  el.style.left=(geo.ox+(t.x-geo.minX)/2*geo.tw - t.z*geo.lift)+'px';
-  el.style.top=(geo.oy+(t.y-geo.minY)/2*geo.th - t.z*geo.lift)+'px';
+  el.style.left=(geo.ox+(t.x-geo.minX)/2*geo.tw - t.z*geo.lx)+'px';
+  el.style.top=(geo.oy+(t.y-geo.minY)/2*geo.th - t.z*geo.ly)+'px';
   el.style.zIndex=t.z*200+t.x+t.y; el.style.setProperty('--z',t.z);
 }
 function renderAll(anim){
