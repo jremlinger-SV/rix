@@ -350,6 +350,10 @@ header.mh .sndbtn{width:30px;height:30px}
 body.gameover .tiles,body.gameover .boost{visibility:hidden}
 body.gameover .over{bottom:0}
 .lvl{z-index:7}
+/* Wegschieben zum Druntergucken */
+.tile.lifted{z-index:9000!important;transition:none!important;filter:none;box-shadow:inset 0 0 0 1px rgba(15,29,61,.10),0 var(--d) 0 #d3dff3,0 calc(var(--d) + 1.5px) 0 #8fa6d0,0 14px 26px rgba(1,4,16,.6)}
+.tile.lifted.springback{transition:transform .24s cubic-bezier(.3,1.5,.5,1)!important}
+#tiles{touch-action:none}
 /* Booster-Abzeichen oben rechts (goldener Punkt mit Zahl) */
 .tile .bst{position:absolute;right:0;top:0;z-index:2;width:52%;height:42%;box-sizing:border-box;
   display:flex;justify-content:flex-end;align-items:flex-start;padding:4% 9% 0 0;
@@ -845,10 +849,10 @@ function coverPeek(){ const i=peek; peek=-1; if (i>=0 && T[i] && T[i].alive && T
 document.addEventListener('pointerdown',e=>{
   if (peek<0) return;
   const el=e.target && e.target.closest ? e.target.closest('#tiles .tile') : null;
-  if (el && +el.dataset.i===peek) return;   // derselbe Stein: wird gleich genutzt
-  if (el && peekPartner(+el.dataset.i)) return;   // passender Partner: beide gehen gleich zusammen hoch
+  if (el) return;   // Steine im Feld: entschieden wird beim Loslassen (Tipp oder Wegschieben zum Druntergucken)
   coverPeek();
 },true);
+function peekBeforeTap(i){ if (peek>=0 && i!==peek && !peekPartner(i)) coverPeek(); }
 // Partner des aufgedeckten Steins – auch wenn er selbst noch verdeckt ist
 function peekPartner(i){ return peek>=0 && i!==peek && T[peek] && T[peek].alive && T[i] && T[i].alive && keyOf(T[i].f)===keyOf(T[peek].f) && isFree(i) && isFree(peek); }
 function pairPeek(a,b){
@@ -943,8 +947,42 @@ function showHint(){
   ids.forEach(i=>{ const el=tileEls[i]; if (!el) return; el.classList.remove('hint'); void el.offsetWidth; el.classList.add('hint'); setTimeout(()=>el.classList.remove('hint'),2500); });
   return ids.length>0;
 }
-tilesEl.addEventListener('pointerdown',e=>{ const el=e.target.closest('.tile'); if (!el) return; e.preventDefault(); onTap(+el.dataset.i); });
-tilesEl.addEventListener('keydown',e=>{ if (e.key!=='Enter' && e.key!==' ') return; const el=e.target.closest('.tile'); if (!el) return; e.preventDefault(); onTap(+el.dataset.i); });
+/* Steine: kurz antippen = Zug. Antippen, halten und ziehen = Stein beiseiteschieben und darunter schauen;
+   beim Loslassen springt er zurück, ohne dass ein Zug passiert. */
+let lift=null;
+const LIFT_PX=10;
+tilesEl.addEventListener('pointerdown',e=>{
+  const el=e.target.closest('.tile'); if (!el || lift) return;
+  e.preventDefault();
+  lift={el, i:+el.dataset.i, pid:e.pointerId, x:e.clientX, y:e.clientY, moved:false};
+  try{ el.setPointerCapture(e.pointerId); }catch(_){}
+});
+tilesEl.addEventListener('pointermove',e=>{
+  if (!lift || e.pointerId!==lift.pid) return;
+  const dx=e.clientX-lift.x, dy=e.clientY-lift.y;
+  if (!lift.moved){
+    if (Math.hypot(dx,dy)<LIFT_PX) return;
+    lift.moved=true; lift.el.classList.add('lifted'); idleTime=0;
+  }
+  lift.el.style.transform=`translate(${dx}px,${dy}px) scale(1.06)`;
+});
+function endLift(e, cancel){
+  if (!lift || (e && e.pointerId!==lift.pid)) return;
+  const L=lift; lift=null;
+  try{ L.el.releasePointerCapture(L.pid); }catch(_){}
+  if (L.moved){
+    // zurückfedern
+    L.el.classList.add('springback'); L.el.style.transform='';
+    setTimeout(()=>{ L.el.classList.remove('lifted','springback'); },260);
+    return;
+  }
+  if (cancel || !L.el.isConnected) return;
+  peekBeforeTap(L.i); onTap(L.i);
+}
+tilesEl.addEventListener('pointerup',e=>endLift(e,false));
+tilesEl.addEventListener('pointercancel',e=>endLift(e,true));
+tilesEl.addEventListener('lostpointercapture',e=>{ if (lift && e.pointerId===lift.pid && lift.moved) endLift(e,true); });
+tilesEl.addEventListener('keydown',e=>{ if (e.key!=='Enter' && e.key!==' ') return; const el=e.target.closest('.tile'); if (!el) return; e.preventDefault(); peekBeforeTap(+el.dataset.i); onTap(+el.dataset.i); });
 new ResizeObserver(()=>relayout()).observe(tableEl);
 
 /* ===================== Effekte (nur an den geräumten Steinen) ===================== */
