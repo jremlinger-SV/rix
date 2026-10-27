@@ -776,16 +776,23 @@ function newSet(){
   const k=1+Math.round(a*13);         // je mehr Hilfe, desto mehr Kandidaten
   const allFit=a>0.55;
   const wantAll3=a>0.4;               // alle drei Steine sollen nacheinander legbar sein
-  let bestS=null, bestV=-1, bestOk=false;
-  for (let t=0;t<60 && (t<k || !bestS || (wantAll3 && !bestOk && t<40));t++){
+  // Erfolgserlebnis: möglichst ein Stein im Satz, der SOFORT eine Reihe schließt – nach zwei Zügen ohne Räumung
+  // oder in engen Lagen wird gezielt danach gesucht. Die Schwierigkeit steigt weiter über die Steinformen (d).
+  const wantLine = gift || sinceClear>=2 || stress>0.3 || playTime<GRACE;
+  const lineNow = s=>s.reduce((n,p)=>{ const b=bestPlacement(grid,p.shape); return n+(b && b.n>0 ? 1 : 0); },0);
+  let bestS=null, bestV=-1, bestOk=false, bestLn=0;
+  for (let t=0;t<70 && (t<k || !bestS || (wantAll3 && !bestOk && t<40) || (wantLine && !bestLn && t<70));t++){
     const s=[randPiece(d),randPiece(d),randPiece(d)];
     if (allFit ? !s.every(p=>canPlaceAnywhere(p.shape)) : !s.some(p=>canPlaceAnywhere(p.shape))) continue;
     let v = rateSet(s);
     const ok = lastRate.placed===3;
+    const ln = lineNow(s);
     if (wantAll3 && ok) v+=40;        // komplett legbare Sätze klar bevorzugen
+    if (ln>0) v += wantLine ? 70 : 25; // Satz mit sofort passender Reihe
+    if (ln>1) v += 10;
     if (stress>0.35 && lastRate.lines>0) v+=25;  // in engen Lagen: Satz mit Chance auf eine Reihe
     if (stress>0.5) v-=s.reduce((a,p)=>a+p.shape.length,0)*0.8*stress;   // und eher handliche Steine
-    if (v>bestV){ bestV=v; bestS=s; bestOk=ok; }
+    if (v>bestV){ bestV=v; bestS=s; bestOk=ok; bestLn=ln; }
   }
   return bestS || [randPiece(0),randPiece(0),randPiece(0)];
 }
