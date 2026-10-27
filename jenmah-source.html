@@ -360,8 +360,8 @@ body.gameover .over{bottom:0}
       <span class="wordmark">jenmah</span>
     </h1>
     <div class="mscore" aria-label="Punkte">
-      <span class="scorewrap"><b id="score">50.000</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
-      <span class="msub">Stufe <b id="level">1</b> · Rekord <b id="best">50.000</b></span>
+      <span class="scorewrap"><b id="score">Level 1</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
+      <span class="msub">Rekord <b id="best">–</b></span>
     </div>
     <button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
   </header>
@@ -510,7 +510,7 @@ function positionsOf(id){
 /* solv: Mischen ergibt garantiert eine lösbare Lage (Stufe 1–3); danach wird frei gemischt wie beim Original.
    chaos: Anteil der Steine, die nach dem lösbaren Verteilen frei vertauscht werden (0 = garantiert lösbar, 1 = wie im Original). */
 const BIG=['pagode','festung','tempel'];
-function levelCfg(n){
+function tierCfg(n){
   if (n<=1) return {lay:['huegel','doppelhuegel'], kinds:6, hint:6, mix:99, solv:true, chaos:0, grp:1, hide:0, b:[3,5,3]};
   if (n===2) return {lay:['bruecke','fenster'], kinds:10, hint:10, mix:99, solv:true, chaos:0, grp:1, hide:.1, b:[3,5,3]};
   if (n===3) return {lay:['tor','turm','zwillinge'], kinds:16, hint:15, mix:3, solv:true, chaos:0, grp:.9, hide:.15, b:[2,3,2]};
@@ -520,6 +520,13 @@ function levelCfg(n){
   if (n<=9)  return {lay:BIG.concat('kreuz','tor'), kinds:36, hint:50, mix:1, fs:true, chaos:.1, grp:.45, hide:.33, b:[1,1,1]};
   return {lay:BIG.concat('kreuz','tor'), kinds:36, hint:60, mix:1, fs:true, chaos:.15, grp:.35, hide:.35, b:[1,1,1]};
 }
+
+/* Level wie bei Vita: durchnummeriert, für alle gleich (fester Zufallswert je Level).
+   Schwierigkeitsstufe je Level; jedes 5. Level (ab 10) ist zur Erholung eine Stufe leichter. */
+function tierOf(L){ const t = L<=2?1 : L<=5?2 : L<=9?3 : L<=14?4 : L<=22?5 : L<=35?6 : L<=55?7 : 8; return (L>=10 && L%5===0) ? Math.max(1,t-1) : t; }
+function levelCfg(L){ return tierCfg(tierOf(L)); }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function withSeed(seed, fn){ const orig=Math.random; Math.random=mulberry32(seed); try{ return fn(); } finally{ Math.random=orig; } }
 
 /* ===================== Spielregeln ===================== */
 let T=[];          // Steine: {x,y,z,f,alive}
@@ -579,12 +586,12 @@ function pairsFor(n, cfg){
 }
 
 /* ===================== Zustand ===================== */
-let lvl=1, layId='', score=0, best=load('jenmah-best',0), combo=0, lastMatch=0, mixLeft=0, playTime=0, bestAtStart=0;
+let owner='', overMode='retry', lvl=1, layId='', score=0, best=load('jenmah-best',0), combo=0, lastMatch=0, mixLeft=0, playTime=0, bestAtStart=0;
 let boost={undo:0,hint:0,mix:0}, busy=false, lastProgress=0, lastHint=0;
 const parkEl=$('park'), tilesEl=$('tiles'), tableEl=$('table'), wrapEl=$('tablewrap'), fxEl=$('fx'), fxFix=$('fxfix');
 let tileEls=[];
 function cfg(){ return levelCfg(lvl); }
-function persist(){ if (endHold) return; save('jenmah-game',{lvl,layId,score,combo:0,mixLeft,playTime,bestAtStart,boost,park,t:T.map(t=>[t.x,t.y,t.z,t.f,t.alive?1:0,t.h?1:0])}); }
+function persist(){ if (endHold) return; save('jenmah-game',{who:owner,lvl,layId,score,combo:0,mixLeft,playTime,bestAtStart,boost,park,t:T.map(t=>[t.x,t.y,t.z,t.f,t.alive?1:0,t.h?1:0])}); }
 
 /* ===================== Darstellung ===================== */
 let geo={tw:40,th:53,d:4,ox:0,oy:0};
@@ -638,22 +645,25 @@ function tileCenter(i){ const el=tileEls[i]; return {x:el.offsetLeft+el.offsetWi
 /* ===================== Ablauf ===================== */
 function toast(text){ const t=$('lvl'); t.textContent=text; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); }
 function startLevel(n, quiet){
-  lvl=n; const c=cfg();
-  const opts=c.lay.filter(id=>id!==layId); layId=pick(opts.length?opts:c.lay);
-  const pos=positionsOf(layId);
-  T=pos.map(p=>({x:p.x,y:p.y,z:p.z,f:'',alive:true})); buildNB();
-  if (c.kinds<36) c.kinds+=rnd(3)-1;   // von Spiel zu Spiel etwas anders
-  let faces=null, guard=0;
-  while (!faces && guard++<6) faces=deal(T.map((_,i)=>i), pairsFor(T.length,c), c.grp||0);
-  if (!faces){ faces={}; const ps=pairsFor(T.length,c).flat(); T.forEach((_,i)=>faces[i]=ps[i]); }
-  T.forEach((t,i)=>t.f=faces[i]);
-  if (c.chaos>0){ const ch=Math.min(1,Math.max(0,c.chaos+(Math.random()-.5)*.1)); const ids=shuffle(T.map((_,i)=>i)).slice(0,Math.round(ch*T.length)); const fl=shuffle(ids.map(i=>T[i].f)); ids.forEach((i,k)=>T[i].f=fl[k]); }
-  if (c.hide>0){ const k=Math.round(T.length*Math.min(.45,Math.max(0,c.hide+(Math.random()-.5)*.06))); shuffle(T.map((_,i)=>i)).slice(0,k).forEach(i=>T[i].h=true); }
+  lvl=n=Math.max(1,Math.floor(n)||1); const c=cfg(); owner=(player||'').toLowerCase(); score=n-1;
+  layId=c.lay[(n*7+3)%c.lay.length];
+  withSeed((n*2654435761)>>>0, ()=>{
+    const pos=positionsOf(layId);
+    T=pos.map(p=>({x:p.x,y:p.y,z:p.z,f:'',alive:true})); buildNB();
+    if (c.kinds<36) c.kinds+=rnd(3)-1;
+    let faces=null, guard=0;
+    while (!faces && guard++<6) faces=deal(T.map((_,i)=>i), pairsFor(T.length,c), c.grp||0);
+    if (!faces){ faces={}; const ps=pairsFor(T.length,c).flat(); T.forEach((_,i)=>faces[i]=ps[i]); }
+    T.forEach((t,i)=>t.f=faces[i]);
+    if (c.chaos>0){ const ch=Math.min(1,Math.max(0,c.chaos+(Math.random()-.5)*.1)); const ids=shuffle(T.map((_,i)=>i)).slice(0,Math.round(ch*T.length)); const fl=shuffle(ids.map(i=>T[i].f)); ids.forEach((i,k)=>T[i].f=fl[k]); }
+    if (c.hide>0){ const k=Math.round(T.length*Math.min(.45,Math.max(0,c.hide+(Math.random()-.5)*.06))); shuffle(T.map((_,i)=>i)).slice(0,k).forEach(i=>T[i].h=true); }
+  });
+  $('over').hidden=true; leaveGameOver();
   boost={undo:c.b[0],hint:c.b[1],mix:c.b[2]}; $('rescue').hidden=true;
   mixLeft=c.mix; park=[]; renderPark(); parkEl.classList.remove('jam'); combo=0; lastProgress=performance.now(); lastHint=0;
-  $('level').textContent=lvl;
+  showLevelUI();
   renderAll(true);
-  if (!quiet) toast(`Stufe ${lvl} · ${LAYOUTS[layId].name}`);
+  if (!quiet) toast(`Level ${lvl}`);
   persist();
 }
 /* Ablage: 4 Plätze oben. Ein Tipp auf einen freien Stein legt ihn ab;
@@ -705,7 +715,6 @@ function pairWithPark(i,pi){
   const now=performance.now();
   combo = now-lastMatch<COMBO_MS ? combo+1 : 0; lastMatch=now;
   const j=park[pi], special=T[i].f[0]==='f'||T[i].f[0]==='s';
-  const gain=pairPoints()+(special?20:0);
   T[i].alive=false;
   const r=removeFieldEl(i);
   const slot=parkEl.children[pi], pt=slot.firstChild;
@@ -716,12 +725,11 @@ function pairWithPark(i,pi){
   setTimeout(()=>{
     const sr=slot.getBoundingClientRect(), c={x:sr.left+sr.width/2, y:sr.top+sr.height/2};
     [pt,fly].forEach(el=>{ el.classList.add('gone'); });
-    fxShards([c], fxFix); showGainAt(c.x, c.y+sr.height*.9, gain, combo, fxFix);
+    fxShards([c], fxFix); if (combo>=1) showGainAt(c.x, c.y+sr.height*.9, 0, combo, fxFix);
     SND.swoosh(combo>=2?2:1);
     setTimeout(()=>{ park.splice(pi,1); renderPark(); refreshFree(); busy=false; persist(); checkState(); },280);
   },200);
   lastProgress=now; lastHint=0;
-  setScore(score+gain);
   refreshFree(); persist();
 }
 function reveal(i){
@@ -742,10 +750,10 @@ function levelClear(){
   // restliche Steine (falls die Runde vorzeitig als geschafft gilt) ausblenden
   T.forEach((t,i)=>{ if (!t.alive) return; t.alive=false; const el=tileEls[i]; if (el){ el.classList.add('gone'); setTimeout(()=>el.remove(),360); tileEls[i]=null; } });
   park=[]; renderPark();
-  const bonus=400+200*lvl;
-  celebrate(bonus); SND.clear();
-  setScore(score+bonus);
-  setTimeout(()=>{ busy=false; startLevel(lvl+1); },1750);
+  const done=lvl;
+  celebrate(`Level ${done} ✓`); SND.clear();
+  setProgress(done+1); recordScore(done); score=done; updateLiveCrown(); save('jenmah-game',null);
+  setTimeout(()=>{ busy=false; showEnd('next',`Level ${done} geschafft!`,`Weiter zu Level ${done+1}`); },1600);
 }
 /* Wie bei Vita Mahjong: 4 Steine ohne Paar in der Ablage – verloren. Rettung nur mit „Zurück“. */
 function stuck(){
@@ -812,7 +820,7 @@ function fxShards(pts, layer){ layer=layer||fxEl;
 }
 function showGainAt(x,y,g,c,layer){ layer=layer||fxEl;
   const el=document.createElement('div'); el.className='gain'; el.style.left=x+'px'; el.style.top=y+'px';
-  el.textContent='+'+showGain(g);
+  el.textContent=c>=2?'Super-Kombi!':'Kombi!';
   if (c>=1){ const s=document.createElement('small'); s.textContent=`Kombi ×${(1+0.5*Math.min(c,6)).toLocaleString('de-DE')}`; el.appendChild(s); }
   layer.appendChild(el); setTimeout(()=>el.remove(),950);
 }
@@ -829,7 +837,7 @@ function celebrate(bonus){
   const cols=['#9fd8ff','#38bdf8','#ffffff','#6c7dff','#c9e3ff'];
   for (let k=0;k<14;k++){ const sp=document.createElement('i'); sp.className='spark'; const a=(k/14)*Math.PI*2+Math.random()*.3, d=80+Math.random()*60;
     sp.style.setProperty('--dx',Math.cos(a)*d+'px'); sp.style.setProperty('--dy',Math.sin(a)*d+'px'); sp.style.setProperty('--c',cols[k%cols.length]); sp.style.setProperty('--sd','120ms'); box.appendChild(sp); }
-  const bn=document.createElement('div'); bn.className='cbonus'; bn.textContent='+'+showGain(bonus); box.appendChild(bn);
+  const bn=document.createElement('div'); bn.className='cbonus'; bn.textContent=bonus; box.appendChild(bn);
   const wv=document.createElement('i'); wv.className='cwave2'; box.appendChild(wv);
   for (let k=0;k<10;k++){ const sp=document.createElement('i'); sp.className='spark gold'; const a=(k/10)*Math.PI*2+.3, d=110+Math.random()*50;
     sp.style.setProperty('--dx',Math.cos(a)*d+'px'); sp.style.setProperty('--dy',Math.sin(a)*d+'px'); sp.style.setProperty('--c',k%2?'#ffd84d':'#fff3b0'); sp.style.setProperty('--sd','380ms'); box.appendChild(sp); }
@@ -873,7 +881,7 @@ function updateLiveCrown(){
   if (!on && liveCrownOn) el.hidden=true;
   liveCrownOn=on;
 }
-function setScore(v){ score=v; const s=$('score'); countTo(score); updateLiveCrown(); s.classList.add('bump'); setTimeout(()=>s.classList.remove('bump'),150); if (score>best){ best=score; save('jenmah-best',best); } }
+function setScore(v){ score=v; updateLiveCrown(); }
 
 /* ===================== Töne (wie Jemrix, gleiche Ton-Einstellung) ===================== */
 const SND=(()=>{
@@ -960,7 +968,6 @@ setInterval(()=>{
   if (tickLast && gameActive()){
     const dt=Math.min(2,(now-tickLast)/1000);
     playTime+=dt; idleTime+=dt;
-    if (idleTime>=IDLE_LIMIT){ idleTime=0; finishGame('Zeit abgelaufen'); }
     // Kleine Hilfe für Erfolgserlebnisse: nach einer Weile ohne Paar leuchtet ein passendes Paar kurz auf
   } else if (tickLast && !gameActive()) lastProgress+=Math.min(2000,now-tickLast);
   tickLast=now;
@@ -978,26 +985,26 @@ function holdEnd(title, then){
 }
 function finishGame(title){
   if (endHold) return;
-  $('rescue').hidden=true; save('jenmah-game',null); recordScore(score);
-  SND.end(score>bestAtStart && score>0);
-  holdEnd(title, ()=>showGameOver(title));
+  $('rescue').hidden=true; busy=false; save('jenmah-game',null);
+  SND.end(false);
+  setTimeout(()=>showEnd('retry', title, 'Nochmal'), 500);
 }
-function showGameOver(title){
-  $('overtitle').textContent=title; $('final').textContent=showPts(score);
-  $('overmsg').textContent = score>bestAtStart && score>0 ? 'Neuer Rekord!' : `Punkte · Rekord ${showPts(best)}`;
+/* Ende eines Levels: geschafft (weiter) oder verloren (nochmal) */
+function showEnd(mode, title, btn){
+  overMode=mode;
+  $('overtitle').textContent=title; $('final').textContent=`Level ${lvl}`;
+  $('overmsg').textContent = mode==='next' ? 'Gut gemacht!' : 'Kein Problem – das Level bleibt gleich.';
+  $('again').textContent=btn;
   document.body.classList.add('gameover'); $('over').hidden=false; renderScores();
 }
 function leaveGameOver(){ document.body.classList.remove('gameover'); }
 function familyIntro(){ const f=$('family'); f.classList.remove('intro'); void f.offsetWidth; f.classList.add('intro'); setTimeout(()=>f.classList.remove('intro'),1800); }
 function newGame(){
-  idleTime=0; familyIntro();
+  idleTime=0; familyIntro(); busy=false;
   setTimeout(askName,0);
-  score=0; combo=0; lastMatch=0; playTime=0; bestAtStart=best; layId=''; busy=false;
-  cancelAnimationFrame(countRaf); shownScore=0; $('score').classList.remove('hot'); renderOdo(0); liveCrownOn=false; $('livecrown').hidden=true;
-  $('over').hidden=true; leaveGameOver();
-  startLevel(1, true);
+  startLevel(player ? getProgress(player) : 1, true);
 }
-$('again').onclick=newGame;
+$('again').onclick=()=>{ startLevel(overMode==='next' ? getProgress(player) : lvl); };
 /* Beenden: zurück zur Familien-Startseite, Name wird neu gewählt */
 $('quit').onclick=()=>{
   save('jenmah-game',null); try{ localStorage.removeItem('jenmah-name'); }catch(e){}
@@ -1007,7 +1014,12 @@ $('quit').onclick=()=>{
 
 /* ===================== Spieler und Highscores ===================== */
 let player=load('jenmah-name',''), lastRun=null;
-let localScores=load('jenmah-scores',[]);
+const progKey=n=>'jenmah-level-'+clean(n).toLowerCase();
+function getProgress(n){ const v=+load(progKey(n||player||''),1); return v>=1 ? Math.floor(v) : 1; }
+function setProgress(v){ if (player) save(progKey(player), Math.max(getProgress(player), v)); }
+function myBest(){ return player ? getProgress(player)-1 : 0; }
+function showLevelUI(){ $('score').textContent=`Level ${lvl}`; $('best').textContent=myBest()>0 ? `Level ${myBest()}` : '–'; }
+let localScores=load('jenmah-lv-scores',[]);
 function clean(n){ return String(n||'').replace(/\s+/g,' ').trim().slice(0,20); }
 const NAME_OK=/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ' .-]{1,19}$/;
 function askName(){
@@ -1022,6 +1034,7 @@ function askName(){
   markLeader();
 }
 function setPlayer(n){ idleTime=0; player=n; save('jenmah-name',n); $('reg').hidden=true; SND.start(); lastProgress=performance.now();
+  if (owner!==n.toLowerCase() || lvl!==getProgress(n)) startLevel(getProgress(n)); else showLevelUI();
   if (isBirthdayKid(n) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; lastProgress=performance.now(); }); }
 $('regform').addEventListener('submit',e=>{ e.preventDefault(); const n=clean($('regname').value);
   if (n.length<2){ $('regerr').textContent='Bitte mindestens 2 Buchstaben eingeben.'; return; }
@@ -1040,24 +1053,24 @@ async function api(fn, body){
   } finally { clearTimeout(to); }
 }
 let listSeq=0, listApplied=0, sharedRows=null;
-let pending=load('jenmah-pending',[]), sharedCache=load('jenmah-shared-cache',null);
+let pending=load('jenmah-lv-pending',[]), sharedCache=load('jenmah-lv-shared-cache',null);
 let syncing=false, netOk=null, fetching=false;
 function recordScore(s){
   if (!player || s<=0) return;
   lastRun={name:player, score:s};
-  localScores.push({name:player, score:s, at:Date.now()}); localScores.sort((a,b)=>b.score-a.score); localScores=localScores.slice(0,20); save('jenmah-scores',localScores);
-  if (ONLINE){ pending.push({name:player, score:s, at:Date.now()}); save('jenmah-pending',pending); }
+  localScores.push({name:player, score:s, at:Date.now()}); localScores.sort((a,b)=>b.score-a.score); localScores=localScores.slice(0,20); save('jenmah-lv-scores',localScores);
+  if (ONLINE){ pending.push({name:player, score:s, at:Date.now()}); save('jenmah-lv-pending',pending); }
   updateNet(); trySync(); renderTop2();
 }
 function takeList(j, seq){
   if (!j || !Array.isArray(j.players)) return false;
   if (seq!=null){ if (seq<listApplied) return false; listApplied=seq; }
   sharedRows=j.players.filter(p=>p && typeof p.score==='number').map(p=>({name:clean(p.name), score:p.score}));
-  sharedCache=sharedRows; save('jenmah-shared-cache',sharedCache);
-  if (typeof j.epoch==='number' && j.epoch>load('jenmah-server-epoch',0)){
-    save('jenmah-server-epoch',j.epoch);
-    if (load('jenmah-server-epoch-seen',0)){ localScores=[]; save('jenmah-scores',localScores); best=0; save('jenmah-best',0); $('best').textContent=showPts(0); pending=[]; save('jenmah-pending',pending); }
-    save('jenmah-server-epoch-seen',1);
+  sharedCache=sharedRows; save('jenmah-lv-shared-cache',sharedCache);
+  if (typeof j.epoch==='number' && j.epoch>load('jenmah-lv-server-epoch',0)){
+    save('jenmah-lv-server-epoch',j.epoch);
+    if (load('jenmah-lv-server-epoch-seen',0)){ localScores=[]; save('jenmah-lv-scores',localScores); pending=[]; save('jenmah-lv-pending',pending); }
+    save('jenmah-lv-server-epoch-seen',1);
   }
 }
 function refreshViews(){ updateNet(); if (!$('over').hidden) renderScores(); else renderTop2(); markLeader(); }
@@ -1068,12 +1081,12 @@ async function fetchScores(){
   finally{ fetching=false; refreshViews(); trySync(); }
 }
 async function trySync(){
-  if (!ONLINE){ pending=[]; save('jenmah-pending',pending); return; }
+  if (!ONLINE){ pending=[]; save('jenmah-lv-pending',pending); return; }
   if (syncing || !pending.length || navigator.onLine===false){ updateNet(); return; }
   syncing=true; const batch=pending.slice(0,50);
   try{ const seq=++listSeq;
     const j=await api('submit_scores_mah',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score)}))});
-    pending=pending.slice(batch.length); save('jenmah-pending',pending);
+    pending=pending.slice(batch.length); save('jenmah-lv-pending',pending);
     if (j && j.ok!==false){ if (takeList(j,seq)===false) setTimeout(fetchScores,300); }
     netOk=true;
   }catch(e){ netOk=false; }
@@ -1115,7 +1128,7 @@ function renderTop2(){
     const pl=document.createElement('span'); pl.className='pl'; if (i===0) pl.innerHTML=CROWN; else pl.textContent='2.';
     const nm=document.createElement('span'); nm.className='nmx'; nm.textContent=r.name;
     if (isBirthdayKid(r.name)){ const ci=document.createElement('i'); ci.className='cakei'; nm.appendChild(ci); }
-    const b=document.createElement('b'); b.textContent=showPts(r.score); c.append(pl,nm,b); box.appendChild(c); });
+    const b=document.createElement('b'); b.textContent='Level '+r.score; c.append(pl,nm,b); box.appendChild(c); });
 }
 function renderScores(){
   renderTop2();
@@ -1127,7 +1140,7 @@ function renderScores(){
     if (ol.children.length===0){ li.classList.add('first'); n.innerHTML=CROWN; }
     n.appendChild(document.createTextNode(r.name));
     if (isBirthdayKid(r.name)){ const c=document.createElement('i'); c.className='cakei'; n.appendChild(c); }
-    const b=document.createElement('b'); b.textContent=showPts(r.score); li.append(n,b);
+    const b=document.createElement('b'); b.textContent='Level '+r.score; li.append(n,b);
     if (!marked && lastRun && r.name.toLowerCase()===lastRun.name.toLowerCase() && r.score===lastRun.score){ li.classList.add('me'); marked=true; }
     ol.appendChild(li); });
 }
@@ -1164,25 +1177,24 @@ if (!PREVIEW && 'serviceWorker' in navigator && location.protocol!=='file:'){
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{
     document.addEventListener('visibilitychange',()=>{ if (!document.hidden) reg.update().catch(()=>{}); }); }).catch(()=>{}); });
 }
-$('best').textContent=showPts(best);
 updateNet(); renderTop2(); fetchScores();
 familyIntro();
 const saved=load('jenmah-game',null);
 try{
   const ok=saved && Array.isArray(saved.t) && saved.t.length>=2 && LAYOUTS[saved.layId] && saved.t.every(a=>Array.isArray(a) && (a.length===5||a.length===6) && typeof a[3]==='string' && /^[dbcwrfs][0-9A-Z]$/.test(a[3]));
-  if (ok && (saved.t.some(a=>a[4]) || (saved.park||[]).length)){
-    lvl=saved.lvl||1; layId=saved.layId; score=+saved.score||0; mixLeft=saved.mixLeft??cfg().mix; playTime=saved.playTime||0; bestAtStart=saved.bestAtStart??best;
+  if (ok && (saved.t.some(a=>a[4]) || (saved.park||[]).length) && (saved.who||'')===(player||'').toLowerCase()){
+    lvl=saved.lvl||1; layId=saved.layId; owner=saved.who||''; score=lvl-1; mixLeft=saved.mixLeft??cfg().mix; playTime=saved.playTime||0; bestAtStart=saved.bestAtStart??best;
     T=saved.t.map(a=>({x:a[0],y:a[1],z:a[2],f:a[3],alive:!!a[4],h:!!a[5]})); buildNB();
     if (saved.boost && typeof saved.boost==='object') boost={undo:+saved.boost.undo||0,hint:+saved.boost.hint||0,mix:+saved.boost.mix||0}; else { const b0=cfg().b; boost={undo:b0[0],hint:b0[1],mix:b0[2]}; }
     park=(Array.isArray(saved.park)?saved.park:[]).filter((i,k,arr)=>Number.isInteger(i) && T[i] && !T[i].alive && arr.indexOf(i)===k).slice(0,PARK_N); renderPark();
-    shownScore=score; renderOdo(score); $('level').textContent=lvl; updateLiveCrown();
+    showLevelUI(); updateLiveCrown();
     renderAll(true); lastProgress=performance.now();
     if (!player) askName();
     else if (isBirthdayKid(player)) birthdayShow(()=>{ idleTime=0; });
     if (!T.some(t=>t.alive) && !park.length){ busy=true; setTimeout(levelClear,600); } else if (stuckNow()){ busy=true; setTimeout(stuck,900); }
   } else newGame();
 }catch(err){ newGame(); }
-window.addEventListener('hashchange',()=>{ if (/^#stufe-\d+$/.test(location.hash)){ startLevel(+location.hash.slice(7)); } });
-if (/^#stufe-\d+$/.test(location.hash)) startLevel(+location.hash.slice(7));
+const hashLv=()=>{ const m=/^#(?:stufe|level)-(\d+)$/.exec(location.hash); if (m) startLevel(+m[1]); };
+window.addEventListener('hashchange',hashLv); hashLv();
 })();
 </script>

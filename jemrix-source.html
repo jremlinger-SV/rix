@@ -2011,9 +2011,9 @@ function showModes(cont){
   try{ sessionStorage.setItem('remlinger-unlocked','1'); }catch(e){}   // jenMah darf nur nach dem Familien-Intro starten
   const pk=$('pick'); if (!pk){ if (cont) cont(); return; }
   // Spielauswahl: Jemrix oder jenMah, jeweils mit dem aktuellen Platz 1
-  const rec=(el,rows)=>{ el.innerHTML=''; const r=rows.find(x=>x && x.score>0); if (!r) return; el.insertAdjacentHTML('afterbegin',CROWN); el.append(clean(r.name)+' · '+showPts(r.score)); };
+  const rec=(el,rows,fmt)=>{ el.innerHTML=''; const r=rows.find(x=>x && x.score>0); if (!r) return; el.insertAdjacentHTML('afterbegin',CROWN); el.append(clean(r.name)+' · '+(fmt||showPts)(r.score)); };
   rec($('recJemrix'), topList().rows);
-  const mah=load('jenmah-shared-cache',null)||load('jenmah-scores',[]); rec($('recMah'), (Array.isArray(mah)?mah:[]).slice().sort((a,b)=>b.score-a.score));
+  const mah=load('jenmah-lv-shared-cache',null)||load('jenmah-lv-scores',[]); rec($('recMah'), (Array.isArray(mah)?mah:[]).slice().sort((a,b)=>b.score-a.score), v=>'Level '+v);
   let chosen=false;
   $('pickJemrix').onclick=()=>{ if (chosen) return; chosen=true; $('pickJemrix').classList.add('go'); SND.plop(2);
     setTimeout(()=>{ pk.classList.add('out'); setTimeout(()=>{ pk.remove(); if (cont) cont(); },420); },160); };
