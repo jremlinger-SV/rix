@@ -315,10 +315,11 @@ header.mh .sndbtn{width:30px;height:30px}
 .bbtn .cnt{min-width:17px!important;height:17px!important;font-size:.66rem!important;line-height:17px!important;right:-4px!important;top:-4px!important}
 .boost{gap:clamp(30px,11vw,52px)!important}
 .family{padding-block:2px 4px}
-/* Ablage ganz oben direkt unter dem Kopf, genau 4 Felder in Steingröße */
-.boardslot{padding-top:0!important}
-.app{gap:2px!important}
-.park{margin-top:0!important;align-self:center;width:auto!important;display:inline-flex!important;padding:4px!important;gap:4px!important}
+/* Ablage: genau 4 Felder in Steingröße */
+.park{position:relative;z-index:30}
+.pslot .tile.land{animation:pland .18s ease-out}
+@keyframes pland{0%{transform:scale(1.08)}100%{transform:none}}
+.park{align-self:center;width:auto!important;display:inline-flex!important;padding:4px!important;gap:4px!important}
 .pslot{border-radius:calc(var(--sw,46px)*.13)!important;background:rgba(159,216,255,.07)!important;box-shadow:inset 0 0 0 1.5px rgba(159,216,255,.2)!important}
 .pslot:empty::after{display:none}
 .pslot .tile{height:calc(100% - var(--d))!important}
@@ -677,8 +678,8 @@ function flyFrom(el, fromRect, ms){
   el.style.transition='none'; el.style.transformOrigin='0 0';
   el.style.transform=`translate(${fromRect.left-r1.left}px,${fromRect.top-r1.top}px) scale(${fromRect.width/r1.width},${fromRect.height/r1.height})`;
   void el.offsetWidth;
-  el.style.transition=`transform ${ms||320}ms cubic-bezier(.2,.8,.2,1)`; el.style.transform='';
-  setTimeout(()=>{ el.style.transition=''; el.style.transformOrigin=''; },(ms||320)+30);
+  el.style.zIndex='70'; el.style.transition=`transform ${ms||320}ms cubic-bezier(.15,.85,.25,1)`; el.style.transform='';
+  setTimeout(()=>{ el.style.transition=''; el.style.transformOrigin=''; el.style.zIndex=''; el.classList.add('land'); setTimeout(()=>el.classList.remove('land'),180); },(ms||320)+10);
 }
 function removeFieldEl(i){ const el=tileEls[i]; let r=null; if (el){ r=el.getBoundingClientRect(); el.remove(); } tileEls[i]=null; return r; }
 function select(){}   // (frühere Auswahl, durch die Ablage ersetzt)
@@ -694,7 +695,7 @@ function onTap(i){
   // ablegen
   T[i].alive=false; const r=removeFieldEl(i);
   park.push(i); renderPark();
-  flyFrom(parkEl.children[park.length-1].firstChild, r);
+  flyFrom(parkEl.children[park.length-1].firstChild, r, 190);
   SND.plop(1);
   lastHint=0; refreshFree(); persist(); checkState();
 }
@@ -710,15 +711,15 @@ function pairWithPark(i,pi){
   const slot=parkEl.children[pi], pt=slot.firstChild;
   // Partner fliegt zum abgelegten Stein, dann verschwinden beide
   const fly=document.createElement('div'); fly.className='tile ptile'; fly.innerHTML=faceSVG(T[i].f); slot.appendChild(fly);
-  flyFrom(fly, r, 260);
+  flyFrom(fly, r, 190);
   busy=true; SND.plop(1);
   setTimeout(()=>{
     const sr=slot.getBoundingClientRect(), c={x:sr.left+sr.width/2, y:sr.top+sr.height/2};
     [pt,fly].forEach(el=>{ el.classList.add('gone'); });
     fxShards([c], fxFix); showGainAt(c.x, c.y+sr.height*.9, gain, combo, fxFix);
     SND.swoosh(combo>=2?2:1);
-    setTimeout(()=>{ park.splice(pi,1); renderPark(); refreshFree(); busy=false; persist(); checkState(); },300);
-  },270);
+    setTimeout(()=>{ park.splice(pi,1); renderPark(); refreshFree(); busy=false; persist(); checkState(); },280);
+  },200);
   lastProgress=now; lastHint=0;
   setScore(score+gain);
   refreshFree(); persist();
