@@ -1,7 +1,7 @@
 # Jemrix – nur für Remlingers
 
 Das Block-Puzzle der Familie Remlinger als Web-App fürs iPhone (ab iPhone 15, Hochformat).
-Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix) oder **JJE_mahjong** (Mahjong mit dem Original-Satz von 144 Steinen, früher jenMah).
+Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix), **JJE_mahjong** (Mahjong mit dem Original-Satz von 144 Steinen, früher jenMah) oder **JJE_tetris** (Tetris mit drei Schwierigkeiten).
 
 ## Spielen
 1. Link in **Safari** öffnen: `https://jremlinger-sv.github.io/rix/`
@@ -16,9 +16,11 @@ Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix) oder **J
 
 Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine eigene Liste.
 
-**Aktueller Datenbank-Stand** (in dieser Reihenfolge ausgeführt): `supabase-setup.sql` → `supabase-jenmah.sql` → `supabase-spielzeit.sql` → `supabase-haertung.sql`. Ältere Dateien (`supabase-update-2.sql`, `supabase-multiplayer.sql`) nicht mehr ausführen – sie würden neuere Funktionen überschreiben.
+**Aktueller Datenbank-Stand** (in dieser Reihenfolge ausgeführt): `supabase-setup.sql` → `supabase-jenmah.sql` → `supabase-spielzeit.sql` → `supabase-haertung.sql` → `supabase-tetris.sql`. Ältere Dateien (`supabase-update-2.sql`, `supabase-multiplayer.sql`) nicht mehr ausführen – sie würden neuere Funktionen überschreiben.
 
 **jenMah-Liste:** einmalig `supabase-jenmah.sql` im SQL Editor ausführen (eigene Liste, gleicher Familien-Code). Zurücksetzen mit `select reset_scores_mah();`.
+
+**JJE_tetris-Liste:** einmalig `supabase-tetris.sql` ausführen (eigene Liste, je Schwierigkeit Leicht/Mittel/Schwer getrennt). Zurücksetzen mit `select reset_scores_tet();`.
 
 **Liste zurücksetzen:** Im Supabase SQL Editor `select reset_scores();` ausführen. Die Geräte leeren ihre lokalen Listen beim nächsten Start automatisch mit.
 
@@ -27,15 +29,19 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 |---|---|
 | `index.html` | Jemrix mit Intro und Spielauswahl (wird aus `jemrix-source.html` erzeugt) |
 | `jenmah.html` | jenMah – Mahjong (wird aus `jenmah-source.html` erzeugt) |
+| `tetris.html` | JJE_tetris (wird aus `tetris-source.html` erzeugt) |
 | `config.js` | Supabase-Zugang und Familien-Code |
 | `sw.js` | Offline-Speicher |
 | `manifest.webmanifest`, `icons/` | App-Name, Icon, Startbild |
 | `fonts/` | Schriften lokal (keine Google-Fonts-Abfrage, DSGVO-freundlich) |
 | `supabase-setup.sql` | Datenbank für die Highscores |
 | `supabase-jenmah.sql` | eigene Highscore-Liste für jenMah |
+| `supabase-tetris.sql` | eigene Highscore-Liste für JJE_tetris |
 | `build.py`, `sw.template.js` | Werkzeuge zum Neu-Erzeugen von `index.html` und `sw.js` |
 
 ## Vorschau-Links
 Looks und Geburtstage lassen sich mit einem Zusatz am Link ansehen, z. B. `…/rix/#weihnachten`, `#halloween`, `#ostern`, `#fruehling`, `#sommer`, `#herbst`, `#winter`, `#geburtstag-emma`, `#geburtstag-jenny`, `#geburtstag-jens`.
 
 jenMah: `…/rix/jenmah.html#stufe-5` springt zum Ansehen direkt in eine Stufe (nur nach dem Intro).
+
+JJE_tetris: Looks per Link ansehen, z. B. `…/rix/tetris.html#neon`, `#halloween`, `#weihnachten` (nur nach dem Intro). Bedienung wie im offiziellen Tetris: tippen = drehen, wischen = verschieben, langsam nach unten ziehen = schneller fallen, schnell nach unten wischen = sofort ablegen, Halten-Feld antippen oder nach oben wischen = Stein beiseitelegen.

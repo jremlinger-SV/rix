@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Baut die Web-App: index.html (Jemrix mit Intro und Spielauswahl) aus jemrix-source.html,
-jenmah.html (Mahjong) aus jenmah-source.html und sw.js (Offline-Speicher) aus sw.template.js.
+jenmah.html (Mahjong) aus jenmah-source.html, tetris.html aus tetris-source.html und sw.js (Offline-Speicher) aus sw.template.js.
 Aufruf:  python3 build.py
 Änderungen an den Spielen werden in den *-source.html-Dateien gemacht und hier nur neu exportiert."""
 import sys, re, pathlib, hashlib, time
@@ -222,8 +222,20 @@ m = head('JJE_mahjong', 'JJE_mahjong – Mahjong nur für die Remlingers') + m.r
 assert 'fonts.googleapis' not in m
 (HERE / 'jenmah.html').write_text(m, encoding='utf-8')
 
+# 4c) JJE_tetris aus tetris-source.html: gleicher Kopf, gleiche Schriften, gleicher Offline-Speicher
+t = (HERE / 'tetris-source.html').read_text(encoding='utf-8')
+assert t.count('<title>JJE_tetris</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n') == 1
+t = t.replace('<title>JJE_tetris</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n', '')
+t = re.sub(r'<link rel="preconnect" href="https://fonts.googleapis.com">\n', '', t)
+t = re.sub(r'<link rel="stylesheet" href="https://fonts.googleapis.com/[^"]*">\n', '', t)
+assert t.count("const APP_VERSION='';") == 1
+t = t.replace("const APP_VERSION='';", f"const APP_VERSION='{STAMP}';")
+t = head('JJE_tetris', 'JJE_tetris – Tetris nur für die Remlingers') + t.rstrip() + '\n</body>\n</html>\n'
+assert 'fonts.googleapis' not in t
+(HERE / 'tetris.html').write_text(t, encoding='utf-8')
+
 # 5) Service Worker mit Versionsstempel (neue Version = neuer Cache)
-h = hashlib.sha1(s.encode()); h.update(m.encode())
+h = hashlib.sha1(s.encode()); h.update(m.encode()); h.update(t.encode())
 for f in sorted([*(HERE/'fonts').glob('*'), *(HERE/'icons').glob('*'), HERE/'config.js', HERE/'manifest.webmanifest', HERE/'sw.template.js']):
     h.update(f.name.encode()); h.update(f.read_bytes())
 ver = h.hexdigest()[:10]
@@ -231,4 +243,4 @@ sw = (HERE / 'sw.template.js').read_text(encoding='utf-8').replace('__VERSION__'
 for f in re.findall(r"'([^']+\.(?:html|js|webmanifest|png|woff2))'", sw.split('];')[0]):
     assert (HERE / f).exists(), f'Offline-Datei fehlt: {f}'
 (HERE / 'sw.js').write_text(sw, encoding='utf-8')
-print('index.html, jenmah.html und sw.js gebaut, Version', ver)
+print('index.html, jenmah.html, tetris.html und sw.js gebaut, Version', ver)
