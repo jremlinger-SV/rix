@@ -1,5 +1,5 @@
 /* Jemrix · Offline-Speicher. Die Version wird beim Bauen automatisch gesetzt. */
-const CACHE = 'jemrix-b1afb17e2f';
+const CACHE = 'jemrix-ea8de7a88e';
 const SHELL = [
   './', 'index.html', 'jenmah.html', 'tetris.html', 'config.js', 'manifest.webmanifest',
   'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png',
