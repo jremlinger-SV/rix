@@ -350,9 +350,11 @@ body.gameover .tiles,body.gameover .boost{visibility:hidden}
 body.gameover .over{bottom:0}
 .lvl{z-index:7}
 /* Booster-Abzeichen oben rechts (goldener Punkt mit Zahl) */
-.tile .bst{position:absolute;right:3%;top:2.5%;z-index:2;min-width:44%;height:32%;padding:0 5%;box-sizing:border-box;border-radius:999px;display:grid;place-items:center;
-  background:radial-gradient(circle at 35% 30%,#fff7c2,#ffd84d 55%,#e6b800);color:#0f1d3d;font:800 calc(var(--tw,48px)*.3)/1 var(--display);
-  box-shadow:0 0 0 2px #fff,0 2px 5px rgba(15,29,61,.45),0 0 10px rgba(255,216,77,.85);pointer-events:none}
+.tile .bst{position:absolute;right:0;top:0;z-index:2;width:52%;height:42%;box-sizing:border-box;
+  display:flex;justify-content:flex-end;align-items:flex-start;padding:4% 9% 0 0;
+  color:#0f1d3d;font:800 calc(var(--tw,48px)*.26)/1 var(--display);pointer-events:none}
+.tile .bst::before{content:"";position:absolute;inset:0;z-index:-1;border-top-right-radius:calc(var(--tw,48px)*.13);clip-path:polygon(0 0,100% 0,100% 100%);
+  background:linear-gradient(225deg,#fff6bd 0%,#ffd84d 35%,#e6b800 100%);box-shadow:inset -1px 1px 0 rgba(255,255,255,.6)}
 /* ganze Booster-Kachel golden umrandet und leicht leuchtend – auch erkennbar, wenn die Ecke verdeckt ist */
 .tile:has(.bst){background:linear-gradient(180deg,#fffdf0 0%,#fff6cf 62%,#f7e7a6 100%);
   box-shadow:inset 0 0 0 2.5px #ffd84d,inset 0 0 0 3.5px #fff,0 var(--d) 0 #e9cf73,0 calc(var(--d) + 1.5px) 0 #b8952c,1px calc(var(--d) + 4px) calc(var(--d) + 3px) rgba(1,4,16,.55),0 0 12px rgba(255,216,77,.55)}
