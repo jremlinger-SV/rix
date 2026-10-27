@@ -309,7 +309,7 @@ body.playing .family{display:none}
 body.gameover .play>.over{gap:5px!important;padding:12px 14px!important}
 body.gameover .hs li{padding-block:4px}
 /* Zeile unter dem Feld: Stufe, Reihen, Modus und Platz 1 */
-.tfoot{width:var(--fw,100%)!important;justify-content:space-between!important;gap:8px!important;flex:none;padding:0 2px;box-sizing:border-box}
+.tfoot{display:none!important;width:var(--fw,100%)!important;justify-content:space-between!important;gap:8px!important;flex:none;padding:0 2px;box-sizing:border-box}
 .tinfo{display:flex;gap:10px;align-items:baseline;font-size:.78rem;color:var(--muted);font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
 .tinfo b{font-family:var(--display);font-weight:600;color:var(--fg);font-size:.95rem}
 .msub b.mode{color:#9fd8ff}
@@ -318,6 +318,18 @@ body.gameover .hs li{padding-block:4px}
 .howto li{display:flex;justify-content:space-between;gap:12px;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.07);font-size:.95rem}
 .howto b{font-family:var(--display);font-weight:600;color:#9fd8ff}
 .howto span{color:#dfe6fb}
+/* Feld so groß wie möglich: knapper Kopf, unten Home-Balken-Bereich mitnutzen (dort nur Anzeige) */
+:root{padding-bottom:max(8px,calc(env(safe-area-inset-bottom,0px) - 12px))!important}   /* unten frei genug für die Home-Wischgeste */
+.app{padding-block:4px 0!important;gap:6px!important}
+.boardslot{padding:0!important;gap:0!important}
+header.mh{padding-inline:2px!important}
+.wtxt{display:flex;flex-direction:column;line-height:1}
+.hrec{font-size:.72rem;font-weight:700;color:var(--muted);margin-top:3px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hrec b{font-family:var(--display);font-weight:600;color:var(--fg)}
+.mscore{padding-top:0!important;gap:1px!important}
+.mscore #score{font-size:clamp(1.7rem,7.6vw,2.1rem)!important}
+.msub{font-size:.72rem!important}
+#family{display:none}
 </style>
 
 <div class="app">
@@ -328,11 +340,11 @@ body.gameover .hs li{padding-block:4px}
         <rect x="7" y="6" width="7" height="7" rx="1.8" fill="#6c7dff"/><rect x="14.5" y="6" width="7" height="7" rx="1.8" fill="#6c7dff"/><rect x="22" y="6" width="7" height="7" rx="1.8" fill="#6c7dff"/><rect x="14.5" y="13.5" width="7" height="7" rx="1.8" fill="#6c7dff"/>
         <rect x="7" y="23" width="7" height="7" rx="1.8" fill="#38bdf8"/><rect x="14.5" y="23" width="7" height="7" rx="1.8" fill="#38bdf8"/><rect x="22" y="23" width="7" height="7" rx="1.8" fill="#2f6bff"/><rect x="22" y="15.5" width="7" height="7" rx="1.8" fill="#2f6bff"/>
       </svg>
-      <span class="wordmark jje">JJE<i>_tetris</i></span>
+      <span class="wtxt"><span class="wordmark jje">JJE<i>_tetris</i></span><span class="hrec">Rekord <b id="best">–</b></span></span>
     </h1>
     <div class="mscore" aria-label="Punkte">
       <span class="scorewrap"><b id="score">0</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
-      <span class="msub"><b class="mode" id="modelbl">Leicht</b> · Rekord <b id="best">–</b></span>
+      <span class="msub"><b class="mode" id="modelbl">Leicht</b> · Stufe <b id="level">1</b> · <b id="lines">0</b> Reihen</span>
     </div>
     <div class="hbtns"><button class="sndbtn pausebtn" id="pausebtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button><button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button></div>
   </header>
@@ -386,8 +398,7 @@ body.gameover .hs li{padding-block:4px}
       </div>
     </div>
     <div class="foot tfoot">
-      <div class="tinfo"><span>Stufe <b id="level">1</b></span><span><b id="lines">0</b> Reihen</span></div>
-      <div class="top2" id="top2" aria-label="Highscore Platz 1"></div>
+            <div class="top2" id="top2" aria-label="Highscore Platz 1"></div>
     </div>
   </div>
   <div class="netline" id="netline" hidden></div>
