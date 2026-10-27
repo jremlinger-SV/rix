@@ -121,7 +121,7 @@ s = s[:a] + "fetchScores();\n" + s[b:]
 rep('let shared=null, sharedRows=null, myId=null, myDoc={};', 'let sharedRows=null;')
 
 # 3) Offline-Speicher registrieren
-rep('\nplayCine(()=>birthdayShow(', """
+rep('\nplayCine(()=>showModes(', """
 if ('serviceWorker' in navigator && location.protocol!=='file:'){
   // Updates zuverlässig holen: bei jeder Rückkehr in die App nach neuer Version fragen
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{
@@ -134,7 +134,7 @@ if ('serviceWorker' in navigator && location.protocol!=='file:'){
     if (document.getElementById('cine')) location.reload();
   });
 }
-playCine(()=>birthdayShow(""")
+playCine(()=>showModes(""")
 
 # 3b) Versionsstempel (deutsche Zeit) für die Anzeige auf der Modusauswahl
 try:
