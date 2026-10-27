@@ -523,8 +523,10 @@ function tierCfg(n){
 
 /* Level wie bei Vita: durchnummeriert, für alle gleich (fester Zufallswert je Level).
    Schwierigkeitsstufe je Level; jedes 5. Level (ab 10) ist zur Erholung eine Stufe leichter. */
-function tierOf(L){ const t = L<=2?1 : L<=5?2 : L<=9?3 : L<=14?4 : L<=22?5 : L<=35?6 : L<=55?7 : 8; return (L>=10 && L%5===0) ? Math.max(1,t-1) : t; }
+function tierOf(L){ const t = L<=3?3 : L<=8?4 : L<=15?5 : L<=28?6 : L<=50?7 : 8; return (L>=10 && L%5===0) ? Math.max(3,t-1) : t; }   // Start auf mittlerem Niveau
 function levelCfg(L){ return tierCfg(tierOf(L)); }
+/* Je Level vorab per Simulation geprüfte Verteilung (gleichmäßig steigende Schwierigkeit, Level 1–300) */
+const LEVEL_SEEDS=[8,41,72,12,6,9,14,25,33,18,5,0,2,22,18,59,12,5,69,69,29,67,68,74,20,3,75,40,7,55,16,7,26,1,23,2,4,46,11,13,5,3,17,1,56,22,8,64,10,12,14,59,16,2,5,5,2,16,10,9,32,0,22,37,29,11,58,58,40,4,5,21,4,34,53,59,10,12,8,13,3,14,8,30,11,9,20,5,21,9,0,14,7,42,28,19,25,5,9,75,44,9,66,9,44,17,4,29,0,31,4,10,32,3,7,37,9,1,0,25,28,37,14,25,2,8,33,22,54,5,12,55,8,42,4,13,29,17,57,21,3,11,37,4,12,3,4,35,8,16,20,24,13,1,17,2,4,62,8,10,4,55,7,25,27,10,9,33,24,20,17,13,17,5,27,9,48,16,5,56,55,63,14,38,40,13,68,46,16,7,8,4,6,47,0,1,21,20,26,20,0,7,8,17,0,4,26,72,19,5,10,11,7,6,3,19,9,58,20,4,7,76,24,0,17,12,56,28,58,10,0,24,43,8,68,28,6,15,12,27,27,10,40,20,2,1,8,50,3,18,19,52,19,5,12,2,40,5,3,11,12,33,24,6,12,11,28,12,2,73,34,4,6,5,2,22,0,7,17,59,3,33,61,2,4,0,2,6,6,57,3,6,50,44,2,19,42,2,4,9];
 function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 function withSeed(seed, fn){ const orig=Math.random; Math.random=mulberry32(seed); try{ return fn(); } finally{ Math.random=orig; } }
 
@@ -561,7 +563,8 @@ function deal(ids, pairs, grp){
       const fr=ids.filter(i=>alive[i] && freeIn(i,alive));
       if (fr.length<2){ ok=false; break; }
       // höhere Steine zuerst bevorzugen, damit nichts als Einzelturm übrig bleibt
-      fr.sort((a,b)=>T[b].z-T[a].z+(Math.random()-.5)*1.6);
+      const key={}; fr.forEach(i=>{ key[i]=T[i].z+Math.random()*1.6; });   // eindeutig sortieren: gleiches Level auf jedem Gerät
+      fr.sort((a,b)=>key[b]-key[a]);
       const a=fr[0]; const rest=fr.slice(1); const b=rest[rnd(rest.length)];
       faces[a]=p[0]; faces[b]=p[1]; alive[a]=alive[b]=false;
     }
@@ -647,7 +650,7 @@ function toast(text){ const t=$('lvl'); t.textContent=text; t.classList.remove('
 function startLevel(n, quiet){
   lvl=n=Math.max(1,Math.floor(n)||1); const c=cfg(); owner=(player||'').toLowerCase(); score=n-1;
   layId=c.lay[(n*7+3)%c.lay.length];
-  withSeed((n*2654435761)>>>0, ()=>{
+  withSeed(((n*2654435761)+(LEVEL_SEEDS[n-1]||0)*97)>>>0, ()=>{
     const pos=positionsOf(layId);
     T=pos.map(p=>({x:p.x,y:p.y,z:p.z,f:'',alive:true})); buildNB();
     if (c.kinds<36) c.kinds+=rnd(3)-1;
