@@ -701,6 +701,7 @@ function onTap(i){
   if (busy || endHold || !$('over').hidden || !$('reg').hidden || document.querySelector('.bday') || !T[i] || !T[i].alive) return;
   idleTime=0;
   if (!isFree(i)){ nope(tileEls[i]); return; }
+  if (peekPartner(i)){ pairPeek(peek,i); return; }   // Partner des aufgedeckten Steins gefunden: beide wandern nach oben
   if (T[i].h && peek!==i){ reveal(i); return; }
   if (T[i].h){ T[i].h=false; peek=-1; }   // aufgedeckter Stein wird genutzt: bleibt ab jetzt offen
   const pi=parkKeyIdx(T[i].f);
@@ -751,8 +752,31 @@ document.addEventListener('pointerdown',e=>{
   if (peek<0) return;
   const el=e.target && e.target.closest ? e.target.closest('#tiles .tile') : null;
   if (el && +el.dataset.i===peek) return;   // derselbe Stein: wird gleich genutzt
+  if (el && peekPartner(+el.dataset.i)) return;   // passender Partner: beide gehen gleich zusammen hoch
   coverPeek();
 },true);
+function peekPartner(i){ return peek>=0 && i!==peek && T[peek] && T[peek].alive && T[i] && T[i].alive && !T[i].h && keyOf(T[i].f)===keyOf(T[peek].f) && isFree(i) && isFree(peek); }
+function pairPeek(a,b){
+  if (park.length>=PARK_N) return;
+  const now=performance.now();
+  combo = now-lastMatch<COMBO_MS ? combo+1 : 0; lastMatch=now;
+  T[a].h=false; peek=-1;
+  T[a].alive=T[b].alive=false;
+  const ra=removeFieldEl(a), rb=removeFieldEl(b);
+  const slot=parkEl.children[park.length];
+  const fa=document.createElement('div'); fa.className='tile ptile'; fa.innerHTML=faceSVG(T[a].f);
+  const fb=document.createElement('div'); fb.className='tile ptile'; fb.innerHTML=faceSVG(T[b].f);
+  slot.append(fa,fb); flyFrom(fa, ra, 190); flyFrom(fb, rb, 190);
+  busy=true; SND.plop(1);
+  setTimeout(()=>{
+    const sr=slot.getBoundingClientRect(), c={x:sr.left+sr.width/2, y:sr.top+sr.height/2};
+    [fa,fb].forEach(el=>el.classList.add('gone'));
+    fxShards([c], fxFix); if (combo>=1) showGainAt(c.x, c.y+sr.height*.9, 0, combo, fxFix);
+    SND.swoosh(combo>=2?2:1);
+    setTimeout(()=>{ renderPark(); refreshFree(); busy=false; persist(); checkState(); },280);
+  },200);
+  lastProgress=now; refreshFree(); persist();
+}
 function stuckNow(){ return park.length>=PARK_N; }
 function checkState(){
   if (busy) return;
