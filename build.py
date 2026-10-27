@@ -44,24 +44,30 @@ let listSeq=0, listApplied=0;   // ältere Antworten dürfen eine neuere Liste n
 let pending=load('jemrix-pending',[]);
 let sharedCache=load('jemrix-shared-cache',null); // letzte bekannte gemeinsame Liste
 let syncing=false, netOk=null, fetching=false;
+function recordTime(){   // nur Spielzeit nachmelden (ohne neues Ergebnis)
+  if (!player || !ONLINE) { ptSave(); return; }
+  const secs=takeSecs(); if (secs<=0) return;
+  pending.push({name:player, score:0, secs, at:Date.now()}); save('jemrix-pending',pending); updateNet(); trySync();
+}
 function recordScore(s){
-  if (!player || s<=0) return;
+  if (!player) return;
+  if (s<=0){ recordTime(); return; }
   lastRun={name:player, score:s};
   localScores.push({name:player, score:s, at:Date.now()});
   localScores.sort((a,b)=>b.score-a.score); localScores=localScores.slice(0,20);
   save('jemrix-scores',localScores);
-  pending.push({name:player, score:s, at:Date.now()}); save('jemrix-pending',pending);
+  pending.push({name:player, score:s, secs:ONLINE?takeSecs():0, at:Date.now()}); save('jemrix-pending',pending);
   updateNet(); trySync(); renderTop2();
 }
 function takeList(j, seq){
   if (!j || !Array.isArray(j.players)) return false;
   if (seq!=null){ if (seq<listApplied) return false; listApplied=seq; }
-  sharedRows=j.players.filter(p=>p && typeof p.score==='number').map(p=>({name:clean(p.name), score:p.score}));
+  sharedRows=j.players.filter(p=>p && typeof p.score==='number').map(p=>({name:clean(p.name), score:p.score, secs:+p.secs||0}));
   sharedCache=sharedRows; save('jemrix-shared-cache',sharedCache);
   if (typeof j.epoch==='number' && j.epoch>load('jemrix-server-epoch',0)){
     // Liste wurde auf dem Server zurückgesetzt: lokale Listen ebenfalls leeren
     save('jemrix-server-epoch',j.epoch);
-    if (load('jemrix-server-epoch-seen',0)){ localScores=[]; save('jemrix-scores',localScores); best=0; save('jemrix-best',0); $('best').textContent=showPts(0); pending=[]; save('jemrix-pending',pending); }
+    if (load('jemrix-server-epoch-seen',0)){ localScores=[]; save('jemrix-scores',localScores); best=0; save('jemrix-best',0); $('best').textContent=showPts(0); pending=[]; save('jemrix-pending',pending); clearTimes(); }
     save('jemrix-server-epoch-seen',1);
   }
 }
@@ -81,7 +87,7 @@ async function trySync(){
   const batch=pending.slice(0,50);
   try{
     const seq=++listSeq;
-    const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score)}))});
+    const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score), secs:Math.round(e.secs||0)}))});
     // Antwort vom Server (auch eine Ablehnung): Stapel ist erledigt und blockiert die Warteschlange nicht
     pending=pending.slice(batch.length); save('jemrix-pending',pending);
     if (j && j.ok!==false){ if (takeList(j, seq)===false) setTimeout(fetchScores,300); }   // ältere Antwort verworfen: Liste frisch holen
@@ -102,13 +108,15 @@ function updateNet(){
 function topList(){
   const base = sharedRows ? sharedRows : (sharedCache || null);
   if (base){
-    const rows=base.slice();
-    pending.forEach(e=>rows.push({name:e.name, score:e.score}));   // eigene, noch nicht übertragene Ergebnisse
-    const bestBy=new Map(); rows.forEach(r=>{ const k=clean(r.name).toLowerCase(); if(!bestBy.has(k)||bestBy.get(k).score<r.score) bestBy.set(k,{name:clean(r.name),score:r.score}); });
+    const bestBy=new Map();
+    base.forEach(r=>{ const k=clean(r.name).toLowerCase(); bestBy.set(k,{name:clean(r.name),score:r.score,secs:+r.secs||0}); });
+    pending.forEach(e=>{ const k=clean(e.name).toLowerCase(); const o=bestBy.get(k)||{name:clean(e.name),score:0,secs:0};   // eigene, noch nicht übertragene Ergebnisse
+      if (e.score>o.score){ o.score=e.score; o.name=clean(e.name); } o.secs+=(+e.secs||0); bestBy.set(k,o); });
+    Object.entries(unsentSecs).forEach(([k,v])=>{ const o=bestBy.get(k); if (o) o.secs+=v; });   // laufende Spielzeit auf diesem Gerät
     const t = sharedRows && netOk ? 'Highscores · Familie' : 'Highscores · zuletzt synchronisiert';
-    return {title:t, rows:[...bestBy.values()].sort((a,b)=>b.score-a.score).slice(0,10)};
+    return {title:t, rows:[...bestBy.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10)};
   }
-  return {title:'Highscores · dieses Gerät', rows:localScores.slice(0,10)};
+  return {title:'Highscores · dieses Gerät', rows:localScores.slice(0,10).map(r=>({name:r.name, score:r.score, secs:localTime[clean(r.name).toLowerCase()]||0}))};
 }
 window.addEventListener('online',()=>{ netOk=null; fetchScores(); });
 window.addEventListener('offline',updateNet);

@@ -342,6 +342,10 @@ header.mh .sndbtn{width:30px;height:30px}
 .rescue b{font-family:var(--display);font-size:1.4rem}
 .rescue span{color:#c9d0ea;font-size:.95rem}
 @keyframes ehin2{from{opacity:0;transform:translate(-50%,-44%) scale(.95)}}
+
+/* Spielzeit unter dem Namen in der Highscore-Liste */
+.hs li{align-items:center}
+.hs li span small.pt{display:block;font-family:var(--body);font-size:.68em;font-weight:700;color:#8f99bd;letter-spacing:.02em;line-height:1.2;margin-top:1px}
 body.gameover .tiles,body.gameover .boost{visibility:hidden}
 body.gameover .over{bottom:0}
 .lvl{z-index:7}
@@ -808,7 +812,7 @@ function levelClear(){
   const done=lvl; ended=true;
   celebrate(`Level ${done} ✓`); SND.clear();
   save('jenmah-game',null);
-  if (preview){ later(()=>showEnd('next',`Level ${done} geschafft!`,`Zurück zu Level ${getProgress(player)}`,'Vorschau – zählt nicht für die Liste.'),1600); return; }
+  if (preview){ recordTime(); later(()=>showEnd('next',`Level ${done} geschafft!`,`Zurück zu Level ${getProgress(player)}`,'Vorschau – zählt nicht für die Liste.'),1600); return; }
   setProgress(done+1); recordScore(done); score=done; updateLiveCrown();
   later(()=>showEnd('next',`Level ${done} geschafft!`,`Weiter zu Level ${done+1}`),1600);
 }
@@ -997,7 +1001,7 @@ setInterval(()=>{
   const now=performance.now();
   if (tickLast && gameActive()){
     const dt=Math.min(2,(now-tickLast)/1000);
-    playTime+=dt; idleTime+=dt;
+    playTime+=dt; idleTime+=dt; addPlaySecs(dt);
     // Kleine Hilfe für Erfolgserlebnisse: nach einer Weile ohne Paar leuchtet ein passendes Paar kurz auf
   } else if (tickLast && !gameActive()) lastProgress+=Math.min(2000,now-tickLast);
   tickLast=now;
@@ -1008,7 +1012,7 @@ document.addEventListener('visibilitychange',()=>{ if (!document.hidden) idleTim
 let endHold=null;   // (Rest der alten Ende-Anzeige; bleibt null)
 function finishGame(title){
   if (endHold) return;
-  $('rescue').hidden=true; busy=true; ended=true; save('jenmah-game',null);   // bis „Nochmal“ nichts mehr antippbar
+  $('rescue').hidden=true; busy=true; ended=true; save('jenmah-game',null); recordTime();   // bis „Nochmal“ nichts mehr antippbar
   SND.end(false);
   later(()=>showEnd('retry', title, 'Nochmal'), 500);
 }
@@ -1030,7 +1034,7 @@ function newGame(){
 $('again').onclick=()=>{ startLevel(overMode==='next' ? getProgress(player) : lvl); };   // startLevel gibt das Feld wieder frei
 /* Beenden: zurück zur Familien-Startseite, Name wird neu gewählt */
 $('quit').onclick=()=>{
-  save('jenmah-game',null); try{ localStorage.removeItem('jenmah-name'); }catch(e){}
+  recordTime(); save('jenmah-game',null); try{ localStorage.removeItem('jenmah-name'); }catch(e){}
   document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
   setTimeout(()=>{ location.href='./'; },380);
 };
@@ -1044,6 +1048,17 @@ function myBest(){ return player ? getProgress(player)-1 : 0; }
 function showLevelUI(){ $('score').textContent=`Level ${lvl}`; $('best').textContent=myBest()>0 ? `Level ${myBest()}` : '–'; }
 let localScores=load('jenmah-lv-scores',[]);
 function clean(n){ return String(n||'').replace(/\s+/g,' ').trim().slice(0,20); }
+
+/* Spielzeit je Spieler seit dem letzten Zurücksetzen der Highscore-Liste (nur aktive Spielzeit) */
+const PT_KEY='jenmah';
+let unsentSecs=load(PT_KEY+'-unsent-secs',{}), localTime=load(PT_KEY+'-time-local',{}), ptSaveAt=0;
+function ptSave(){ save(PT_KEY+'-unsent-secs',unsentSecs); save(PT_KEY+'-time-local',localTime); }
+function addPlaySecs(dt){ if (!player || !(dt>0)) return; const k=clean(player).toLowerCase(); unsentSecs[k]=(unsentSecs[k]||0)+dt; localTime[k]=(localTime[k]||0)+dt; const n=Date.now(); if (n-ptSaveAt>10000){ ptSaveAt=n; ptSave(); } }
+function takeSecs(){ const k=clean(player||'').toLowerCase(); const v=Math.round(unsentSecs[k]||0); delete unsentSecs[k]; ptSave(); return v; }
+function clearTimes(){ unsentSecs={}; localTime={}; ptSave(); }
+function fmtTime(s){ s=Math.round(s||0); if (s<=0) return ''; if (s<60) return '< 1 Min'; const m=Math.floor(s/60); if (m<60) return m+' Min'; return Math.floor(m/60)+' Std '+(m%60)+' Min'; }
+function addTimeTo(el, secs){ const t=fmtTime(secs); if (!t) return; const sm=document.createElement('small'); sm.className='pt'; sm.textContent='Spielzeit '+t; el.appendChild(sm); }
+document.addEventListener('visibilitychange',()=>{ if (!document.hidden || !player) return; ptSave(); if ((unsentSecs[clean(player).toLowerCase()]||0)>=60 && typeof recordTime==='function') recordTime(); });
 const NAME_OK=/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ' .-]{1,19}$/;
 function askName(){
   $('reg').hidden=false; $('regname').value=player||''; $('regerr').textContent='';
@@ -1079,21 +1094,27 @@ async function api(fn, body){
 let listSeq=0, listApplied=0, sharedRows=null;
 let pending=load('jenmah-lv-pending',[]), sharedCache=load('jenmah-lv-shared-cache',null);
 let syncing=false, netOk=null, fetching=false;
+function recordTime(){   // nur Spielzeit nachmelden (z. B. verlorenes Level, Beenden)
+  if (!player || !ONLINE){ ptSave(); return; }
+  const secs=takeSecs(); if (secs<=0) return;
+  pending.push({name:player, score:0, secs, at:Date.now()}); save('jenmah-lv-pending',pending); updateNet(); trySync();
+}
 function recordScore(s){
-  if (!player || s<=0) return;
+  if (!player) return;
+  if (s<=0){ recordTime(); return; }
   lastRun={name:player, score:s};
   localScores.push({name:player, score:s, at:Date.now()}); localScores.sort((a,b)=>b.score-a.score); localScores=localScores.slice(0,20); save('jenmah-lv-scores',localScores);
-  if (ONLINE){ pending.push({name:player, score:s, at:Date.now()}); save('jenmah-lv-pending',pending); }
+  if (ONLINE){ pending.push({name:player, score:s, secs:takeSecs(), at:Date.now()}); save('jenmah-lv-pending',pending); }
   updateNet(); trySync(); renderTop2();
 }
 function takeList(j, seq){
   if (!j || !Array.isArray(j.players)) return false;
   if (seq!=null){ if (seq<listApplied) return false; listApplied=seq; }
-  sharedRows=j.players.filter(p=>p && typeof p.score==='number').map(p=>({name:clean(p.name), score:p.score}));
+  sharedRows=j.players.filter(p=>p && typeof p.score==='number').map(p=>({name:clean(p.name), score:p.score, secs:+p.secs||0}));
   sharedCache=sharedRows; save('jenmah-lv-shared-cache',sharedCache);
   if (typeof j.epoch==='number' && j.epoch>load('jenmah-lv-server-epoch',0)){
     save('jenmah-lv-server-epoch',j.epoch);
-    if (load('jenmah-lv-server-epoch-seen',0)){ localScores=[]; save('jenmah-lv-scores',localScores); pending=[]; save('jenmah-lv-pending',pending); }
+    if (load('jenmah-lv-server-epoch-seen',0)){ localScores=[]; save('jenmah-lv-scores',localScores); pending=[]; save('jenmah-lv-pending',pending); clearTimes(); }
     save('jenmah-lv-server-epoch-seen',1);
   }
 }
@@ -1109,7 +1130,7 @@ async function trySync(){
   if (syncing || !pending.length || navigator.onLine===false){ updateNet(); return; }
   syncing=true; const batch=pending.slice(0,50);
   try{ const seq=++listSeq;
-    const j=await api('submit_scores_mah',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score)}))});
+    const j=await api('submit_scores_mah',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score), secs:Math.round(e.secs||0)}))});
     pending=pending.slice(batch.length); save('jenmah-lv-pending',pending);
     if (j && j.ok!==false){ if (takeList(j,seq)===false) setTimeout(fetchScores,300); }
     netOk=true;
@@ -1125,11 +1146,14 @@ function updateNet(){
 }
 function topList(){
   const base=sharedRows ? sharedRows : (sharedCache || null);
-  if (base){ const rows=base.slice(); pending.forEach(e=>rows.push({name:e.name, score:e.score}));
-    const bestBy=new Map(); rows.forEach(r=>{ const k=clean(r.name).toLowerCase(); if (!bestBy.has(k)||bestBy.get(k).score<r.score) bestBy.set(k,{name:clean(r.name),score:r.score}); });
-    return {title: sharedRows && netOk ? 'Highscores · Familie' : 'Highscores · zuletzt synchronisiert', rows:[...bestBy.values()].sort((a,b)=>b.score-a.score).slice(0,10)}; }
+  if (base){ const bestBy=new Map();
+    base.forEach(r=>{ const k=clean(r.name).toLowerCase(); bestBy.set(k,{name:clean(r.name),score:r.score,secs:+r.secs||0}); });
+    pending.forEach(e=>{ const k=clean(e.name).toLowerCase(); const o=bestBy.get(k)||{name:clean(e.name),score:0,secs:0};
+      if (e.score>o.score){ o.score=e.score; o.name=clean(e.name); } o.secs+=(+e.secs||0); bestBy.set(k,o); });
+    Object.entries(unsentSecs).forEach(([k,v])=>{ const o=bestBy.get(k); if (o) o.secs+=v; });
+    return {title: sharedRows && netOk ? 'Highscores · Familie' : 'Highscores · zuletzt synchronisiert', rows:[...bestBy.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10)}; }
   // nur lokal: pro Name der beste Wert
-  const bestBy=new Map(); localScores.forEach(r=>{ const k=clean(r.name).toLowerCase(); if (!bestBy.has(k)||bestBy.get(k).score<r.score) bestBy.set(k,{name:clean(r.name),score:r.score}); });
+  const bestBy=new Map(); localScores.forEach(r=>{ const k=clean(r.name).toLowerCase(); if (!bestBy.has(k)||bestBy.get(k).score<r.score) bestBy.set(k,{name:clean(r.name),score:r.score,secs:localTime[k]||0}); });
   return {title:'Highscores · dieses Gerät', rows:[...bestBy.values()].sort((a,b)=>b.score-a.score).slice(0,10)};
 }
 window.addEventListener('online',()=>{ netOk=null; fetchScores(); });
@@ -1156,7 +1180,7 @@ function renderTop2(){
 }
 function renderScores(){
   renderTop2();
-  const tl=topList(), rows=tl.rows.slice(0, Math.max(3, Math.min(10, Math.floor((($('over').offsetHeight||300)-235)/34)))); $('hstitle').textContent=tl.title;
+  const tl=topList(), rows=tl.rows.slice(0, Math.max(3, Math.min(10, Math.floor((($('over').offsetHeight||300)-235)/44)))); $('hstitle').textContent=tl.title;
   const ol=$('hslist'); ol.innerHTML='';
   if (!rows.length){ const li=document.createElement('li'); li.style.gridTemplateColumns='1fr'; li.textContent='Noch keine Einträge.'; li.style.counterIncrement='none'; ol.appendChild(li); return; }
   let marked=false;
@@ -1164,6 +1188,7 @@ function renderScores(){
     if (ol.children.length===0){ li.classList.add('first'); n.innerHTML=CROWN; }
     n.appendChild(document.createTextNode(r.name));
     if (isBirthdayKid(r.name)){ const c=document.createElement('i'); c.className='cakei'; n.appendChild(c); }
+    addTimeTo(n, r.secs);
     const b=document.createElement('b'); b.textContent='Level '+r.score; li.append(n,b);
     if (!marked && lastRun && r.name.toLowerCase()===lastRun.name.toLowerCase() && r.score===lastRun.score){ li.classList.add('me'); marked=true; }
     ol.appendChild(li); });

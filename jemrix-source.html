@@ -536,6 +536,10 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .overbtns button{min-width:10em;box-sizing:border-box}
 .ghostbtn.light{color:#dfe6fb;border-color:rgba(223,230,251,.45)}
 @media (prefers-reduced-motion: reduce){.cell.burst::after{animation-name:fadeout;animation-duration:.4s}.cell.land,.floating.pick,.slot.enter .mini,.celebrate .spark{animation:none}.celebrate .ch{animation:none}.celebrate.on::before{animation:none}.combo.show{animation-duration:.01s}#score{transition:none}}
+
+/* Spielzeit unter dem Namen in der Highscore-Liste */
+.hs li{align-items:center}
+.hs li span small.pt{display:block;font-family:var(--body);font-size:.68em;font-weight:700;color:#8f99bd;letter-spacing:.02em;line-height:1.2;margin-top:1px}
 /* ===== Spielauswahl nach dem Intro: JJE_blocks oder JJE_mahjong ===== */
 /* Wortmarke JJE_…: „JJE“ in Schriftfarbe, Rest in Akzentblau */
 .wordmark.jje{background:none;color:var(--fg);-webkit-background-clip:border-box;background-clip:border-box;letter-spacing:-.02em}
@@ -799,7 +803,7 @@ setInterval(()=>{
   const now=performance.now();
   if (tickLast && gameActive()){
     const dt=Math.min(2,(now-tickLast)/1000);
-    playTime+=dt;
+    playTime+=dt; addPlaySecs(dt);
     // Unsichtbarer Inaktivitäts-Timeout: 3 Minuten ohne Berührung beenden die Partie
     idleTime+=dt;
     if (idleTime>=IDLE_LIMIT && !drag){ idleTime=0; finishGame('Zeit abgelaufen'); }
@@ -1703,6 +1707,17 @@ let player=load('jemrix-name',''), lastRun=null;
 let localScores=load('jemrix-scores',[]);
 let shared=null, sharedRows=null, myId=null, myDoc={};
 function clean(n){ return String(n||'').replace(/\s+/g,' ').trim().slice(0,20); }
+
+/* Spielzeit je Spieler seit dem letzten Zurücksetzen der Highscore-Liste (nur aktive Spielzeit) */
+const PT_KEY='jemrix';
+let unsentSecs=load(PT_KEY+'-unsent-secs',{}), localTime=load(PT_KEY+'-time-local',{}), ptSaveAt=0;
+function ptSave(){ save(PT_KEY+'-unsent-secs',unsentSecs); save(PT_KEY+'-time-local',localTime); }
+function addPlaySecs(dt){ if (!player || !(dt>0)) return; const k=clean(player).toLowerCase(); unsentSecs[k]=(unsentSecs[k]||0)+dt; localTime[k]=(localTime[k]||0)+dt; const n=Date.now(); if (n-ptSaveAt>10000){ ptSaveAt=n; ptSave(); } }
+function takeSecs(){ const k=clean(player||'').toLowerCase(); const v=Math.round(unsentSecs[k]||0); delete unsentSecs[k]; ptSave(); return v; }
+function clearTimes(){ unsentSecs={}; localTime={}; ptSave(); }
+function fmtTime(s){ s=Math.round(s||0); if (s<=0) return ''; if (s<60) return '< 1 Min'; const m=Math.floor(s/60); if (m<60) return m+' Min'; return Math.floor(m/60)+' Std '+(m%60)+' Min'; }
+function addTimeTo(el, secs){ const t=fmtTime(secs); if (!t) return; const sm=document.createElement('small'); sm.className='pt'; sm.textContent='Spielzeit '+t; el.appendChild(sm); }
+document.addEventListener('visibilitychange',()=>{ if (!document.hidden || !player) return; ptSave(); if ((unsentSecs[clean(player).toLowerCase()]||0)>=60 && typeof recordTime==='function') recordTime(); });
 // gleiche Regel wie auf dem Server: lateinische Buchstaben, Leerzeichen, Bindestrich, Punkt, Apostroph
 const NAME_OK=/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ' .-]{1,19}$/;
 function showPlayer(){
@@ -1841,7 +1856,7 @@ function renderTop2(){
 }
 function renderScores(){
   renderTop2();
-  const tl=topList(), title=tl.title, rows=tl.rows.slice(0, Math.max(3, Math.min(10, Math.floor((($('over').offsetHeight||boardEl.offsetHeight)-235)/34)))); $('hstitle').textContent=title;
+  const tl=topList(), title=tl.title, rows=tl.rows.slice(0, Math.max(3, Math.min(10, Math.floor((($('over').offsetHeight||boardEl.offsetHeight)-235)/44)))); $('hstitle').textContent=title;
   const ol=$('hslist'); ol.innerHTML='';
   if (!rows.length){ const li=document.createElement('li'); li.style.gridTemplateColumns='1fr'; li.textContent='Noch keine Einträge.'; li.style.counterIncrement='none'; ol.appendChild(li); return; }
   let marked=false;
@@ -1854,6 +1869,7 @@ function renderScores(){
     }
     n.appendChild(document.createTextNode(r.name));
     if (isBirthdayKid(r.name)){ const c=document.createElement('i'); c.className='cakei'; n.appendChild(c); }
+    addTimeTo(n, r.secs);
     const b=document.createElement('b'); b.textContent=showPts(r.score);
     li.append(n,b);
     if (!marked && lastRun && r.name.toLowerCase()===lastRun.name.toLowerCase() && r.score===lastRun.score){ li.classList.add('me'); marked=true; }
@@ -1984,7 +2000,7 @@ $('restart').onclick=showStanding;
 $('resume').onclick=closeStanding;
 /* Beenden: zurück zum Kino-Startbildschirm, Name wird neu gewählt */
 $('quit').onclick=()=>{
-  if (pauseMode){ recordScore(score); pauseMode=false; }
+  if (pauseMode){ recordScore(score); pauseMode=false; } else if (typeof recordTime==='function') recordTime();
   save('jemrix-game',null); try{ localStorage.removeItem('jemrix-name'); localStorage.removeItem('achtfeld-game'); }catch(e){}
   player=''; document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
   setTimeout(()=>{ try{ location.reload(); }catch(e){ location.href=location.href.split('#')[0]; } },380);
