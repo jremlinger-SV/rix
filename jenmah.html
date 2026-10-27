@@ -309,6 +309,34 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .park.full{box-shadow:inset 0 0 0 1.5px rgba(255,216,77,.55),0 0 14px rgba(255,216,77,.25)}
 .fxfix{position:fixed;inset:0;z-index:60;border-radius:0}
 body.gameover .park{visibility:hidden}
+/* ===== Bildschirm wie bei Vita Mahjong: Kopf mit Punkten, dunkle Spielfläche mit Ablage-Leiste, Feld und runden Knöpfen ===== */
+header.mh{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px}
+header.mh h1{justify-self:start}
+header.mh .logo{width:30px;height:30px}
+header.mh .wordmark{font-size:1.25rem}
+header.mh .sndbtn{justify-self:end;margin:0}
+.mscore{display:flex;flex-direction:column;align-items:center;gap:1px;font-variant-numeric:tabular-nums}
+.mscore #score{font-family:"Lilita One",var(--display);font-weight:400;font-size:clamp(1.8rem,8.4vw,2.3rem);line-height:1;color:color-mix(in srgb,var(--b2) 72%,var(--score-mix));-webkit-text-stroke:.09em var(--score-edge);paint-order:stroke fill;text-shadow:0 .07em 0 color-mix(in srgb,var(--b2) 55%,#0b1a45);display:inline-flex;white-space:nowrap}
+.mscore .livecrown{width:1.5rem;height:1.5rem;top:calc(50% - .75rem)}
+.msub{font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:.03em;white-space:nowrap}
+.msub b{font-family:var(--display);font-weight:600;color:var(--fg)}
+.boardslot{margin-inline:-6px;padding:10px 6px 14px;border-radius:22px;gap:10px;
+  background:radial-gradient(ellipse at 50% 18%,color-mix(in srgb,var(--b2) 28%,var(--board)),var(--board) 62%);box-shadow:0 10px 30px rgba(20,26,50,.25)}
+.table{background:none!important;box-shadow:none!important}
+.park{background:color-mix(in srgb,#000 35%,var(--board))!important;box-shadow:inset 0 0 0 2px rgba(159,216,255,.32),inset 0 3px 8px rgba(0,0,0,.45)!important;border-radius:14px;padding:6px 8px!important;gap:5px!important}
+.park.full{box-shadow:inset 0 0 0 2px rgba(255,216,77,.6),inset 0 3px 8px rgba(0,0,0,.45)!important}
+.park.jam{box-shadow:inset 0 0 0 2px rgba(248,113,113,.85),0 0 16px rgba(248,113,113,.35)!important}
+.pslot{width:var(--sw,46px)!important;background:none!important;box-shadow:none!important}
+.pslot:empty::after{display:none}
+.boost{gap:clamp(26px,10vw,48px)!important;padding-top:2px}
+.bbtn{width:58px;height:58px;padding:0!important;justify-content:center;border-radius:50%!important;background:radial-gradient(circle at 50% 30%,#22336b,#0b1330 75%)!important;box-shadow:inset 0 0 0 2.5px #2f6bff,0 5px 12px rgba(0,0,0,.4)!important}
+.bbtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.bbtn svg{width:28px!important;height:28px!important;color:#9fd8ff!important}
+.bbtn .cnt{right:-3px!important;top:-3px!important;box-shadow:0 0 0 2px var(--board)!important}
+.bbtn:disabled{opacity:.45}
+.bbtn:disabled .cnt{background:#5b6b95!important}
+#boardslot .foot{display:none}
+body.gameover .park{visibility:hidden}
 /* Netz-Hinweis oben, damit er die Hilfe-Knöpfe nicht verdeckt */
 .netline{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 6px);pointer-events:none;font-size:.72rem;padding:4px 12px}
 .boost{display:flex;justify-content:center;gap:10px;flex:none}
@@ -331,7 +359,7 @@ body.gameover .over{bottom:0}
 </style>
 
 <div class="app">
-  <header>
+  <header class="mh">
     <h1 aria-label="jenMah">
       <svg class="logo" viewBox="0 0 36 36" aria-hidden="true">
         <rect width="36" height="36" rx="10" fill="#0f1d3d"/>
@@ -343,13 +371,12 @@ body.gameover .over{bottom:0}
       </svg>
       <span class="wordmark">jenmah</span>
     </h1>
-    <button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
-    <div class="stats">
-      <div class="stat"><small>Stufe</small><b id="level">1</b></div>
-      <div class="stat"><small>Rekord</small><b id="best">50.000</b></div>
+    <div class="mscore" aria-label="Punkte">
+      <span class="scorewrap"><b id="score">50.000</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
+      <span class="msub">Stufe <b id="level">1</b> · Rekord <b id="best">50.000</b></span>
     </div>
+    <button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
   </header>
-  <div class="scoreline" aria-label="Punkte"><span class="scorewrap"><b id="score">50.000</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span></div>
   <div class="boardslot" id="boardslot">
     <div class="park" id="park" aria-label="Ablage mit 4 Plätzen"></div>
     <div class="tablewrap" id="tablewrap">
@@ -383,9 +410,9 @@ body.gameover .over{bottom:0}
       </div>
     </div>
     <div class="boost" id="boost">
-      <button type="button" class="bbtn" id="bUndo" aria-label="Zurück: letzten Stein aus der Ablage zurücklegen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Zurück</span><i class="cnt" id="cUndo">0</i></button>
-      <button type="button" class="bbtn" id="bHint" aria-label="Tipp: passendes Paar zeigen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Tipp</span><i class="cnt" id="cHint">0</i></button>
       <button type="button" class="bbtn" id="bMix" aria-label="Mischen: Steine im Feld neu verteilen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Mischen</span><i class="cnt" id="cMix">0</i></button>
+      <button type="button" class="bbtn" id="bHint" aria-label="Tipp: passendes Paar zeigen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Tipp</span><i class="cnt" id="cHint">0</i></button>
+      <button type="button" class="bbtn" id="bUndo" aria-label="Zurück: letzten Stein aus der Ablage zurücklegen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Zurück</span><i class="cnt" id="cUndo">0</i></button>
     </div>
     <div class="foot">
       <div class="top2" id="top2" aria-label="Highscores Platz 1 und 2"></div>
@@ -401,7 +428,7 @@ body.gameover .over{bottom:0}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='27.10.2026, 15:29';   // wird beim Bauen gefüllt
+const APP_VERSION='27.10.2026, 15:32';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JENMAH_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 const pick=a=>a[rnd(a.length)];
@@ -478,6 +505,7 @@ const LAYOUTS={
   kreuz:{name:'Kreuz', r:[[2,0,3,9,0],[0,2.5,2,4,0],[5,2.5,2,4,0],[2,0.5,3,8,1],[0.5,3,1,3,1],[5.5,3,1,3,1],[2,1,3,7,2],[2.5,2,2,5,3]]},
   pagode:{name:'Pagode', r:[[0,0,7,9,0],[0.5,0.5,6,8,1],[1.5,1.5,4,6,2],[2,2.5,3,3,3]]},
   festung:{name:'Festung', r:[[0,0,7,9,0],[1,0,5,9,1],[1,1.5,5,6,2],[2,3,3,2,3]]},
+  tor:{name:'Tor', r:[[1,0,5,2,0],[0,2,7,2,0],[0,4,3,3,0],[4,4,3,3,0],[1.5,0.5,4,2,1],[0.5,2.5,6,1,1],[0.5,3.5,2,3,1],[4.5,3.5,2,3,1],[2.5,0.5,2,1,2],[1,4,1,2,2],[5,4,1,2,2],[1,4.5,1,1,3],[5,4.5,1,1,3]]},
   tempel:{name:'Tempel', r:[[0,1,7,7,0],[1,0,5,1,0],[1,8,5,1,0],[0.5,0.5,6,8,1],[1,1.5,5,6,2],[2,2.5,3,2,3],[3,3,1,1,4]]}
 };
 function positionsOf(id){
@@ -493,12 +521,12 @@ const BIG=['pagode','festung','tempel'];
 function levelCfg(n){
   if (n<=1) return {lay:['huegel','doppelhuegel'], kinds:6, hint:6, mix:99, solv:true, chaos:0, grp:1, hide:0, b:[3,5,3]};
   if (n===2) return {lay:['bruecke','fenster'], kinds:10, hint:10, mix:99, solv:true, chaos:0, grp:1, hide:.1, b:[3,5,3]};
-  if (n===3) return {lay:['turm','zwillinge'], kinds:16, hint:15, mix:3, solv:true, chaos:0, grp:.9, hide:.15, b:[2,3,2]};
-  if (n===4) return {lay:['kreuz'], kinds:22, hint:20, mix:3, fs:true, chaos:0, grp:.85, hide:.2, b:[2,3,2]};
+  if (n===3) return {lay:['tor','turm','zwillinge'], kinds:16, hint:15, mix:3, solv:true, chaos:0, grp:.9, hide:.15, b:[2,3,2]};
+  if (n===4) return {lay:['tor','kreuz'], kinds:22, hint:20, mix:3, fs:true, chaos:0, grp:.85, hide:.2, b:[2,3,2]};
   if (n===5) return {lay:BIG, kinds:36, hint:30, mix:2, fs:true, chaos:0, grp:.7, hide:.25, b:[1,2,1]};
-  if (n<=7)  return {lay:BIG.concat('kreuz'), kinds:36, hint:40, mix:2, fs:true, chaos:.05, grp:.55, hide:.3, b:[1,2,1]};
-  if (n<=9)  return {lay:BIG.concat('kreuz'), kinds:36, hint:50, mix:1, fs:true, chaos:.1, grp:.45, hide:.33, b:[1,1,1]};
-  return {lay:BIG.concat('kreuz'), kinds:36, hint:60, mix:1, fs:true, chaos:.15, grp:.35, hide:.35, b:[1,1,1]};
+  if (n<=7)  return {lay:BIG.concat('kreuz','tor'), kinds:36, hint:40, mix:2, fs:true, chaos:.05, grp:.55, hide:.3, b:[1,2,1]};
+  if (n<=9)  return {lay:BIG.concat('kreuz','tor'), kinds:36, hint:50, mix:1, fs:true, chaos:.1, grp:.45, hide:.33, b:[1,1,1]};
+  return {lay:BIG.concat('kreuz','tor'), kinds:36, hint:60, mix:1, fs:true, chaos:.15, grp:.35, hide:.35, b:[1,1,1]};
 }
 
 /* ===================== Spielregeln ===================== */
@@ -561,7 +589,7 @@ function pairsFor(n, cfg){
 /* ===================== Zustand ===================== */
 let lvl=1, layId='', score=0, best=load('jenmah-best',0), combo=0, lastMatch=0, mixLeft=0, playTime=0, bestAtStart=0;
 let boost={undo:0,hint:0,mix:0}, busy=false, lastProgress=0, lastHint=0;
-const tilesEl=$('tiles'), tableEl=$('table'), wrapEl=$('tablewrap'), fxEl=$('fx'), fxFix=$('fxfix');
+const parkEl=$('park'), tilesEl=$('tiles'), tableEl=$('table'), wrapEl=$('tablewrap'), fxEl=$('fx'), fxFix=$('fxfix');
 let tileEls=[];
 function cfg(){ return levelCfg(lvl); }
 function persist(){ if (endHold) return; save('jenmah-game',{lvl,layId,score,combo:0,mixLeft,playTime,bestAtStart,boost,park,t:T.map(t=>[t.x,t.y,t.z,t.f,t.alive?1:0,t.h?1:0])}); }
@@ -580,6 +608,7 @@ function measure(){
   const usedW=cols*tw+lift*maxZ+d, usedH=rows*th+lift*maxZ+d;
   geo={tw,th,d,lift,minX,minY,ox:4+(W-usedW)/2+lift*maxZ, oy:4+(H-usedH)/2+lift*maxZ};
   tilesEl.style.setProperty('--tw',tw+'px'); tilesEl.style.setProperty('--d',d+'px');
+  const sw=Math.min(tw*.92,54); parkEl.style.setProperty('--sw',sw+'px'); parkEl.style.setProperty('--tw',sw+'px'); parkEl.style.setProperty('--d',Math.max(3,sw*.1)+'px');
 }
 function placeEl(el,t){
   el.style.width=geo.tw+'px'; el.style.height=geo.th+'px';
@@ -631,7 +660,6 @@ function startLevel(n, quiet){
    wird später sein Partner im Feld angetippt, fliegt er hinauf und beide verschwinden automatisch. */
 const PARK_N=4;
 let park=[];   // Indizes der abgelegten Steine, in Platz-Reihenfolge
-const parkEl=$('park');
 function parkKeyIdx(f){ const k=keyOf(f); return park.findIndex(j=>keyOf(T[j].f)===k); }
 function renderPark(){
   parkEl.innerHTML='';
