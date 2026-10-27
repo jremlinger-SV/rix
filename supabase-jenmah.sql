@@ -23,7 +23,7 @@ create or replace function public.get_scores_mah()
 returns json
 language sql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
   select json_build_object(
     'ok', true,
@@ -88,7 +88,7 @@ create or replace function public.reset_scores_mah()
 returns void
 language sql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
   delete from jenmah_scores;
   update jenmah_meta set epoch = epoch + 1 where id = 1;

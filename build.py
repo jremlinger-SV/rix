@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Baut die eigenständige Web-App (index.html) aus der Spieldatei achtfeld.html.
-Aufruf:  python3 build.py  [Pfad zu achtfeld.html]
-Änderungen am Spiel werden in achtfeld.html gemacht und hier nur neu exportiert."""
+"""Baut die Web-App: index.html (Jemrix mit Intro und Spielauswahl) aus jemrix-source.html,
+jenmah.html (Mahjong) aus jenmah-source.html und sw.js (Offline-Speicher) aus sw.template.js.
+Aufruf:  python3 build.py
+Änderungen an den Spielen werden in den *-source.html-Dateien gemacht und hier nur neu exportiert."""
 import sys, re, pathlib, hashlib, time
 
 HERE = pathlib.Path(__file__).resolve().parent

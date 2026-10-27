@@ -2021,6 +2021,8 @@ function showModes(cont){
     try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
     setTimeout(()=>{ pk.classList.add('out'); setTimeout(()=>{ location.href='jenmah.html'; },300); },160); };
 }
+// Zurück aus jenMah (Safari stellt die Seite aus dem Zwischenspeicher wieder her): frisch laden, sonst bleibt die Auswahl unbedienbar
+window.addEventListener('pageshow',e=>{ if (e.persisted) location.reload(); });
 function wrongOrient(){ return LAND.matches; }
 let resumeTurbo=null;   // gespeicherter Turbo startet erst, wenn das Spiel wirklich losgeht
 playCine(()=>showModes(()=>{ familyIntro(); if (player && $('reg').hidden && isBirthdayKid(player) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; }); if (resumeTurbo){ const r=resumeTurbo; resumeTurbo=null; startTurbo(r.left, r.mul); turboTotal=Math.max(r.left, r.total||r.left); tickTurbo(); persist(); } }));

@@ -590,11 +590,13 @@ function pairsFor(n, cfg){
 
 /* ===================== Zustand ===================== */
 let owner='', overMode='retry', lvl=1, layId='', score=0, best=load('jenmah-best',0), combo=0, lastMatch=0, mixLeft=0, playTime=0, bestAtStart=0;
+let gen=0, ended=false, preview=false, hashWanted=0;
+function later(fn,ms){ const g=gen; return setTimeout(()=>{ if (g===gen) fn(); },ms); }   // nur ausführen, wenn noch dasselbe Level läuft
 let boost={undo:0,hint:0,mix:0}, busy=false, lastProgress=0, lastHint=0;
 const parkEl=$('park'), tilesEl=$('tiles'), tableEl=$('table'), wrapEl=$('tablewrap'), fxEl=$('fx'), fxFix=$('fxfix');
 let tileEls=[];
 function cfg(){ return levelCfg(lvl); }
-function persist(){ if (endHold) return; save('jenmah-game',{who:owner,lvl,layId,score,combo:0,mixLeft,playTime,bestAtStart,boost,park,t:T.map(t=>[t.x,t.y,t.z,t.f,t.alive?1:0,t.h?1:0])}); }
+function persist(){ if (endHold || ended) return; save('jenmah-game',{who:owner,lvl,layId,score,combo:0,mixLeft,playTime,bestAtStart,boost,park,t:T.map(t=>[t.x,t.y,t.z,t.f,t.alive?1:0,t.h?1:0])}); }
 
 /* ===================== Darstellung ===================== */
 let geo={tw:40,th:53,d:4,ox:0,oy:0};
@@ -649,6 +651,8 @@ function tileCenter(i){ const el=tileEls[i]; return {x:el.offsetLeft+el.offsetWi
 function toast(text){ const t=$('lvl'); t.textContent=text; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); }
 function startLevel(n, quiet){
   lvl=n=Math.max(1,Math.floor(n)||1); const c=cfg(); owner=(player||'').toLowerCase(); score=n-1;
+  gen++; busy=false; ended=false; peek=-1; clearTimeout(celebTimer);
+  preview = !!player && n>getProgress(player);   // Level-Link über dem eigenen Stand: nur ansehen, keine Wertung
   layId=c.lay[(n*7+3)%c.lay.length];
   withSeed(((n*2654435761)+(LEVEL_SEEDS[n-1]||0)*97)>>>0, ()=>{
     const pos=positionsOf(layId);
@@ -666,7 +670,7 @@ function startLevel(n, quiet){
   mixLeft=c.mix; park=[]; renderPark(); parkEl.classList.remove('jam'); combo=0; lastProgress=performance.now(); lastHint=0;
   showLevelUI();
   renderAll(true);
-  if (!quiet) toast(`Level ${lvl}`);
+  if (!quiet) toast(preview ? `Level ${lvl} · Vorschau` : `Level ${lvl}`);
   persist();
 }
 /* Ablage: 4 Plätze oben. Ein Tipp auf einen freien Stein legt ihn ab;
@@ -695,14 +699,13 @@ function flyFrom(el, fromRect, ms){
   setTimeout(()=>{ el.style.transition=''; el.style.transformOrigin=''; el.style.zIndex=''; el.classList.add('land'); setTimeout(()=>el.classList.remove('land'),180); },(ms||320)+10);
 }
 function removeFieldEl(i){ const el=tileEls[i]; let r=null; if (el){ r=el.getBoundingClientRect(); el.remove(); } tileEls[i]=null; return r; }
-function select(){}   // (frühere Auswahl, durch die Ablage ersetzt)
 function nope(el){ if (!el) return; el.classList.remove('nope'); void el.offsetWidth; el.classList.add('nope'); SND.thud(); }
 function onTap(i){
   if (busy || endHold || !$('over').hidden || !$('reg').hidden || document.querySelector('.bday') || !T[i] || !T[i].alive) return;
   idleTime=0;
   if (!isFree(i)){ nope(tileEls[i]); return; }
   if (peekPartner(i)){   // Partner des aufgedeckten Steins gefunden: beide wandern nach oben
-    if (T[i].h){ const a=peek; T[i].h=false; flipTo(i,true); SND.plop(3); busy=true; setTimeout(()=>{ busy=false; pairPeek(a,i); },430); }
+    if (T[i].h){ const a=peek; T[i].h=false; flipTo(i,true); SND.plop(3); busy=true; later(()=>{ busy=false; pairPeek(a,i); },430); }
     else pairPeek(peek,i);
     return; }
   if (T[i].h && peek!==i){ reveal(i); return; }
@@ -718,24 +721,23 @@ function onTap(i){
   lastHint=0; refreshFree(); persist(); checkState();
 }
 const COMBO_MS=4000;
-function pairPoints(){ return Math.round((10+3*(lvl-1))*(1+0.5*Math.min(combo,6))); }
 function pairWithPark(i,pi){
   const now=performance.now();
   combo = now-lastMatch<COMBO_MS ? combo+1 : 0; lastMatch=now;
-  const j=park[pi], special=T[i].f[0]==='f'||T[i].f[0]==='s';
   T[i].alive=false;
   const r=removeFieldEl(i);
   const slot=parkEl.children[pi], pt=slot.firstChild;
+  park.splice(pi,1);   // Spielstand sofort richtig (auch wenn die App jetzt beendet wird)
   // Partner fliegt zum abgelegten Stein, dann verschwinden beide
   const fly=document.createElement('div'); fly.className='tile ptile'; fly.innerHTML=faceSVG(T[i].f); slot.appendChild(fly);
   flyFrom(fly, r, 190);
   busy=true; SND.plop(1);
-  setTimeout(()=>{
+  later(()=>{
     const sr=slot.getBoundingClientRect(), c={x:sr.left+sr.width/2, y:sr.top+sr.height/2};
     [pt,fly].forEach(el=>{ el.classList.add('gone'); });
     fxShards([c], fxFix); if (combo>=1) showGainAt(c.x, c.y+sr.height*.9, 0, combo, fxFix);
     SND.swoosh(combo>=2?2:1);
-    setTimeout(()=>{ park.splice(pi,1); renderPark(); refreshFree(); busy=false; persist(); checkState(); },280);
+    later(()=>{ renderPark(); refreshFree(); busy=false; persist(); checkState(); },280);
   },200);
   lastProgress=now; lastHint=0;
   refreshFree(); persist();
@@ -753,7 +755,7 @@ function reveal(i){
   const pi=parkKeyIdx(T[i].f);
   if (pi>=0){   // Partner liegt schon in der Ablage: aufgedeckter Stein wandert automatisch hinauf
     T[i].h=false; peek=-1; flipTo(i,true); SND.plop(3); busy=true;
-    setTimeout(()=>{ busy=false; const p2=parkKeyIdx(T[i].f); if (T[i].alive && p2>=0) pairWithPark(i,p2); },450);
+    later(()=>{ busy=false; const p2=parkKeyIdx(T[i].f); if (T[i].alive && p2>=0) pairWithPark(i,p2); },450);
     return;
   }
   peek=i; flipTo(i,true); SND.plop(3);
@@ -780,39 +782,41 @@ function pairPeek(a,b){
   const fb=document.createElement('div'); fb.className='tile ptile'; fb.innerHTML=faceSVG(T[b].f);
   slot.append(fa,fb); flyFrom(fa, ra, 190); flyFrom(fb, rb, 190);
   busy=true; SND.plop(1);
-  setTimeout(()=>{
+  later(()=>{
     const sr=slot.getBoundingClientRect(), c={x:sr.left+sr.width/2, y:sr.top+sr.height/2};
     [fa,fb].forEach(el=>el.classList.add('gone'));
     fxShards([c], fxFix); if (combo>=1) showGainAt(c.x, c.y+sr.height*.9, 0, combo, fxFix);
     SND.swoosh(combo>=2?2:1);
-    setTimeout(()=>{ renderPark(); refreshFree(); busy=false; persist(); checkState(); },280);
+    later(()=>{ renderPark(); refreshFree(); busy=false; persist(); checkState(); },280);
   },200);
   lastProgress=now; refreshFree(); persist();
 }
 function stuckNow(){ return park.length>=PARK_N; }
 function checkState(){
   if (busy) return;
-  if (!T.some(t=>t.alive) && !park.length){ busy=true; setTimeout(levelClear,380); return; }
-  if (stuckNow()){ busy=true; setTimeout(stuck,650); }
+  if (!T.some(t=>t.alive) && !park.length){ busy=true; later(levelClear,380); return; }
+  if (stuckNow()){ busy=true; later(stuck,650); }
 }
 function levelClear(){
   // restliche Steine (falls die Runde vorzeitig als geschafft gilt) ausblenden
   T.forEach((t,i)=>{ if (!t.alive) return; t.alive=false; const el=tileEls[i]; if (el){ el.classList.add('gone'); setTimeout(()=>el.remove(),360); tileEls[i]=null; } });
   park=[]; renderPark();
-  const done=lvl;
+  const done=lvl; ended=true;
   celebrate(`Level ${done} ✓`); SND.clear();
-  setProgress(done+1); recordScore(done); score=done; updateLiveCrown(); save('jenmah-game',null);
-  setTimeout(()=>{ busy=false; showEnd('next',`Level ${done} geschafft!`,`Weiter zu Level ${done+1}`); },1600);
+  save('jenmah-game',null);
+  if (preview){ later(()=>showEnd('next',`Level ${done} geschafft!`,`Zurück zu Level ${getProgress(player)}`,'Vorschau – zählt nicht für die Liste.'),1600); return; }
+  setProgress(done+1); recordScore(done); score=done; updateLiveCrown();
+  later(()=>showEnd('next',`Level ${done} geschafft!`,`Weiter zu Level ${done+1}`),1600);
 }
 /* Wie bei Vita Mahjong: 4 Steine ohne Paar in der Ablage – verloren. Rettung nur mit „Zurück“. */
 function stuck(){
   if (endHold){ busy=false; return; }
   parkEl.classList.add('jam'); SND.thud();
   if (boost.undo>0){ $('rescue').hidden=false; $('rUndo').textContent=`Letzten Stein zurück (${boost.undo})`; return; }   // bleibt busy, bis entschieden ist
-  busy=false; finishGame('Ablage voll');
+  finishGame('Ablage voll');
 }
 $('rUndo').onclick=()=>{ $('rescue').hidden=true; busy=false; doUndo(); };
-$('rGive').onclick=()=>{ $('rescue').hidden=true; busy=false; finishGame('Ablage voll'); };
+$('rGive').onclick=()=>{ $('rescue').hidden=true; finishGame('Ablage voll'); };
 /* Hilfen */
 function updateBoost(){
   [['undo','bUndo','cUndo'],['hint','bHint','cHint'],['mix','bMix','cMix']].forEach(([k,b,c])=>{ $(c).textContent=boost[k]; $(b).disabled=boost[k]<=0; });
@@ -829,7 +833,7 @@ function doUndo(){
 $('bUndo').onclick=()=>{ if (canAct()) doUndo(); };
 $('bHint').onclick=()=>{ if (!canAct() || boost.hint<=0) return; if (showHint()){ boost.hint--; updateBoost(); persist(); } else toast(T.some(t=>t.alive && t.h) ? 'Kein Paar sichtbar · verdeckte Steine umdrehen' : 'Kein Paar sichtbar · Mischen hilft'); };
 $('bMix').onclick=()=>{ if (!canAct() || boost.mix<=0) return; boost.mix--; busy=true; reshuffle(); };
-/* Mischen: die Steine im Feld tauschen ihre Bilder (Ablage und verdeckte Plätze bleiben) */
+/* Mischen: die Steine im Feld tauschen ihre Bilder; die Ablage bleibt, verdeckte Steine bleiben verdeckt (mit neuem Bild) */
 function reshuffle(){
   coverPeek();
   const ids=T.map((t,i)=>t.alive?i:-1).filter(i=>i>=0);
@@ -843,7 +847,7 @@ function reshuffle(){
     setTimeout(()=>el.classList.remove('flip'),520+(k%12)*25); });
   ids.forEach(i=>T[i].f=faces[i]);
   SND.swoosh(2);
-  setTimeout(()=>{ busy=false; lastProgress=performance.now(); refreshFree(); persist(); },560+12*25);
+  later(()=>{ busy=false; lastProgress=performance.now(); refreshFree(); persist(); },560+12*25);
 }
 /* Hilfe: zuerst ein freier Partner für die Ablage, sonst ein freies Paar */
 function showHint(){
@@ -895,33 +899,6 @@ function celebrate(bonus){
 }
 
 /* ===================== Punkte (Anzeige wie bei Jemrix) ===================== */
-const SHOW_BASE=50000, SHOW_MUL=10;
-const showPts=v=>(SHOW_BASE+Math.round(v)*SHOW_MUL).toLocaleString('de-DE');
-const showGain=g=>(Math.round(g)*SHOW_MUL).toLocaleString('de-DE');
-let shownScore=0, countRaf=0, odoLen=-1, odoCols=[];
-function renderOdo(v){
-  const el=$('score'); const N=SHOW_BASE+v*SHOW_MUL; const txt=Math.round(N).toLocaleString('de-DE');
-  if (txt.length!==odoLen){ el.textContent=''; odoCols=[];
-    [...txt].forEach(ch=>{ if (/\d/.test(ch)){ const o=document.createElement('span'); o.className='od'; const c=document.createElement('span'); c.className='odc';
-        for (let d=0; d<=10; d++){ const x=document.createElement('span'); x.textContent=d%10; c.appendChild(x); } o.appendChild(c); el.appendChild(o); odoCols.push(c); }
-      else { const p=document.createElement('span'); p.className='odp'; p.textContent=ch; el.appendChild(p); } });
-    odoLen=txt.length; }
-  const n=odoCols.length;
-  for (let i=0;i<n;i++){ const p=n-1-i, pow=Math.pow(10,p); let pos=Math.floor(N/pow)%10;
-    if (p>0){ const lower=N-Math.floor(N/pow)*pow; pos+=Math.min(1,Math.max(0,(lower-(pow-SHOW_MUL))/SHOW_MUL)); } else pos+=N%1;
-    odoCols[i].style.transform=`translateY(${-pos*1.2}em)`; }
-  el.setAttribute('aria-label',Math.round(N).toLocaleString('de-DE')+' Punkte');
-}
-function countTo(target){
-  const el=$('score'), from=shownScore, t0=performance.now(), dur=Math.min(1400,450+Math.abs(target-from)*6);
-  cancelAnimationFrame(countRaf);
-  if (target<=from || matchMedia('(prefers-reduced-motion: reduce)').matches){ shownScore=target; renderOdo(target); $('best').textContent=showPts(best); return; }
-  el.classList.add('hot');
-  const step=now=>{ const k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3); shownScore=from+(target-from)*e; renderOdo(shownScore);
-    if (shownScore>bestAtStart) $('best').textContent=showPts(Math.max(shownScore,bestAtStart));
-    if (k<1) countRaf=requestAnimationFrame(step); else { shownScore=target; renderOdo(target); el.classList.remove('hot'); $('best').textContent=showPts(best); } };
-  countRaf=requestAnimationFrame(step);
-}
 let liveCrownOn=false;
 function updateLiveCrown(){
   const el=$('livecrown'); if (!el || endHold) return;
@@ -931,7 +908,6 @@ function updateLiveCrown(){
   if (!on && liveCrownOn) el.hidden=true;
   liveCrownOn=on;
 }
-function setScore(v){ score=v; updateLiveCrown(); }
 
 /* ===================== Töne (wie Jemrix, gleiche Ton-Einstellung) ===================== */
 const SND=(()=>{
@@ -1010,7 +986,7 @@ const SND=(()=>{
 
 /* ===================== Zeit, Hinweise, Inaktivität ===================== */
 const LAND=matchMedia('(orientation: landscape) and (max-height: 560px)');
-const IDLE_LIMIT=180; let idleTime=0, tickLast=0;
+let idleTime=0, tickLast=0;
 ['pointerdown','touchstart','keydown','wheel'].forEach(ev=>window.addEventListener(ev,()=>{ idleTime=0; },{capture:true,passive:true}));
 function gameActive(){ return T.length && !endHold && !busy && !document.hidden && !LAND.matches && $('over').hidden && $('reg').hidden && !document.querySelector('.bday'); }
 setInterval(()=>{
@@ -1025,25 +1001,18 @@ setInterval(()=>{
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden) idleTime=0; else { try{ if (T.length && $('over').hidden) persist(); }catch(_){} } });
 
 /* ===================== Spielende ===================== */
-const END_HOLD_S=10; let endHold=null;
-function holdEnd(title, then){
-  const el=$('endhold'); $('ehTitle').textContent=title; let left=END_HOLD_S; $('ehSec').textContent=left;
-  el.classList.remove('run'); el.hidden=false; void el.offsetWidth; el.classList.add('run'); document.body.classList.add('ending');
-  clearInterval(endHold);
-  endHold=setInterval(()=>{ left--; if (left>0){ $('ehSec').textContent=left; return; }
-    clearInterval(endHold); endHold=null; el.hidden=true; el.classList.remove('run'); document.body.classList.remove('ending'); then(); },1000);
-}
+let endHold=null;   // (Rest der alten Ende-Anzeige; bleibt null)
 function finishGame(title){
   if (endHold) return;
-  $('rescue').hidden=true; busy=false; save('jenmah-game',null);
+  $('rescue').hidden=true; busy=true; ended=true; save('jenmah-game',null);   // bis „Nochmal“ nichts mehr antippbar
   SND.end(false);
-  setTimeout(()=>showEnd('retry', title, 'Nochmal'), 500);
+  later(()=>showEnd('retry', title, 'Nochmal'), 500);
 }
 /* Ende eines Levels: geschafft (weiter) oder verloren (nochmal) */
-function showEnd(mode, title, btn){
-  overMode=mode;
+function showEnd(mode, title, btn, msg){
+  overMode=mode; busy=true;
   $('overtitle').textContent=title; $('final').textContent=`Level ${lvl}`;
-  $('overmsg').textContent = mode==='next' ? 'Gut gemacht!' : 'Kein Problem – das Level bleibt gleich.';
+  $('overmsg').textContent = msg || (mode==='next' ? 'Gut gemacht!' : 'Kein Problem – das Level bleibt gleich.');
   $('again').textContent=btn;
   document.body.classList.add('gameover'); $('over').hidden=false; renderScores();
 }
@@ -1054,7 +1023,7 @@ function newGame(){
   setTimeout(askName,0);
   startLevel(player ? getProgress(player) : 1, true);
 }
-$('again').onclick=()=>{ startLevel(overMode==='next' ? getProgress(player) : lvl); };
+$('again').onclick=()=>{ startLevel(overMode==='next' ? getProgress(player) : lvl); };   // startLevel gibt das Feld wieder frei
 /* Beenden: zurück zur Familien-Startseite, Name wird neu gewählt */
 $('quit').onclick=()=>{
   save('jenmah-game',null); try{ localStorage.removeItem('jenmah-name'); }catch(e){}
@@ -1232,9 +1201,9 @@ updateNet(); renderTop2(); fetchScores();
 familyIntro();
 const saved=load('jenmah-game',null);
 try{
-  const ok=saved && Array.isArray(saved.t) && saved.t.length>=2 && LAYOUTS[saved.layId] && saved.t.every(a=>Array.isArray(a) && (a.length===5||a.length===6) && typeof a[3]==='string' && /^[dbcwrfs][0-9A-Z]$/.test(a[3]));
+  const ok=saved && Array.isArray(saved.t) && saved.t.length>=2 && LAYOUTS[saved.layId] && saved.t.every(a=>Array.isArray(a) && (a.length===5||a.length===6) && [a[0],a[1],a[2]].every(Number.isFinite) && typeof a[3]==='string' && /^[dbcwrfs][0-9A-Z]$/.test(a[3]));
   if (ok && (saved.t.some(a=>a[4]) || (saved.park||[]).length) && (saved.who||'')===(player||'').toLowerCase()){
-    lvl=saved.lvl||1; layId=saved.layId; owner=saved.who||''; score=lvl-1; mixLeft=saved.mixLeft??cfg().mix; playTime=saved.playTime||0; bestAtStart=saved.bestAtStart??best;
+    lvl=saved.lvl||1; layId=saved.layId; owner=saved.who||''; score=lvl-1; preview=!!player && lvl>getProgress(player); mixLeft=saved.mixLeft??cfg().mix; playTime=saved.playTime||0; bestAtStart=saved.bestAtStart??best;
     T=saved.t.map(a=>({x:a[0],y:a[1],z:a[2],f:a[3],alive:!!a[4],h:!!a[5]})); buildNB();
     if (saved.boost && typeof saved.boost==='object') boost={undo:+saved.boost.undo||0,hint:+saved.boost.hint||0,mix:+saved.boost.mix||0}; else { const b0=cfg().b; boost={undo:b0[0],hint:b0[1],mix:b0[2]}; }
     park=(Array.isArray(saved.park)?saved.park:[]).filter((i,k,arr)=>Number.isInteger(i) && T[i] && !T[i].alive && arr.indexOf(i)===k).slice(0,PARK_N); renderPark();
@@ -1242,11 +1211,10 @@ try{
     renderAll(true); lastProgress=performance.now();
     if (!player) askName();
     else if (isBirthdayKid(player)) birthdayShow(()=>{ idleTime=0; });
-    if (!T.some(t=>t.alive) && !park.length){ busy=true; setTimeout(levelClear,600); } else if (stuckNow()){ busy=true; setTimeout(stuck,900); }
+    gen++; if (stuckNow()){ busy=true; later(stuck,900); }
   } else newGame();
 }catch(err){ newGame(); }
 // Level-Link: nur neu aufbauen, wenn man nicht schon in diesem Level spielt; aufgedeckte Steine bleiben aufgedeckt
-let hashWanted=0;
 const hashLv=()=>{ const m=/^#(?:stufe|level)-(\d+)$/.exec(location.hash); if (!m) return;
   hashWanted=+m[1];
   if (+m[1]!==lvl || !T.some(t=>t.alive)) startLevel(+m[1]);

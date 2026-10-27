@@ -725,7 +725,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 16:50';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 17:10';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -2068,6 +2068,8 @@ function showModes(cont){
     try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
     setTimeout(()=>{ pk.classList.add('out'); setTimeout(()=>{ location.href='jenmah.html'; },300); },160); };
 }
+// Zurück aus jenMah (Safari stellt die Seite aus dem Zwischenspeicher wieder her): frisch laden, sonst bleibt die Auswahl unbedienbar
+window.addEventListener('pageshow',e=>{ if (e.persisted) location.reload(); });
 function wrongOrient(){ return LAND.matches; }
 let resumeTurbo=null;   // gespeicherter Turbo startet erst, wenn das Spiel wirklich losgeht
 if ('serviceWorker' in navigator && location.protocol!=='file:'){
