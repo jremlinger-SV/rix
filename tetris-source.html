@@ -234,19 +234,19 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 html{background:#0f1b3f!important}
 body{background:radial-gradient(ellipse at 50% 30%,#1b2f66 0%,#0f1b3f 58%,#0a1330 100%)!important}
 body{padding-left:max(4px,env(safe-area-inset-left,0px))!important;padding-right:max(4px,env(safe-area-inset-right,0px))!important}
-.app{padding-block:4px 0!important;max-width:none!important;gap:4px}   /* Statusleiste ist schon über :root abgezogen – nicht doppelt */
+.app{padding-block:clamp(10px,2vh,18px) 2px!important;max-width:none!important;gap:clamp(6px,1.2vh,12px)}   /* Statusleiste ist schon über :root abgezogen – nicht doppelt */
 header.mh{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding-inline:6px}
 header.mh h1{justify-self:start}
 header.mh .logo{width:26px;height:26px}
 header.mh .wordmark{font-size:clamp(.82rem,3.9vw,1rem)}
 header.mh .sndbtn{justify-self:end;margin:0;width:30px;height:30px}
-.mscore{display:flex;flex-direction:column;align-items:center;gap:0;font-variant-numeric:tabular-nums}
+.mscore{display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:2px;font-variant-numeric:tabular-nums}
 .mscore #score{font-family:"Lilita One",var(--display);font-weight:400;font-size:clamp(1.8rem,8.4vw,2.3rem);line-height:1;color:color-mix(in srgb,var(--b2) 72%,var(--score-mix));-webkit-text-stroke:.09em var(--score-edge);paint-order:stroke fill;text-shadow:0 .07em 0 color-mix(in srgb,var(--b2) 55%,#0b1a45);display:inline-flex;white-space:nowrap;transition:transform .15s}
 .mscore .livecrown{width:1.5rem;height:1.5rem;top:calc(50% - .75rem)}
 .msub{font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:.03em;white-space:nowrap;margin-top:-1px}
 .msub b{font-family:var(--display);font-weight:600;color:var(--fg)}
 .boardslot{gap:5px;padding:2px 0 2px;min-height:0}
-.play{position:relative;flex:1 1 auto;width:100%;min-height:0;display:flex;justify-content:center;align-items:flex-start;gap:var(--gap,8px)}
+.play{position:relative;flex:1 1 auto;width:100%;min-height:0;display:flex;justify-content:center;align-items:center;gap:var(--gap,8px)}
 .wellwrap{position:relative;flex:none;border-radius:12px}
 #cv{display:block;border-radius:12px;box-shadow:0 0 0 2px rgba(159,216,255,.32),0 10px 30px rgba(1,4,16,.45);touch-action:none;cursor:pointer}
 .wellwrap.skinglow #cv{animation:skinglow .75s ease-out}
