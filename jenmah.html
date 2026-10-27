@@ -264,17 +264,20 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .ghostbtn.light{color:#dfe6fb;border-color:rgba(223,230,251,.45)}
 /* ===== jenMah: Spieltisch und Steine ===== */
 .boardslot{gap:6px}
+.app{gap:6px}
+.scoreline b{font-size:clamp(2.1rem,10vw,2.6rem)}
+@media (min-height: 900px){.scoreline b{font-size:3rem}}
 .tablewrap{position:relative;flex:1 1 auto;width:100%;min-height:240px}
 .table{position:absolute;inset:0;z-index:0;isolation:isolate;background:radial-gradient(ellipse at 50% 0%,rgba(77,155,255,.22),transparent 60%),var(--board);border-radius:14px;box-shadow:0 10px 30px rgba(20,26,50,.25);overflow:hidden}
 .tiles{position:absolute;inset:0}
 .tile{position:absolute;box-sizing:border-box;border-radius:calc(var(--tw)*.16);
   background:linear-gradient(160deg,#ffffff 0%,#f1f6ff 45%,#dce8ff 100%);
   box-shadow:inset 0 0 0 1px rgba(47,107,255,.18),inset 0 calc(var(--d)*-.5) calc(var(--d)*.9) rgba(29,78,216,.10),
-    calc(var(--d)*.45) calc(var(--d)*.45) 0 #b9d2ff, var(--d) var(--d) 0 #2f6bff, calc(var(--d) + 1px) calc(var(--d) + 1px) 0 #1d4ed8,
-    calc(var(--d) + 2px) calc(var(--d) + 4px) calc(var(--d) + 4px) rgba(3,8,26,.45);
+    calc(var(--d)*.35) calc(var(--d)*.35) 0 #c9dcff, calc(var(--d)*.7) calc(var(--d)*.7) 0 #2f6bff, var(--d) var(--d) 0 #1d4ed8, calc(var(--d) + 1px) calc(var(--d) + 1px) 0 #14348f,
+    calc(var(--d) + 3px) calc(var(--d) + 5px) calc(var(--d) + 6px) rgba(3,8,26,.55);
   transition:transform .12s ease, filter .2s, box-shadow .12s;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.tile svg{position:absolute;inset:6% 7%;width:86%;height:88%;display:block;pointer-events:none;transition:opacity .2s}
-.tile{filter:brightness(calc(.95 + var(--z,0)*.025))}
+.tile svg{position:absolute;inset:3.5% 4%;width:92%;height:93%;display:block;pointer-events:none;transition:opacity .2s}
+.tile{filter:brightness(calc(.93 + var(--z,0)*.025))}
 .tile.sel{filter:none}
 .tile.back{background:linear-gradient(160deg,#5b9bff 0%,#2f6bff 45%,#1d4ed8 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),inset 0 2px 0 rgba(255,255,255,.3),
     calc(var(--d)*.45) calc(var(--d)*.45) 0 #b9d2ff, var(--d) var(--d) 0 #eef4ff, calc(var(--d) + 1px) calc(var(--d) + 1px) 0 #c9daf8,
@@ -298,8 +301,8 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .gain small{display:block;font-family:var(--display);font-weight:600;font-size:.8rem;-webkit-text-stroke:0;text-align:center;color:#cfe6ff}
 @keyframes gain{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-55%) scale(1.08)}100%{opacity:0;transform:translate(-50%,-130%) scale(1)}}
 /* Ablage: 4 Plätze über dem Spielfeld */
-.park{--tw:50px;--d:4px;display:flex;justify-content:center;gap:clamp(8px,3vw,14px);flex:none;padding:7px 12px 9px;border-radius:14px;background:color-mix(in srgb,var(--board) 88%,transparent);box-shadow:inset 0 0 0 1px rgba(159,216,255,.12)}
-.pslot{position:relative;width:clamp(42px,12.5vw,54px);aspect-ratio:1/1.32;max-width:100%;border-radius:9px;background:color-mix(in srgb,var(--well) 80%,transparent);box-shadow:inset 0 0 0 1.5px rgba(159,216,255,.22)}
+.park{--tw:44px;--d:4px;display:flex;justify-content:center;gap:clamp(8px,3vw,14px);flex:none;padding:5px 12px 8px;border-radius:14px;background:color-mix(in srgb,var(--board) 88%,transparent);box-shadow:inset 0 0 0 1px rgba(159,216,255,.12)}
+.pslot{position:relative;width:clamp(38px,11vw,48px);aspect-ratio:1/1.26;max-width:100%;border-radius:9px;background:color-mix(in srgb,var(--well) 80%,transparent);box-shadow:inset 0 0 0 1.5px rgba(159,216,255,.22)}
 .pslot:empty::after{content:"";position:absolute;inset:34% 30%;border-radius:4px;border:1.5px dashed rgba(159,216,255,.28)}
 .pslot .tile{left:0;top:0;width:100%;height:100%;cursor:default}
 .park.jam{box-shadow:inset 0 0 0 2px rgba(248,113,113,.8),0 0 16px rgba(248,113,113,.35)!important}
@@ -309,7 +312,7 @@ body.gameover .park{visibility:hidden}
 /* Netz-Hinweis oben, damit er die Hilfe-Knöpfe nicht verdeckt */
 .netline{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 6px);pointer-events:none;font-size:.72rem;padding:4px 12px}
 .boost{display:flex;justify-content:center;gap:10px;flex:none}
-.bbtn{position:relative;display:inline-flex;align-items:center;gap:6px;padding:8px 14px 8px 11px;border-radius:999px;background:var(--panel);color:var(--fg);font-size:.88rem;box-shadow:0 3px 10px rgba(15,29,61,.12),inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 22%,transparent)}
+.bbtn{position:relative;display:inline-flex;align-items:center;gap:6px;padding:6px 13px 6px 10px;border-radius:999px;background:var(--panel);color:var(--fg);font-size:.88rem;box-shadow:0 3px 10px rgba(15,29,61,.12),inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 22%,transparent)}
 .bbtn svg{width:19px;height:19px;color:var(--accent)}
 .bbtn .cnt{position:absolute;right:-5px;top:-7px;min-width:19px;height:19px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:var(--accent);color:#fff;font:700 .72rem/19px var(--display);font-style:normal;text-align:center;box-shadow:0 0 0 2px var(--bg)}
 .bbtn:disabled{opacity:.42;cursor:default}
@@ -398,7 +401,7 @@ body.gameover .over{bottom:0}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='27.10.2026, 15:19';   // wird beim Bauen gefüllt
+const APP_VERSION='27.10.2026, 15:29';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JENMAH_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 const pick=a=>a[rnd(a.length)];
@@ -415,11 +418,11 @@ const CJK_NUM=['一','二','三','四','五','六','七','八','九'];
 const DOTS={1:[[30,40]],2:[[30,22],[30,58]],3:[[15,17],[30,40],[45,63]],4:[[18,22],[42,22],[18,58],[42,58]],5:[[17,19],[43,19],[30,40],[17,61],[43,61]],
   6:[[18,16],[42,16],[18,40],[42,40],[18,64],[42,64]],7:[[14,12],[30,21],[46,30],[18,51],[42,51],[18,69],[42,69]],
   8:[[18,12],[42,12],[18,30],[42,30],[18,49],[42,49],[18,67],[42,67]],9:[[14,16],[30,16],[46,16],[14,40],[30,40],[46,40],[14,64],[30,64],[46,64]]};
-const DOT_R={1:15,2:11,3:9.5,4:9.5,5:8.5,6:8.5,7:7,8:7.2,9:7.2};
+const DOT_R={1:17,2:12,3:10.5,4:10.5,5:9.5,6:9.5,7:7.6,8:7.8,9:7.8};
 const BAMBOO={2:[[30],[30]],3:[[30],[18,42]],4:[[20,40],[20,40]],5:[[17,43],[30],[17,43]],6:[[14,30,46],[14,30,46]],7:[[30],[14,30,46],[14,30,46]],8:[[12,24,36,48],[12,24,36,48]],9:[[14,30,46],[14,30,46],[14,30,46]]};
-function idx(t){ return `<text x="4.5" y="12" class="f-idx" font-size="10" fill="${C.idx}">${t}</text>`; }
+function idx(t){ return `<text x="3.5" y="11.5" class="f-idx" font-size="11" fill="${C.idx}">${t}</text>`; }
 function dot(x,y,r,c){ return `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/><circle cx="${x}" cy="${y}" r="${(r*.62).toFixed(1)}" fill="none" stroke="#fff" stroke-width="${(r*.2).toFixed(1)}"/><circle cx="${x}" cy="${y}" r="${(r*.24).toFixed(1)}" fill="#fff"/>`; }
-function stick(x,y,h,c){ return `<rect x="${x-3.4}" y="${y}" width="6.8" height="${h}" rx="3.4" fill="${c}"/><rect x="${x-3.4}" y="${(y+h/2-1.2).toFixed(1)}" width="6.8" height="2.4" fill="#fff" opacity=".6"/><rect x="${x-1.1}" y="${y+2.5}" width="2.2" height="${Math.max(1,h-5).toFixed(1)}" rx="1.1" fill="#fff" opacity=".28"/>`; }
+function stick(x,y,h,c){ return `<rect x="${x-3.9}" y="${y}" width="7.8" height="${h}" rx="3.9" fill="${c}"/><rect x="${x-3.4}" y="${(y+h/2-1.2).toFixed(1)}" width="6.8" height="2.4" fill="#fff" opacity=".6"/><rect x="${x-1.1}" y="${y+2.5}" width="2.2" height="${Math.max(1,h-5).toFixed(1)}" rx="1.1" fill="#fff" opacity=".28"/>`; }
 function txt(x,y,s,size,c,cls='f-cjk'){ return `<text x="${x}" y="${y}" text-anchor="middle" class="${cls}" font-size="${size}" fill="${c}">${s}</text>`; }
 function flower(k){
   const stem=`<path d="M30 46 C30 56 28 64 30 74" stroke="${C.teal}" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M30 62 C24 58 20 60 18 64 C23 66 27 65 30 62Z" fill="${C.teal}"/>`;
@@ -452,9 +455,9 @@ function faceSVG(f){
       rows.forEach((xs,ri)=>xs.forEach((x,xi)=>{ const mid=(xs.length===1 && r===3) || (n===9 && xi===1) || (n===5 && ri===1); b+=stick(x, 8+ri*(h+gap), h, mid?C.blue:(ri%2?C.sky:C.teal)); }));
       b+=idx(n); }
   }
-  else if (s==='c'){ b=txt(30,35,CJK_NUM[n-1],28,C.navy)+txt(30,71,'萬',28,C.vio2)+idx(n); }
-  else if (s==='w'){ const ch={O:'東',S:'南',W:'西',N:'北'}[f[1]]; b=txt(30,56,ch,40,C.navy)+idx(f[1]); }
-  else if (s==='r'){ if (f[1]==='Z') b=txt(30,57,'中',42,C.vio2); else if (f[1]==='F') b=txt(30,57,'發',40,C.teal);
+  else if (s==='c'){ b=txt(30,36,CJK_NUM[n-1],32,C.navy)+txt(30,74,'萬',31,C.vio2)+idx(n); }
+  else if (s==='w'){ const ch={O:'東',S:'南',W:'西',N:'北'}[f[1]]; b=txt(30,58,ch,46,C.navy)+idx(f[1]); }
+  else if (s==='r'){ if (f[1]==='Z') b=txt(30,59,'中',48,C.vio2); else if (f[1]==='F') b=txt(30,59,'發',46,C.teal);
     else b=`<rect x="13" y="14" width="34" height="52" rx="5" fill="none" stroke="${C.blue}" stroke-width="4"/><rect x="19.5" y="20.5" width="21" height="39" rx="3" fill="none" stroke="${C.sky}" stroke-width="2"/>`; }
   else if (s==='f') b=flower(n)+idx(n);
   else if (s==='s') b=season(n)+idx(n);
@@ -472,10 +475,10 @@ const LAYOUTS={
   fenster:{name:'Fenster', r:[[0,0,6,2,0],[0,5,6,2,0],[0,2,2,3,0],[4,2,2,3,0],[1,0,4,2,1],[1,5,4,2,1],[2,2.5,2,2,0]]},
   turm:{name:'Turm', r:[[0,0,6,8,0],[1,1,4,6,1],[2,2,2,4,2]]},
   zwillinge:{name:'Zwillinge', r:[[0,0,3,8,0],[3.5,0,3,8,0],[0.5,1,2,6,1],[4,1,2,6,1],[0.5,3,2,2,2],[4,3,2,2,2]]},
-  kreuz:{name:'Kreuz', r:[[2,0,4,10,0],[0,3,2,4,0],[6,3,2,4,0],[2,1,4,8,1],[3,2,2,6,2],[3,4,2,2,3]]},
-  pagode:{name:'Pagode', r:[[0,1,8,9,0],[1,0,6,1,0],[1,10,6,1,0],[1,2,6,7,1],[2,3,4,4,2],[3,4.5,2,1,3]]},
-  festung:{name:'Festung', r:[[0,0,8,10,0],[1,1,6,8,1],[2,3,4,4,2]]},
-  schmetterling:{name:'Schmetterling', r:[[0,1,3,8,0],[5,1,3,8,0],[3,0,2,10,0],[2,0,1,1,0],[5,0,1,1,0],[3,10,2,1,0],[0.5,2,2,6,1],[5.5,2,2,6,1],[3,1,2,8,1],[1,3,1,4,2],[6,3,1,4,2],[3,2,2,6,2],[3,3,2,4,3],[3,4,2,2,4]]}
+  kreuz:{name:'Kreuz', r:[[2,0,3,9,0],[0,2.5,2,4,0],[5,2.5,2,4,0],[2,0.5,3,8,1],[0.5,3,1,3,1],[5.5,3,1,3,1],[2,1,3,7,2],[2.5,2,2,5,3]]},
+  pagode:{name:'Pagode', r:[[0,0,7,9,0],[0.5,0.5,6,8,1],[1.5,1.5,4,6,2],[2,2.5,3,3,3]]},
+  festung:{name:'Festung', r:[[0,0,7,9,0],[1,0,5,9,1],[1,1.5,5,6,2],[2,3,3,2,3]]},
+  tempel:{name:'Tempel', r:[[0,1,7,7,0],[1,0,5,1,0],[1,8,5,1,0],[0.5,0.5,6,8,1],[1,1.5,5,6,2],[2,2.5,3,2,3],[3,3,1,1,4]]}
 };
 function positionsOf(id){
   const out=[];
@@ -486,16 +489,16 @@ function positionsOf(id){
    Von Spiel zu Spiel anders: wechselnde Aufbauten und Sortenzahl. */
 /* solv: Mischen ergibt garantiert eine lösbare Lage (Stufe 1–3); danach wird frei gemischt wie beim Original.
    chaos: Anteil der Steine, die nach dem lösbaren Verteilen frei vertauscht werden (0 = garantiert lösbar, 1 = wie im Original). */
-const BIG=['pagode','festung','schmetterling'];
+const BIG=['pagode','festung','tempel'];
 function levelCfg(n){
-  if (n<=1) return {lay:['huegel','doppelhuegel'], kinds:6, hint:6, mix:99, solv:true, chaos:0, hide:0, b:[3,5,3]};
-  if (n===2) return {lay:['bruecke','fenster'], kinds:10, hint:10, mix:99, solv:true, chaos:0, hide:.1, b:[3,5,3]};
-  if (n===3) return {lay:['turm','zwillinge'], kinds:16, hint:15, mix:3, solv:true, chaos:0, hide:.15, b:[2,3,2]};
-  if (n===4) return {lay:['kreuz'], kinds:22, hint:20, mix:3, fs:true, chaos:.1, hide:.2, b:[2,3,2]};
-  if (n===5) return {lay:BIG, kinds:36, hint:30, mix:2, fs:true, chaos:.2, hide:.25, b:[1,2,1]};
-  if (n<=7)  return {lay:BIG.concat('kreuz'), kinds:36, hint:40, mix:2, fs:true, chaos:.35, hide:.3, b:[1,2,1]};
-  if (n<=9)  return {lay:BIG.concat('kreuz'), kinds:36, hint:50, mix:1, fs:true, chaos:.5, hide:.33, b:[1,1,1]};
-  return {lay:BIG.concat('kreuz'), kinds:36, hint:60, mix:1, fs:true, chaos:1, hide:.35, b:[1,1,1]};
+  if (n<=1) return {lay:['huegel','doppelhuegel'], kinds:6, hint:6, mix:99, solv:true, chaos:0, grp:1, hide:0, b:[3,5,3]};
+  if (n===2) return {lay:['bruecke','fenster'], kinds:10, hint:10, mix:99, solv:true, chaos:0, grp:1, hide:.1, b:[3,5,3]};
+  if (n===3) return {lay:['turm','zwillinge'], kinds:16, hint:15, mix:3, solv:true, chaos:0, grp:.9, hide:.15, b:[2,3,2]};
+  if (n===4) return {lay:['kreuz'], kinds:22, hint:20, mix:3, fs:true, chaos:0, grp:.85, hide:.2, b:[2,3,2]};
+  if (n===5) return {lay:BIG, kinds:36, hint:30, mix:2, fs:true, chaos:0, grp:.7, hide:.25, b:[1,2,1]};
+  if (n<=7)  return {lay:BIG.concat('kreuz'), kinds:36, hint:40, mix:2, fs:true, chaos:.05, grp:.55, hide:.3, b:[1,2,1]};
+  if (n<=9)  return {lay:BIG.concat('kreuz'), kinds:36, hint:50, mix:1, fs:true, chaos:.1, grp:.45, hide:.33, b:[1,1,1]};
+  return {lay:BIG.concat('kreuz'), kinds:36, hint:60, mix:1, fs:true, chaos:.15, grp:.35, hide:.35, b:[1,1,1]};
 }
 
 /* ===================== Spielregeln ===================== */
@@ -517,10 +520,15 @@ function freeList(){ const al=T.map(t=>t.alive); const out=[]; T.forEach((t,i)=>
 function movePairs(){ const by={}; freeList().filter(i=>!T[i].h).forEach(i=>{ const k=keyOf(T[i].f); (by[k]=by[k]||[]).push(i); }); let n=0; const pairs=[]; Object.values(by).forEach(l=>{ n+=Math.floor(l.length/2); if (l.length>=2) pairs.push([l[0],l[1]]); }); return {n,pairs}; }
 /* Lösbar verteilen: rückwärts abbauen – immer zwei gerade freie Plätze bekommen ein Paar.
    So gibt es garantiert einen Weg, das ganze Feld zu räumen. */
-function deal(ids, pairs){
+function deal(ids, pairs, grp){
   for (let attempt=0; attempt<400; attempt++){
     const alive=T.map(()=>false); ids.forEach(i=>alive[i]=true);
-    const order=shuffle(pairs.slice()), faces={};
+    // grp: Anteil der Sorten, deren Paare direkt nacheinander frei werden (weniger Verwechslungsgefahr mit der Ablage)
+    let order=shuffle(pairs.slice());
+    if (grp>0){ const by={}; order.forEach(p=>{ const k=keyOf(p[0]); (by[k]=by[k]||[]).push(p); });
+      const out=[], loose=[]; shuffle(Object.keys(by)).forEach(k=>{ if (Math.random()<grp) out.push(by[k]); else by[k].forEach(p=>loose.push([p])); });
+      order=shuffle(out.concat(loose)).flat(); }
+    const faces={};
     let ok=true;
     for (const p of order){
       const fr=ids.filter(i=>alive[i] && freeIn(i,alive));
@@ -565,12 +573,12 @@ function measure(){
   let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9,maxZ=0;
   alive.forEach(t=>{ minX=Math.min(minX,t.x); minY=Math.min(minY,t.y); maxX=Math.max(maxX,t.x+2); maxY=Math.max(maxY,t.y+2); maxZ=Math.max(maxZ,t.z); });
   const cols=(maxX-minX)/2, rows=(maxY-minY)/2;
-  const W=tableEl.clientWidth-16, H=tableEl.clientHeight-16;
-  const LIFT=.15, RATIO=1.32;   // Stein 3:4, jede Ebene leicht nach oben links versetzt
-  const tw=Math.max(18, Math.min(68, W/(cols+LIFT*(maxZ+1)+.08), H/(rows*RATIO+LIFT*(maxZ+1)+.1)));
-  const th=tw*RATIO, lift=tw*LIFT, d=Math.max(2.5,tw*.1);
+  const W=tableEl.clientWidth-8, H=tableEl.clientHeight-8;
+  const LIFT=.17, RATIO=1.26;   // Stein knapp 4:5, jede Ebene deutlich nach oben links versetzt
+  const tw=Math.max(18, Math.min(78, W/(cols+LIFT*maxZ+.14), H/(rows*RATIO+LIFT*maxZ+.16)));
+  const th=tw*RATIO, lift=tw*LIFT, d=Math.max(3,tw*.12);
   const usedW=cols*tw+lift*maxZ+d, usedH=rows*th+lift*maxZ+d;
-  geo={tw,th,d,lift,minX,minY,ox:8+(W-usedW)/2+lift*maxZ, oy:8+(H-usedH)/2+lift*maxZ};
+  geo={tw,th,d,lift,minX,minY,ox:4+(W-usedW)/2+lift*maxZ, oy:4+(H-usedH)/2+lift*maxZ};
   tilesEl.style.setProperty('--tw',tw+'px'); tilesEl.style.setProperty('--d',d+'px');
 }
 function placeEl(el,t){
@@ -607,7 +615,7 @@ function startLevel(n, quiet){
   T=pos.map(p=>({x:p.x,y:p.y,z:p.z,f:'',alive:true})); buildNB();
   if (c.kinds<36) c.kinds+=rnd(3)-1;   // von Spiel zu Spiel etwas anders
   let faces=null, guard=0;
-  while (!faces && guard++<6) faces=deal(T.map((_,i)=>i), pairsFor(T.length,c));
+  while (!faces && guard++<6) faces=deal(T.map((_,i)=>i), pairsFor(T.length,c), c.grp||0);
   if (!faces){ faces={}; const ps=pairsFor(T.length,c).flat(); T.forEach((_,i)=>faces[i]=ps[i]); }
   T.forEach((t,i)=>t.f=faces[i]);
   if (c.chaos>0){ const ch=Math.min(1,Math.max(0,c.chaos+(Math.random()-.5)*.1)); const ids=shuffle(T.map((_,i)=>i)).slice(0,Math.round(ch*T.length)); const fl=shuffle(ids.map(i=>T[i].f)); ids.forEach((i,k)=>T[i].f=fl[k]); }
