@@ -734,7 +734,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 22:04';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 22:27';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -1785,7 +1785,7 @@ function askName(){
   markLeader();
   if (!player) setTimeout(()=>{ try{$('regname').focus();}catch(e){} },50);
 }
-function setPlayer(n){ idleTime=0; player=n; save('jemrix-name',n); $('reg').hidden=true; showPlayer(); SND.start();
+function setPlayer(n){ idleTime=0; if (player && clean(player).toLowerCase()!==clean(n).toLowerCase() && typeof recordTime==='function') recordTime(); player=n; save('jemrix-name',n); $('reg').hidden=true; showPlayer(); SND.start();
   if (!isBirthdayKid(n)) return;
   const go=()=>{ idleTime=0; };
   if (!document.querySelector('.bday')) birthdayShow(go);   // Gratulation nur für das Geburtstagskind – bei jedem Spielstart
@@ -1864,7 +1864,7 @@ async function trySync(){
     const seq=++listSeq;
     const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score), secs:Math.round(e.secs||0), id:e.id||''}))});
     // Antwort vom Server (auch eine Ablehnung): Stapel ist erledigt und blockiert die Warteschlange nicht
-    pending=pending.slice(batch.length); save('jemrix-pending',pending);
+    pending=pending.filter(e=>!batch.includes(e)); save('jemrix-pending',pending);
     if (j && j.ok!==false){ if (takeList(j, seq)===false) setTimeout(fetchScores,300); }   // ältere Antwort verworfen: Liste frisch holen
     netOk=true;
   }catch(e){ netOk=false; }

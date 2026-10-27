@@ -1745,7 +1745,7 @@ function askName(){
   markLeader();
   if (!player) setTimeout(()=>{ try{$('regname').focus();}catch(e){} },50);
 }
-function setPlayer(n){ idleTime=0; player=n; save('jemrix-name',n); $('reg').hidden=true; showPlayer(); SND.start();
+function setPlayer(n){ idleTime=0; if (player && clean(player).toLowerCase()!==clean(n).toLowerCase() && typeof recordTime==='function') recordTime(); player=n; save('jemrix-name',n); $('reg').hidden=true; showPlayer(); SND.start();
   if (!isBirthdayKid(n)) return;
   const go=()=>{ idleTime=0; };
   if (!document.querySelector('.bday')) birthdayShow(go);   // Gratulation nur für das Geburtstagskind – bei jedem Spielstart

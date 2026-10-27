@@ -91,7 +91,7 @@ async function trySync(){
     const seq=++listSeq;
     const j=await api('submit_scores',{p_code:FAMILY_CODE, p_entries:batch.map(e=>({name:e.name, score:Math.round(e.score), secs:Math.round(e.secs||0), id:e.id||''}))});
     // Antwort vom Server (auch eine Ablehnung): Stapel ist erledigt und blockiert die Warteschlange nicht
-    pending=pending.slice(batch.length); save('jemrix-pending',pending);
+    pending=pending.filter(e=>!batch.includes(e)); save('jemrix-pending',pending);
     if (j && j.ok!==false){ if (takeList(j, seq)===false) setTimeout(fetchScores,300); }   // ältere Antwort verworfen: Liste frisch holen
     netOk=true;
   }catch(e){ netOk=false; }
