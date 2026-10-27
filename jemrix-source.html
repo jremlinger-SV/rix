@@ -892,6 +892,7 @@ setInterval(()=>{
     // Unsichtbarer Inaktivitäts-Timeout: 3 Minuten ohne Berührung beenden die Partie
     idleTime+=dt;
     if (idleTime>=IDLE_LIMIT && !drag){ idleTime=0; finishGame('Zeit abgelaufen'); }
+    if (bdayNext.length && !MP.on && playTime>=bdayNext[0] && isBirthdayKid(player)){ bdayNext.shift(); bdayTurbo(); persist(); }
   } else if (tickLast && MP.on && !MP.done && !endHold && !document.hidden && $('mpcount').hidden && wrongOrient()){
     // Mehrspieler hochkant liegen gelassen: Inaktivität zählt trotzdem, sonst wartet die Runde ewig
     idleTime+=Math.min(2,(now-tickLast)/1000);
@@ -1117,7 +1118,7 @@ function setScore(v){
   s.classList.add('bump'); setTimeout(()=>s.classList.remove('bump'),150);
   if (score>best){ best=score; save('jemrix-best',best); }
 }
-function persist(){ if (MP.on || MP.used || endHold) return; const tl=turboUntil>performance.now()?turboUntil-performance.now():0; save('jemrix-game',{grid,pieces,score,combo,sinceClear,stars:[...stars],skinOrder,skinBump,playTime,profile,turboLeft:tl,turboMul,turboTotal,bestAtStart}); }
+function persist(){ if (MP.on || MP.used || endHold) return; const tl=turboUntil>performance.now()?turboUntil-performance.now():0; save('jemrix-game',{grid,pieces,score,combo,sinceClear,stars:[...stars],skinOrder,skinBump,playTime,profile,turboLeft:tl,turboMul,turboTotal,bestAtStart,bdayNext}); }
 /* Looks */
 const SKINS=[['klassik','Klassik'],['glas','Glas'],['neon','Neon'],['pixel','Pixel'],['gem','Edelstein'],['eis','Eis'],['symbol','Symbole'],['blasen','Blasen'],['nacht','Sternennacht'],
   ['halloween','Halloween'],['weihnachten','Weihnachten'],['ostern','Ostern'],['fruehling','Frühling'],['sommer','Sommer'],['herbst','Herbst'],['winter','Winter'],['geburtstag','Geburtstag'],
@@ -1662,7 +1663,14 @@ function setPlayer(n){ idleTime=0; player=n; save('jemrix-name',n); $('reg').hid
     // Gratulation nur für das Geburtstagskind selbst – bei jedem Spielstart
     tickLast=0; birthdayShow(()=>{ idleTime=0; tickLast=performance.now(); });
   }
-  if (isBirthdayKid(n) && score===0){ startTurbo(30000,2); const t=$('lvl'); t.textContent='Geburtstags-Turbo ×2 für 30 s'; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); } }
+  if (isBirthdayKid(n) && score===0){ bdayNext=[60,120]; bdayTurbo(); persist(); } }
+/* Geburtstags-Turbo: ×5 für 30 s – dreimal in den ersten Minuten (Start, nach 1 und nach 2 Minuten Spielzeit) */
+let bdayNext=[];
+function bdayTurbo(){
+  startTurbo(30000,5);
+  const t=$('lvl'); t.textContent='Geburtstags-Turbo ×5 für 30 s'; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  setTimeout(()=>SND.turbo(5),330);
+}
 $('regform').addEventListener('submit',e=>{
   e.preventDefault();
   const n=clean($('regname').value);
@@ -1902,6 +1910,7 @@ function newGame(){
   if (typeof askName==='function') setTimeout(askName,0);
   score=0; combo=0; sinceClear=9; lastMove=0; level=1; endTurbo(); bestAtStart=best;
   const op=opening(); grid=op.grid;
+  bdayNext=[];
   stars=new Set(); skinOrder=shuffleSkins(); skinBump=0; curSkin=null; playTime=0; profile=newProfile(); setsSinceGift=0;
   pieces=op.pieces||newSet();
   cancelAnimationFrame(countRaf); shownScore=0; $('score').classList.remove('hot'); renderOdo(0); liveCrownOn=false; $('livecrown').hidden=true; setLevel(true); $('over').hidden=true; leaveGameOver();
@@ -2356,6 +2365,7 @@ try{
     grid=saved.grid.map(v=>typeof v==='string'?v:null); pieces=saved.pieces; score=+saved.score||0; combo=saved.combo||0; sinceClear=saved.sinceClear??9;
     stars=new Set((saved.stars||[]).filter(k=>grid[k])); skinOrder=saved.skinOrder||null; skinBump=saved.skinBump||0; curSkin=null; playTime=saved.playTime||0; profile=saved.profile||newProfile();
     bestAtStart=Math.max(0,best-0); if (saved.bestAtStart!=null) bestAtStart=saved.bestAtStart;
+    bdayNext=Array.isArray(saved.bdayNext) ? saved.bdayNext.filter(x=>typeof x==='number') : [];
     if (pieces.every(p=>!p)) pieces=newSet();
     shownScore=score; renderOdo(score); setLevel(true); renderBoard(); renderTray(true); updateLiveCrown();
     if (saved.turboLeft>0) resumeTurbo={left:saved.turboLeft, mul:saved.turboMul||2, total:saved.turboTotal};
