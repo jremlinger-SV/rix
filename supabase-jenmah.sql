@@ -54,7 +54,7 @@ begin
   end if;
   for e in select * from json_array_elements(p_entries) loop
     if json_typeof(e) <> 'object' then continue; end if;
-    v_name := regexp_replace(normalize(coalesce(e->>'name', ''), NFKC), '[\u0000-\u001F\u007F­​-‏‪-‮⁠-⁤﻿]', '', 'g');
+    v_name := regexp_replace(normalize(coalesce(e->>'name', ''), NFKC), '[\u0000-\u001F\u007F\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]', '', 'g');
     v_name := btrim(left(btrim(regexp_replace(v_name, '\s+', ' ', 'g')), 20));
     begin
       v_num := (e->>'score')::numeric;
