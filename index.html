@@ -683,7 +683,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='27.10.2026, 14:04';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='27.10.2026, 14:07';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -2048,7 +2048,8 @@ try{
     bdayNext=Array.isArray(saved.bdayNext) ? saved.bdayNext.filter(x=>typeof x==='number') : [];
     if (pieces.every(p=>!p)) pieces=newSet();
     shownScore=score; renderOdo(score); setLevel(true); renderBoard(); renderTray(true); updateLiveCrown();
-    if (saved.turboLeft>0) resumeTurbo={left:saved.turboLeft, mul:saved.turboMul||2, total:saved.turboTotal};
+    // Nur der Geburtstags-Turbo wird fortgesetzt – alte Zeit-Booster aus früheren Versionen nicht mehr
+    if (saved.turboLeft>0 && saved.turboMul===5 && isBirthdayKid(player)) resumeTurbo={left:saved.turboLeft, mul:5, total:saved.turboTotal};
     checkOver();
   } else newGame();
 }catch(err){ newGame(); }

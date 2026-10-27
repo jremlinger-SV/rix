@@ -1989,7 +1989,8 @@ try{
     bdayNext=Array.isArray(saved.bdayNext) ? saved.bdayNext.filter(x=>typeof x==='number') : [];
     if (pieces.every(p=>!p)) pieces=newSet();
     shownScore=score; renderOdo(score); setLevel(true); renderBoard(); renderTray(true); updateLiveCrown();
-    if (saved.turboLeft>0) resumeTurbo={left:saved.turboLeft, mul:saved.turboMul||2, total:saved.turboTotal};
+    // Nur der Geburtstags-Turbo wird fortgesetzt – alte Zeit-Booster aus früheren Versionen nicht mehr
+    if (saved.turboLeft>0 && saved.turboMul===5 && isBirthdayKid(player)) resumeTurbo={left:saved.turboLeft, mul:5, total:saved.turboTotal};
     checkOver();
   } else newGame();
 }catch(err){ newGame(); }
