@@ -301,14 +301,15 @@ header.mh .sndbtn{justify-self:end;margin:0}
 body.gameover .park{visibility:hidden}
 /* ===== Vorbild-Bildschirm: ganzer Hintergrund dunkel, Feld frei darauf ===== */
 :root:root:root{--bg:#0f1b3f;--panel:#16244d;--board:#0f1b3f;--well:#1e2b52;--fg:#e8f0ff;--muted:#8fa3d1;--accent:#4d9bff;--score-mix:#ffffff;--score-edge:#0c1328;color-scheme:dark}
-html,body{background:radial-gradient(ellipse at 50% 30%,#1b2f66 0%,#0f1b3f 58%,#0a1330 100%) fixed!important}
+html{background:#0f1b3f!important}
+body{background:radial-gradient(ellipse at 50% 30%,#1b2f66 0%,#0f1b3f 58%,#0a1330 100%)!important}
 html.intro-on,html.intro-on body{background:#0f1b3f!important}
 header.mh{padding-inline:4px}
 .boardslot{background:none!important;box-shadow:none!important;margin-inline:0!important;padding:4px 0 8px!important;gap:0!important}
-.park{margin-top:4px;margin-bottom:clamp(6px,1.8vh,18px);background:rgba(3,8,26,.55)!important;box-shadow:inset 0 0 0 2px rgba(159,216,255,.38),inset 0 3px 10px rgba(0,0,0,.5)!important;border-radius:12px!important;padding:5px 7px!important;gap:4px!important}
-.tablewrap{margin-bottom:clamp(6px,1.6vh,16px);width:100%}
+.park{margin-top:2px;margin-bottom:clamp(4px,1.2vh,12px);background:rgba(3,8,26,.55)!important;box-shadow:inset 0 0 0 2px rgba(159,216,255,.38),inset 0 3px 10px rgba(0,0,0,.5)!important;border-radius:12px!important;padding:5px 7px!important;gap:4px!important}
+.tablewrap{margin-bottom:clamp(4px,1.2vh,12px);width:100%}
 body{padding-left:max(2px,env(safe-area-inset-left,0px))!important;padding-right:max(2px,env(safe-area-inset-right,0px))!important}
-.app{padding-block:max(6px,env(safe-area-inset-top,0px)) 2px!important;max-width:none!important}
+.app{padding-block:4px 0!important;max-width:none!important}   /* Statusleiste ist schon über :root abgezogen – nicht doppelt */
 header.mh{padding-inline:6px!important}
 header.mh .logo{width:26px;height:26px}
 header.mh .wordmark{font-size:clamp(.82rem,3.9vw,1rem)}
