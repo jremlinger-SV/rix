@@ -607,6 +607,10 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .pk-rec{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:.82rem;font-weight:700;color:#dfe9ff;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pk-rec .crown{width:1.05em;height:1.05em;flex:none}
 .pk-rec:empty{display:none}
+/* BETA-Ecke (Magenta) oben rechts auf der Tetris-Karte */
+.pk-beta{position:absolute;top:0;right:0;width:78px;height:78px;overflow:hidden;border-top-right-radius:22px;pointer-events:none}
+.pk-beta b{position:absolute;top:15px;right:-26px;width:108px;transform:rotate(45deg);text-align:center;font-family:"Unbounded",var(--display);font-weight:800;font-size:.6rem;line-height:1.95;letter-spacing:.16em;color:#fff;
+  background:linear-gradient(180deg,#f45ae6,#d61fc2);box-shadow:0 2px 10px rgba(214,31,194,.6),inset 0 1px 0 rgba(255,255,255,.35)}
 .pk-go{position:absolute;right:16px;top:50%;width:26px;height:26px;margin-top:-13px;opacity:.65}
 .pk-foot{position:relative;display:flex;align-items:center;gap:9px;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#93a6d4;font-weight:700;animation:pkin .7s ease-out .35s both}
 .pk-foot b{font-family:var(--display);font-weight:600;letter-spacing:.06em;color:#4d9bff}
@@ -688,6 +692,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
     </button>
     <button class="pk-card" id="pickTet" type="button">
       <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><rect x="5" y="4" width="8" height="8" rx="2" fill="#6c7dff"/><rect x="14" y="4" width="8" height="8" rx="2" fill="#6c7dff"/><rect x="23" y="4" width="8" height="8" rx="2" fill="#6c7dff"/><rect x="14" y="13" width="8" height="8" rx="2" fill="#6c7dff"/><rect x="5" y="24" width="8" height="8" rx="2" fill="#38bdf8"/><rect x="14" y="24" width="8" height="8" rx="2" fill="#38bdf8"/><rect x="23" y="24" width="8" height="8" rx="2" fill="#2f6bff"/><rect x="23" y="15" width="8" height="8" rx="2" fill="#2f6bff" opacity=".9"/></svg></span>
+      <span class="pk-beta" aria-label="Beta"><b>BETA</b></span>
       <span class="pk-txt"><b class="pk-name">JJE_tetris</b><small>Tetris</small><span class="pk-rec" id="recTet"></span></span>
     </button>
     <div class="pk-foot"><span>Achtung: nur für <b>Remlingers</b></span></div>
