@@ -872,7 +872,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='28.10.2026, 21:56';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='28.10.2026, 22:00';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -2100,7 +2100,7 @@ markLeader();
    die zurückgegebene Funktion wartet das Ende ab und ruft dann done() */
 function faceScan(){
   const reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const T_OK=reduce?600:2100, T_END=T_OK+(reduce?700:1250);
+  const T_OK=reduce?700:2400, T_END=T_OK+(reduce?800:1400);   // Uhr läuft erst, wenn das Intro ganz weg ist
   const o=document.createElement('div'); o.className='fscan'; o.setAttribute('role','status'); o.setAttribute('aria-label','Gesichtsscan');
   let ticks=''; for (let i=0;i<72;i++){ const lg=i%6===0; ticks+=`<line x1="150" y1="${lg?4:8}" x2="150" y2="16" transform="rotate(${i*5} 150 150)" stroke="${lg?'#9fd8ff':'rgba(95,210,255,.45)'}" stroke-width="${lg?2:1}"/>`; }
   const cube=(x,y,s,c1,c2,c3)=>`<g class="fs-cube"><polygon points="${x},${y-s} ${x+s*.87},${y-s/2} ${x},${y} ${x-s*.87},${y-s/2}" fill="${c1}"/><polygon points="${x-s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x-s*.87},${y+s/2}" fill="${c2}"/><polygon points="${x+s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x+s*.87},${y+s/2}" fill="${c3}"/></g>`;
@@ -2118,20 +2118,22 @@ function faceScan(){
   const q=c=>o.querySelector(c), bar=q('.fs-bar i'), pct=q('.fs-pct'), st=q('.fs-stat'), h1=q('.fs-h1'), h2=q('.fs-h2');
   const STEPS=['Gesicht erfassen','Merkmale vermessen','Abgleich Remlinger','Identität prüfen'];
   const hex=()=>Array.from({length:6},()=>Array.from({length:3},()=>Math.floor(Math.random()*65536).toString(16).toUpperCase().padStart(4,'0')).join(' ')).join('\n');
-  let t0=null, ok=false, ended=false, cb=null, raf=0;
-  const finish=()=>{ if (ended) return; ended=true; cancelAnimationFrame(raf); o.classList.add('out'); setTimeout(()=>o.remove(),460); if (cb) cb(); };
-  const tick=now=>{
-    if (t0===null) t0=now; const t=now-t0, k=Math.min(1,t/T_OK);
+  let t0=null, ok=false, ended=false, cb=null, raf=0, safety=0;
+  const finish=()=>{ if (ended) return; ended=true; cancelAnimationFrame(raf); clearTimeout(safety); o.classList.add('out'); setTimeout(()=>o.remove(),460); if (cb) cb(); };
+  const tick=()=>{
+    raf=requestAnimationFrame(tick);
+    if (t0===null) return;   // wartet unter dem ausblendenden Intro
+    const t=performance.now()-t0, k=Math.min(1,t/T_OK);
     bar.style.width=(k*100)+'%'; pct.textContent=ok ? '100 %' : Math.round(k*100)+' %';
     if (!ok){ st.textContent=STEPS[Math.min(STEPS.length-1,Math.floor(k*STEPS.length))]; if (Math.random()<.4){ h1.textContent=hex(); h2.textContent=hex(); } }
     if (!ok && t>=T_OK){ ok=true; o.classList.add('ok'); st.textContent='Identität bestätigt'; try{ SND.plop(2); }catch(e){} }
-    if (t>=T_END){ finish(); return; }
-    raf=requestAnimationFrame(tick);
+    if (t>=T_END) finish();
   };
   raf=requestAnimationFrame(tick);
+  const start=()=>{ if (t0===null){ t0=performance.now(); safety=setTimeout(finish, T_END+2500); } };   // Sicherheitsnetz, falls Animationsbilder ausbleiben
   // Tippen beschleunigt: sofort erkannt, kurz danach weiter
-  o.addEventListener('click',()=>{ if (!ok){ t0=performance.now()-T_OK; } else finish(); });
-  return done=>{ if (ended){ done(); return; } cb=done; };
+  o.addEventListener('click',()=>{ if (t0===null) start(); if (!ok){ t0=performance.now()-T_OK; } else finish(); });
+  return done=>{ if (ended){ done(); return; } cb=done; start(); };
 }
 function playCine(done){
   document.documentElement.classList.add('intro-on');
@@ -2301,7 +2303,7 @@ function applyPreview(){
 window.addEventListener('hashchange',applyPreview);
 /* Start nach dem Intro: direkt ins Spiel (der Mehrspieler-Modus wurde wieder ausgebaut) */
 function showModes(cont){
-  if (window.__jemrixUpdate){ window.__jemrixUpdate=false; location.reload(); return; }   // neue Version bereit: jetzt sauber laden
+  if (window.__jemrixUpdate){ window.__jemrixUpdate=false; try{ sessionStorage.setItem('remlinger-unlocked','1'); sessionStorage.setItem('jje-pick','1'); }catch(e){} location.reload(); return; }   // neue Version: neu laden, direkt zur Spielauswahl (kein zweites Intro)   // neue Version bereit: jetzt sauber laden
   try{ sessionStorage.setItem('remlinger-unlocked','1'); }catch(e){}   // jenMah darf nur nach dem Familien-Intro starten
   const pk=$('pick'); if (!pk){ if (cont) cont(); return; }
   // Spielauswahl: Jemrix oder jenMah, jeweils mit dem aktuellen Platz 1
