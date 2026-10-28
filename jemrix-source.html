@@ -680,6 +680,22 @@ header .stats{gap:10px}
 .fscan .fs-emb .er2{fill:none;stroke:rgba(159,216,255,.55);stroke-width:1;stroke-dasharray:3 4}
 .fscan .fs-emb rect{stroke:rgba(255,255,255,.75);stroke-width:1.2;filter:drop-shadow(0 0 5px rgba(95,210,255,.9));transform-box:fill-box;transform-origin:center;transform:scale(0)}
 .fscan.ok .fs-emb{opacity:1;transform:scale(1)}
+/* Passed-Screen: Bühne und Fortschritt weg, nur Emblem und große Schrift */
+.fscan .fs-stage,.fscan .fs-bot,.fscan .fs-top{transition:opacity .35s ease,transform .45s ease}
+.fscan.ok .fs-stage{opacity:0;transform:scale(.82)}
+.fscan.ok .fs-bot,.fscan.ok .fs-top{opacity:0;transform:translateY(10px)}
+.fscan .fs-pass{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;pointer-events:none;padding:0 20px;text-align:center}
+.fscan .fs-pass .fs-emb{position:relative;left:auto;top:auto;margin:0;width:150px;height:150px;transition-delay:.18s}
+.fscan .fs-pass .fs-emb svg{width:124px;height:124px}
+.fscan .fs-ptxt{display:flex;flex-direction:column;align-items:center;gap:2px;opacity:0;transform:translateY(16px);transition:all .5s cubic-bezier(.2,.9,.3,1.15) .32s}
+.fscan .fs-ptxt b{font-family:"Unbounded",var(--display);font-weight:800;font-size:clamp(2.3rem,11.5vw,3rem);line-height:1.02;letter-spacing:-.01em;
+  background:linear-gradient(180deg,#fff 0%,#e6f4ff 50%,#9fd0ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 18px rgba(95,210,255,.45))}
+.fscan .fs-ptxt span{font-family:"Unbounded",var(--display);font-weight:600;font-size:clamp(1.05rem,5.2vw,1.35rem);letter-spacing:.42em;margin-right:-.42em;text-transform:uppercase;color:#7fd3ff}
+.fscan .fs-chip{display:flex;align-items:center;gap:8px;padding:9px 18px 9px 13px;border-radius:999px;background:rgba(95,210,255,.14);border:1px solid rgba(159,216,255,.45);
+  font-family:var(--body);font-weight:800;font-size:1rem;letter-spacing:.06em;color:#eaf6ff;opacity:0;transform:translateY(10px);transition:all .45s ease .55s}
+.fscan .fs-chip svg{width:20px;height:20px}
+.fscan .fs-chip path{fill:none;stroke:#7fd3ff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.fscan.ok .fs-ptxt,.fscan.ok .fs-chip{opacity:1;transform:none}
 .fscan.ok .fs-emb rect{animation:fsebin .4s cubic-bezier(.2,.9,.3,1.6) forwards}
 .fscan.ok .fs-emb rect:nth-child(2){animation-delay:.08s}.fscan.ok .fs-emb rect:nth-child(3){animation-delay:.16s}
 @keyframes fsebin{to{transform:scale(1)}}
@@ -2042,7 +2058,7 @@ markLeader();
    die zurückgegebene Funktion wartet das Ende ab und ruft dann done() */
 function faceScan(){
   // läuft bewusst immer animiert – auch bei „Bewegung reduzieren“ (sonst bleibt nur ein Standbild)
-  const T_OK=2400, T_END=T_OK+1400;   // Uhr läuft erst, wenn das Intro ganz weg ist
+  const T_OK=3200, T_END=T_OK+1900;   // Scan 3,2 s, danach „Remlinger erkannt“ groß auf leerem Bildschirm   // Uhr läuft erst, wenn das Intro ganz weg ist
   const o=document.createElement('div'); o.className='fscan'; o.setAttribute('role','status'); o.setAttribute('aria-label','Gesichtsscan');
   let ticks=''; for (let i=0;i<72;i++){ const lg=i%6===0; ticks+=`<line x1="150" y1="${lg?4:8}" x2="150" y2="16" transform="rotate(${i*5} 150 150)" stroke="${lg?'#9fd8ff':'rgba(95,210,255,.45)'}" stroke-width="${lg?2:1}"/>`; }
   const cube=(x,y,s,c1,c2,c3)=>`<g class="fs-cube"><polygon points="${x},${y-s} ${x+s*.87},${y-s/2} ${x},${y} ${x-s*.87},${y-s/2}" fill="${c1}"/><polygon points="${x-s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x-s*.87},${y+s/2}" fill="${c2}"/><polygon points="${x+s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x+s*.87},${y+s/2}" fill="${c3}"/></g>`;
@@ -2054,8 +2070,9 @@ function faceScan(){
      <g clip-path="url(#fsCl)"><rect class="fs-scanl" x="10" y="30" width="130" height="26" fill="url(#fsScanG)"/></g></svg></div>
     <div class="fs-pulse"></div><div class="fs-lock"></div>
     <div class="fs-hex fs-h1" aria-hidden="true"></div><div class="fs-hex fs-h2" aria-hidden="true"></div>
-    <div class="fs-emb" aria-hidden="true"><svg viewBox="0 0 100 100"><circle class="er" cx="50" cy="50" r="44"/><circle class="er2" cx="50" cy="50" r="36"/><g><rect x="40" y="22" width="20" height="20" rx="5" fill="#38bdf8"/><rect x="26" y="49" width="20" height="20" rx="5" fill="#6c7dff"/><rect x="54" y="49" width="20" height="20" rx="5" fill="#2f6bff"/></g></svg></div></div>
-   <div class="fs-bot"><div class="fs-stat">Gesicht erfassen</div><div class="fs-bar"><i></i></div><div class="fs-pct">0 %</div><div class="fs-who">Remlinger erkannt</div><div class="fs-sub">Zugang gewährt</div></div><div class="fs-flash"></div>`;
+</div>
+   <div class="fs-bot"><div class="fs-stat">Gesicht erfassen</div><div class="fs-bar"><i></i></div><div class="fs-pct">0 %</div></div>
+   <div class="fs-pass"><div class="fs-emb" aria-hidden="true"><svg viewBox="0 0 100 100"><circle class="er" cx="50" cy="50" r="44"/><circle class="er2" cx="50" cy="50" r="36"/><g><rect x="40" y="22" width="20" height="20" rx="5" fill="#38bdf8"/><rect x="26" y="49" width="20" height="20" rx="5" fill="#6c7dff"/><rect x="54" y="49" width="20" height="20" rx="5" fill="#2f6bff"/></g></svg></div><div class="fs-ptxt"><b>Remlinger</b><span>erkannt</span></div><div class="fs-chip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Zugang gewährt</div></div><div class="fs-flash"></div>`;
   document.body.appendChild(o);
   const q=c=>o.querySelector(c), bar=q('.fs-bar i'), pct=q('.fs-pct'), st=q('.fs-stat'), h1=q('.fs-h1'), h2=q('.fs-h2');
   const STEPS=['Gesicht erfassen','Merkmale vermessen','Abgleich Remlinger','Identität prüfen'];
