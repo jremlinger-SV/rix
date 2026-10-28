@@ -688,7 +688,6 @@ header .stats{gap:10px}
 @keyframes fsfl{0%{opacity:1}100%{opacity:0}}
 .fscan.out{animation:fsout .45s ease-in forwards;pointer-events:none}
 @keyframes fsout{to{opacity:0;transform:scale(1.06);filter:blur(4px)}}
-@media (prefers-reduced-motion: reduce){.fscan *{animation-duration:.01s!important;animation-iteration-count:1!important}}
 </style>
 
 <div class="app">
@@ -2042,8 +2041,8 @@ markLeader();
 /* Gesichtsscan nach dem Intro – nur Show (keine Kamera), jede Anmeldung wird bestätigt. faceScan() legt den Bildschirm sofort an,
    die zurückgegebene Funktion wartet das Ende ab und ruft dann done() */
 function faceScan(){
-  const reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const T_OK=reduce?700:2400, T_END=T_OK+(reduce?800:1400);   // Uhr läuft erst, wenn das Intro ganz weg ist
+  // läuft bewusst immer animiert – auch bei „Bewegung reduzieren“ (sonst bleibt nur ein Standbild)
+  const T_OK=2400, T_END=T_OK+1400;   // Uhr läuft erst, wenn das Intro ganz weg ist
   const o=document.createElement('div'); o.className='fscan'; o.setAttribute('role','status'); o.setAttribute('aria-label','Gesichtsscan');
   let ticks=''; for (let i=0;i<72;i++){ const lg=i%6===0; ticks+=`<line x1="150" y1="${lg?4:8}" x2="150" y2="16" transform="rotate(${i*5} 150 150)" stroke="${lg?'#9fd8ff':'rgba(95,210,255,.45)'}" stroke-width="${lg?2:1}"/>`; }
   const cube=(x,y,s,c1,c2,c3)=>`<g class="fs-cube"><polygon points="${x},${y-s} ${x+s*.87},${y-s/2} ${x},${y} ${x-s*.87},${y-s/2}" fill="${c1}"/><polygon points="${x-s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x-s*.87},${y+s/2}" fill="${c2}"/><polygon points="${x+s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x+s*.87},${y+s/2}" fill="${c3}"/></g>`;
