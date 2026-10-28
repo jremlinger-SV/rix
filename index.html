@@ -672,6 +672,63 @@ header h1{gap:7px}
 header .logo{width:32px;height:32px}
 header .wordmark{font-size:1.45rem}
 header .stats{gap:10px}
+
+/* ===== Gesichtsscan nach dem Intro (gespielt, keine Kamera): HUD-Ringe, Hologramm-Steine, „Remlinger erkannt“ ===== */
+.fscan{position:fixed;inset:0;z-index:289;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#e8f4ff;font-family:var(--body);overflow:hidden;
+  background:radial-gradient(ellipse at 50% 42%,#0f2a6b 0%,#071534 38%,#030817 70%,#02040b 100%)}
+.fscan::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(120,190,255,.05) 0 1px,transparent 1px 4px);pointer-events:none}
+.fscan .fs-top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 70px);left:0;right:0;text-align:center;font-family:"Unbounded",var(--display);font-weight:400;font-size:11px;letter-spacing:.5em;margin-right:-.5em;color:#7fb4ff;text-transform:uppercase}
+.fscan .fs-bot{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 70px);left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:10px}
+.fscan .fs-stat{font-family:"Unbounded",var(--display);font-weight:600;font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:#cfe6ff;min-height:1.2em}
+.fscan .fs-bar{width:220px;height:3px;border-radius:3px;background:rgba(127,180,255,.18);overflow:hidden}
+.fscan .fs-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2f6bff,#5fd2ff,#fff);box-shadow:0 0 10px #5fd2ff}
+.fscan .fs-pct{font-family:"Unbounded",var(--display);font-size:10px;letter-spacing:.3em;color:#7fb4ff}
+.fscan.ok .fs-stat{color:#fff;text-shadow:0 0 14px #5fd2ff}
+.fscan .fs-who{font-family:"Unbounded",var(--display);font-weight:800;font-size:26px;opacity:0;transform:translateY(8px) scale(.96);transition:all .45s cubic-bezier(.2,.9,.3,1.3);
+  background:linear-gradient(180deg,#fff 0%,#dff1ff 45%,#8fc2ff 80%,#4d8dff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(95,210,255,.55))}
+.fscan .fs-sub{font-size:12px;letter-spacing:.3em;margin-right:-.3em;text-transform:uppercase;color:#9fd8ff;opacity:0;transition:opacity .4s .15s;font-weight:700}
+.fscan.ok .fs-who{opacity:1;transform:none}.fscan.ok .fs-sub{opacity:1}
+.fscan .fs-stage{position:relative;width:300px;height:360px}
+.fscan .fs-ring{position:absolute;left:50%;top:50%;border-radius:50%;transform:translate(-50%,-50%)}
+.fscan .fs-r1{width:290px;height:290px;border:1px solid rgba(95,210,255,.25)}
+.fscan .fs-r2{width:262px;height:262px;border:2px solid transparent;border-top-color:#5fd2ff;border-right-color:rgba(95,210,255,.5);animation:fsspin 1.6s linear infinite;filter:drop-shadow(0 0 6px #5fd2ff)}
+.fscan .fs-r3{width:236px;height:236px;border:1px dashed rgba(159,216,255,.45);animation:fsspin 6s linear infinite reverse}
+.fscan .fs-r4{width:310px;height:310px;background:conic-gradient(from 0deg,rgba(95,210,255,0) 0deg,rgba(95,210,255,.32) 40deg,transparent 41deg);-webkit-mask:radial-gradient(circle,transparent 55%,#000 56%,#000 70%,transparent 71%);mask:radial-gradient(circle,transparent 55%,#000 56%,#000 70%,transparent 71%);animation:fsspin 1.1s linear infinite}
+.fscan.ok .fs-r2,.fscan.ok .fs-r4{animation-duration:5s}
+@keyframes fsspin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.fscan .fs-ticks{position:absolute;left:50%;top:50%;width:300px;height:300px;margin:-150px;animation:fsspin2 12s linear infinite}
+@keyframes fsspin2{to{transform:rotate(360deg)}}
+.fscan .fs-pulse{position:absolute;left:50%;top:50%;width:120px;height:120px;margin:-60px;border-radius:50%;border:2px solid #9fd8ff;opacity:0;animation:fspulse 1s ease-out .3s infinite}
+.fscan.ok .fs-pulse{animation:none}
+@keyframes fspulse{0%{opacity:.8;transform:scale(.6)}100%{opacity:0;transform:scale(2.6)}}
+.fscan .fs-lock{position:absolute;left:50%;top:50%;width:200px;height:200px;margin:-100px;border:2px solid #fff;border-radius:50%;opacity:0;transform:scale(1.5);transition:all .35s cubic-bezier(.2,.9,.3,1.3);box-shadow:0 0 30px rgba(95,210,255,.6),inset 0 0 30px rgba(95,210,255,.35)}
+.fscan.ok .fs-lock{opacity:1;transform:scale(1)}
+.fscan .fs-hex{position:absolute;font-family:"Unbounded",var(--display);font-size:8px;letter-spacing:.14em;line-height:1.75;color:#5fa8ff;opacity:.75;white-space:pre;font-variant-numeric:tabular-nums}
+.fscan .fs-h1{left:-18px;top:6px}.fscan .fs-h2{right:-18px;bottom:6px;text-align:right}
+.fscan .fs-sym{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px;transition:opacity .3s,transform .4s}
+.fscan .fs-sym svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.fscan.ok .fs-sym{opacity:0;transform:scale(.7)}
+.fscan .fs-cube{transform-box:fill-box;transform-origin:center;animation:fsfloat 1.6s ease-in-out infinite alternate}
+.fscan .fs-cube:nth-child(2){animation-delay:.3s}.fscan .fs-cube:nth-child(3){animation-delay:.6s}
+@keyframes fsfloat{from{transform:translateY(3px)}to{transform:translateY(-4px)}}
+.fscan .fs-sym polygon{stroke:rgba(223,241,255,.9);stroke-width:1.2;stroke-linejoin:round}
+.fscan .fs-scanl{animation:fsscl 1s linear infinite}
+@keyframes fsscl{from{transform:translateY(-70px)}to{transform:translateY(80px)}}
+.fscan .fs-emb{position:absolute;left:50%;top:50%;width:140px;height:140px;margin:-70px;border-radius:50%;opacity:0;transform:scale(.4);transition:all .4s cubic-bezier(.2,.9,.3,1.5);background:radial-gradient(circle,rgba(95,210,255,.4),rgba(47,107,255,.15) 55%,transparent 70%);display:grid;place-items:center}
+.fscan .fs-emb svg{width:112px;height:112px;overflow:visible}
+.fscan .fs-emb .er{fill:rgba(8,20,52,.82);stroke:#fff;stroke-width:2.5;filter:drop-shadow(0 0 8px #5fd2ff)}
+.fscan .fs-emb .er2{fill:none;stroke:rgba(159,216,255,.55);stroke-width:1;stroke-dasharray:3 4}
+.fscan .fs-emb rect{stroke:rgba(255,255,255,.75);stroke-width:1.2;filter:drop-shadow(0 0 5px rgba(95,210,255,.9));transform-box:fill-box;transform-origin:center;transform:scale(0)}
+.fscan.ok .fs-emb{opacity:1;transform:scale(1)}
+.fscan.ok .fs-emb rect{animation:fsebin .4s cubic-bezier(.2,.9,.3,1.6) forwards}
+.fscan.ok .fs-emb rect:nth-child(2){animation-delay:.08s}.fscan.ok .fs-emb rect:nth-child(3){animation-delay:.16s}
+@keyframes fsebin{to{transform:scale(1)}}
+.fscan .fs-flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(190,235,255,.55),transparent 60%);opacity:0;pointer-events:none}
+.fscan.ok .fs-flash{animation:fsfl .7s ease-out}
+@keyframes fsfl{0%{opacity:1}100%{opacity:0}}
+.fscan.out{animation:fsout .45s ease-in forwards;pointer-events:none}
+@keyframes fsout{to{opacity:0;transform:scale(1.06);filter:blur(4px)}}
+@media (prefers-reduced-motion: reduce){.fscan *{animation-duration:.01s!important;animation-iteration-count:1!important}}
 </style>
 
 <div class="app">
@@ -815,7 +872,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='28.10.2026, 21:40';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='28.10.2026, 21:56';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -2038,6 +2095,44 @@ renderTop2();
 markLeader();
 
 /* Kino-Intro: 6 Sekunden Aufbau, danach geht es per Tipp ins Spiel */
+
+/* Gesichtsscan nach dem Intro – nur Show (keine Kamera), jede Anmeldung wird bestätigt. faceScan() legt den Bildschirm sofort an,
+   die zurückgegebene Funktion wartet das Ende ab und ruft dann done() */
+function faceScan(){
+  const reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const T_OK=reduce?600:2100, T_END=T_OK+(reduce?700:1250);
+  const o=document.createElement('div'); o.className='fscan'; o.setAttribute('role','status'); o.setAttribute('aria-label','Gesichtsscan');
+  let ticks=''; for (let i=0;i<72;i++){ const lg=i%6===0; ticks+=`<line x1="150" y1="${lg?4:8}" x2="150" y2="16" transform="rotate(${i*5} 150 150)" stroke="${lg?'#9fd8ff':'rgba(95,210,255,.45)'}" stroke-width="${lg?2:1}"/>`; }
+  const cube=(x,y,s,c1,c2,c3)=>`<g class="fs-cube"><polygon points="${x},${y-s} ${x+s*.87},${y-s/2} ${x},${y} ${x-s*.87},${y-s/2}" fill="${c1}"/><polygon points="${x-s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x-s*.87},${y+s/2}" fill="${c2}"/><polygon points="${x+s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x+s*.87},${y+s/2}" fill="${c3}"/></g>`;
+  o.innerHTML=`<div class="fs-top">Remlinger · Biometrie</div>
+   <div class="fs-stage"><div class="fs-ring fs-r1"></div><div class="fs-ring fs-r4"></div><div class="fs-ring fs-r2"></div><div class="fs-ring fs-r3"></div>
+    <svg class="fs-ticks" viewBox="0 0 300 300" aria-hidden="true">${ticks}</svg>
+    <div class="fs-sym" aria-hidden="true"><svg viewBox="0 0 150 150"><defs><linearGradient id="fsScanG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fd2ff" stop-opacity="0"/><stop offset="1" stop-color="#bff0ff" stop-opacity=".55"/></linearGradient><clipPath id="fsCl"><circle cx="75" cy="75" r="62"/></clipPath></defs>
+     ${cube(75,52,22,'rgba(159,232,255,.85)','rgba(56,189,248,.75)','rgba(14,116,190,.8)')}${cube(52,92,22,'rgba(180,190,255,.85)','rgba(108,125,255,.75)','rgba(60,70,200,.8)')}${cube(98,92,22,'rgba(130,170,255,.85)','rgba(47,107,255,.75)','rgba(25,60,170,.8)')}
+     <g clip-path="url(#fsCl)"><rect class="fs-scanl" x="10" y="30" width="130" height="26" fill="url(#fsScanG)"/></g></svg></div>
+    <div class="fs-pulse"></div><div class="fs-lock"></div>
+    <div class="fs-hex fs-h1" aria-hidden="true"></div><div class="fs-hex fs-h2" aria-hidden="true"></div>
+    <div class="fs-emb" aria-hidden="true"><svg viewBox="0 0 100 100"><circle class="er" cx="50" cy="50" r="44"/><circle class="er2" cx="50" cy="50" r="36"/><g><rect x="40" y="22" width="20" height="20" rx="5" fill="#38bdf8"/><rect x="26" y="49" width="20" height="20" rx="5" fill="#6c7dff"/><rect x="54" y="49" width="20" height="20" rx="5" fill="#2f6bff"/></g></svg></div></div>
+   <div class="fs-bot"><div class="fs-stat">Gesicht erfassen</div><div class="fs-bar"><i></i></div><div class="fs-pct">0 %</div><div class="fs-who">Remlinger erkannt</div><div class="fs-sub">Zugang gewährt</div></div><div class="fs-flash"></div>`;
+  document.body.appendChild(o);
+  const q=c=>o.querySelector(c), bar=q('.fs-bar i'), pct=q('.fs-pct'), st=q('.fs-stat'), h1=q('.fs-h1'), h2=q('.fs-h2');
+  const STEPS=['Gesicht erfassen','Merkmale vermessen','Abgleich Remlinger','Identität prüfen'];
+  const hex=()=>Array.from({length:6},()=>Array.from({length:3},()=>Math.floor(Math.random()*65536).toString(16).toUpperCase().padStart(4,'0')).join(' ')).join('\n');
+  let t0=null, ok=false, ended=false, cb=null, raf=0;
+  const finish=()=>{ if (ended) return; ended=true; cancelAnimationFrame(raf); o.classList.add('out'); setTimeout(()=>o.remove(),460); if (cb) cb(); };
+  const tick=now=>{
+    if (t0===null) t0=now; const t=now-t0, k=Math.min(1,t/T_OK);
+    bar.style.width=(k*100)+'%'; pct.textContent=ok ? '100 %' : Math.round(k*100)+' %';
+    if (!ok){ st.textContent=STEPS[Math.min(STEPS.length-1,Math.floor(k*STEPS.length))]; if (Math.random()<.4){ h1.textContent=hex(); h2.textContent=hex(); } }
+    if (!ok && t>=T_OK){ ok=true; o.classList.add('ok'); st.textContent='Identität bestätigt'; try{ SND.plop(2); }catch(e){} }
+    if (t>=T_END){ finish(); return; }
+    raf=requestAnimationFrame(tick);
+  };
+  raf=requestAnimationFrame(tick);
+  // Tippen beschleunigt: sofort erkannt, kurz danach weiter
+  o.addEventListener('click',()=>{ if (!ok){ t0=performance.now()-T_OK; } else finish(); });
+  return done=>{ if (ended){ done(); return; } cb=done; };
+}
 function playCine(done){
   document.documentElement.classList.add('intro-on');
   const el=$('cine'); if (!el){ done(); return; }
@@ -2088,7 +2183,8 @@ function playCine(done){
   const go=()=>{
     if (!ready || el.classList.contains('exit')) return;
     el.classList.add('exit'); SND.intro();
-    setTimeout(()=>{ alive=false; cancelAnimationFrame(raf); window.removeEventListener('resize',resize); el.remove(); document.documentElement.classList.remove('intro-on'); done(); },760);
+    const scanDone=faceScan();   // Gesichtsscan liegt schon unter dem ausblendenden Intro
+    setTimeout(()=>{ alive=false; cancelAnimationFrame(raf); window.removeEventListener('resize',resize); el.remove(); document.documentElement.classList.remove('intro-on'); scanDone(done); },760);
   };
   // Familien-Schloss: 1) alle drei Steine antippen, 2) mit dem Daumen über REMLINGERS streichen
   const hint=$('cineTap'), names=['Emma','Jenny','Jens'], tapped=new Set();
