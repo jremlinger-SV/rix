@@ -711,7 +711,6 @@ header .stats{gap:10px}
     </button>
     <button class="pk-card" id="pickTet" type="button">
       <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><rect x="5" y="4" width="8" height="8" rx="2" fill="#6c7dff"/><rect x="14" y="4" width="8" height="8" rx="2" fill="#6c7dff"/><rect x="23" y="4" width="8" height="8" rx="2" fill="#6c7dff"/><rect x="14" y="13" width="8" height="8" rx="2" fill="#6c7dff"/><rect x="5" y="24" width="8" height="8" rx="2" fill="#38bdf8"/><rect x="14" y="24" width="8" height="8" rx="2" fill="#38bdf8"/><rect x="23" y="24" width="8" height="8" rx="2" fill="#2f6bff"/><rect x="23" y="15" width="8" height="8" rx="2" fill="#2f6bff" opacity=".9"/></svg></span>
-      <span class="pk-beta" aria-label="Beta"><b>BETA</b></span>
       <span class="pk-txt"><b class="pk-name">JJE_tetris</b><small>Tetris</small><span class="pk-rec" id="recTet"></span></span>
     </button>
     <div class="pk-foot"><span>Achtung: nur für <b>Remlingers</b></span></div>
@@ -764,7 +763,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='28.10.2026, 21:25';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='28.10.2026, 21:36';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
