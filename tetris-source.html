@@ -555,9 +555,9 @@ function rotate(dir){
   return false;
 }
 function softStep(){ if (!canPlay()) return false; if (fits(cur,cur.r,cur.x,cur.y+1)){ cur.y++; lastRot=false; addScore(1,true); dropAcc=0; if (cur.y>lowestY){ lowestY=cur.y; lockResets=0; } return true; } return false; }
-function fastFall(dist){   // Wischlänge × 2 in Reihen (mindestens 4), danach normal weiter
+function fastFall(dist){   // Wischlänge × 6 in Reihen (mindestens 10) – ein normaler Wisch reicht bis ganz unten; danach normal weiter
   if (!canPlay()) return;
-  fallLeft=Math.max(4, Math.round(dist/C*2)); fallAcc=0; SND.tick();
+  fallLeft=Math.max(10, Math.round(dist/C*6)); fallAcc=0; SND.tick();
 }
 function hardDrop(){
   if (!canPlay()) return;
@@ -842,7 +842,7 @@ function step(dt){
   // Schnellfall nach einem schnellen Wisch: ein Stück zügig nach unten, drehen und schieben bleibt möglich
   if (fallLeft>0){
     fallAcc+=dt;
-    while (fallAcc>=.022 && fallLeft>0){ fallAcc-=.022; if (fits(cur,cur.r,cur.x,cur.y+1)){ cur.y++; fallLeft--; lastRot=false; addScore(1,true); if (cur.y>lowestY){ lowestY=cur.y; lockResets=0; } } else fallLeft=0; }
+    while (fallAcc>=.014 && fallLeft>0){ fallAcc-=.014; if (fits(cur,cur.r,cur.x,cur.y+1)){ cur.y++; fallLeft--; lastRot=false; addScore(1,true); if (cur.y>lowestY){ lowestY=cur.y; lockResets=0; } } else fallLeft=0; }
     if (fallLeft<=0){ fallAcc=0; dropAcc=0; if (onGround()){ lockT=0; lockLimit=.9; } }
     if (fallLeft>0) return;
   }
