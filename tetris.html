@@ -370,6 +370,18 @@ header.mh{padding-inline:2px!important}
 .mscore #score{font-size:clamp(1.7rem,7.6vw,2.1rem)!important}
 .msub{font-size:.72rem!important}
 #family{display:none}
+
+/* Kopf-Knöpfe in allen Spielen: Pause · Beenden (zurück zur Spielauswahl) · Ton – dezent, Beenden mit Rückfrage */
+.hbtns .sndbtn{margin:0}
+.pausebtn svg{width:14px!important;height:14px!important}
+.qbtn svg{width:17px!important;height:17px!important;flex:none}
+.qbtn .ql{display:none;position:absolute;top:calc(100% + 7px);left:auto;right:-10px;transform:none;z-index:60;padding:5px 11px;border-radius:999px;background:#d9466b;color:#fff;font-family:var(--body);font-weight:800;font-size:.78rem;letter-spacing:.01em;white-space:nowrap;box-shadow:0 6px 16px rgba(10,15,40,.35);pointer-events:none}
+.qbtn .ql::before{content:"";position:absolute;left:auto;right:calc(10px + 50% - 4px);right:calc(var(--qw,30px)/2 + 6px);top:-4px;width:8px;height:8px;margin-left:0;background:inherit;transform:rotate(45deg);border-radius:1px}
+.qbtn.arm{color:#fff!important;background:#d9466b!important;border-color:#d9466b!important;opacity:1!important}
+.qbtn.arm .ql{display:block;animation:qlin .18s ease-out}
+@keyframes qlin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+header.mh .hbtns{gap:5px!important}
+header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
 </style>
 
 <div class="app">
@@ -386,7 +398,7 @@ header.mh{padding-inline:2px!important}
       <span class="scorewrap"><b id="score">0</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
       <span class="msub"><b class="mode" id="modelbl">Leicht</b> · Stufe <b id="level">1</b> · <b id="lines">0</b> Reihen</span>
     </div>
-    <div class="hbtns"><button class="sndbtn pausebtn" id="pausebtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button><button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button></div>
+    <div class="hbtns"><button class="sndbtn pausebtn" id="pausebtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button><button class="sndbtn qbtn" id="qbtn" type="button" aria-label="Beenden – zurück zur Spielauswahl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h3.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M10 8l-4 4 4 4M6.5 12H15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ql">Beenden? Nochmal tippen</span></button><button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button></div>
   </header>
   <div class="boardslot" id="boardslot">
     <div class="play" id="play">
@@ -450,7 +462,7 @@ header.mh{padding-inline:2px!important}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='27.10.2026, 23:23';   // wird beim Bauen gefüllt
+const APP_VERSION='28.10.2026, 20:35';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -1113,9 +1125,16 @@ function leave(){
   if (started && !ended && score>0) recordScore(score); else recordTime();
   started=false; save('jjetet-game',null); try{ localStorage.removeItem('jjetet-name'); }catch(e){}
   document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
-  setTimeout(()=>{ location.href='./'; },380);
+  toGamePick(); setTimeout(()=>{ location.href='./'; },380);
 }
 $('quit').onclick=leave;
+/* Beenden-Knopf im Kopf: erster Tipp fragt nach („Beenden?“), zweiter Tipp innerhalb von 3 s beendet */
+function armQuit(btn, go){ let t=0; btn.addEventListener('click',e=>{ e.stopPropagation();
+  if (btn.classList.contains('arm')){ clearTimeout(t); btn.classList.remove('arm'); go(); return; }
+  btn.classList.add('arm'); t=setTimeout(()=>btn.classList.remove('arm'),3000); }); }
+/* zurück zur Spielauswahl (ohne Intro) */
+function toGamePick(){ try{ sessionStorage.setItem('jje-pick','1'); }catch(e){} }
+armQuit($('qbtn'), leave);
 let quitArm=0;
 $('pquit').onclick=()=>{ if (score>0 && Date.now()-quitArm>3000){ quitArm=Date.now(); $('pquit').textContent='Wirklich beenden?'; setTimeout(()=>{ $('pquit').textContent='Beenden'; },3000); return; } leave(); };
 

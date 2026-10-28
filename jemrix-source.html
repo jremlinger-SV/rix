@@ -580,6 +580,25 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 @keyframes pkin{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes pkout{to{opacity:0;transform:scale(1.06)}}
 @media (prefers-reduced-motion: reduce){.gamepick::before,.pk-card,.pk-pre,.pk-foot{animation:none}}
+
+/* Kopf-Knöpfe in allen Spielen: Pause · Beenden (zurück zur Spielauswahl) · Ton – dezent, Beenden mit Rückfrage */
+.hbtns{display:flex;align-items:center;gap:6px}
+.hbtns .sndbtn{margin:0}
+.pausebtn svg{width:14px!important;height:14px!important}
+.qbtn svg{width:17px!important;height:17px!important;flex:none}
+.qbtn .ql{display:none;position:absolute;top:calc(100% + 7px);left:auto;right:-10px;transform:none;z-index:60;padding:5px 11px;border-radius:999px;background:#d9466b;color:#fff;font-family:var(--body);font-weight:800;font-size:.78rem;letter-spacing:.01em;white-space:nowrap;box-shadow:0 6px 16px rgba(10,15,40,.35);pointer-events:none}
+.qbtn .ql::before{content:"";position:absolute;left:auto;right:calc(10px + 50% - 4px);right:calc(var(--qw,30px)/2 + 6px);top:-4px;width:8px;height:8px;margin-left:0;background:inherit;transform:rotate(45deg);border-radius:1px}
+.qbtn.arm{color:#fff!important;background:#d9466b!important;border-color:#d9466b!important;opacity:1!important}
+.qbtn.arm .ql{display:block;animation:qlin .18s ease-out}
+@keyframes qlin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+header .hbtns{margin-left:auto;align-self:center;gap:4px}
+header .hbtns .sndbtn{width:29px;height:29px;padding:5px;--qw:29px}
+header .hbtns .sndbtn svg{width:16px;height:16px}
+header{gap:8px!important}
+header h1{gap:7px}
+header .logo{width:32px;height:32px}
+header .wordmark{font-size:1.45rem}
+header .stats{gap:10px}
 </style>
 
 <div class="app">
@@ -595,7 +614,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
       </svg>
       <span class="wordmark jje">JJE<i>_blocks</i></span>
     </h1>
-    <button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+    <div class="hbtns"><button class="sndbtn pausebtn" id="pausebtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button><button class="sndbtn qbtn" id="qbtn" type="button" aria-label="Beenden – zurück zur Spielauswahl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h3.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M10 8l-4 4 4 4M6.5 12H15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ql">Beenden? Nochmal tippen</span></button><button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button></div>
     <div class="stats">
       <div class="stat"><small>Stufe</small><b id="level">1</b></div>
       <div class="stat"><small>Rekord</small><b id="best">50.000</b></div>
@@ -1633,12 +1652,12 @@ function celebrate(){
   celebTimer=setTimeout(()=>{ box.classList.remove('on'); nm.classList.remove('go'); nm.innerHTML=''; box.querySelectorAll('.spark,.cbonus,.cwave2').forEach(e=>e.remove()); },1700);
 }
 let pauseMode=false;
-function showStanding(){
+function showStanding(title){
   if (!$('over').hidden || !$('reg').hidden) return;
   pauseMode=true;
   turboLeft = turboUntil>performance.now() ? turboUntil-performance.now() : 0;
   if (turboTimer){ clearInterval(turboTimer); turboTimer=null; }
-  $('overtitle').textContent='Spielstand';
+  $('overtitle').textContent=typeof title==='string' ? title : 'Spielstand';
   $('final').textContent=showPts(score);
   $('overmsg').textContent=`Punkte · Rekord ${showPts(best)}`;
   $('resume').hidden=false;
@@ -2018,13 +2037,26 @@ trayEl.addEventListener('keydown',e=>{
 $('again').onclick=()=>{ if (pauseMode){ recordScore(score); turboLeft=0; closeStanding(); } newGame(); };
 $('restart').onclick=showStanding;
 $('resume').onclick=closeStanding;
-/* Beenden: zurück zum Kino-Startbildschirm, Name wird neu gewählt */
-$('quit').onclick=()=>{
-  if (pauseMode){ recordScore(score); pauseMode=false; } else if (typeof recordTime==='function') recordTime();
+
+/* Beenden-Knopf im Kopf: erster Tipp fragt nach („Beenden?“), zweiter Tipp innerhalb von 3 s beendet */
+function armQuit(btn, go){ let t=0; btn.addEventListener('click',e=>{ e.stopPropagation();
+  if (btn.classList.contains('arm')){ clearTimeout(t); btn.classList.remove('arm'); go(); return; }
+  btn.classList.add('arm'); t=setTimeout(()=>btn.classList.remove('arm'),3000); }); }
+/* zurück zur Spielauswahl (ohne Intro) */
+function toGamePick(){ try{ sessionStorage.setItem('jje-pick','1'); }catch(e){} }
+/* Beenden: zurück zur Spielauswahl, Name wird neu gewählt */
+function quitGame(){
+  if (pauseMode){ recordScore(score); pauseMode=false; }
+  else if (grid && score>0 && $('over').hidden && !endHold) recordScore(score);   // laufendes Spiel über den Kopf-Knopf beendet: Punkte zählen
+  else if (typeof recordTime==='function') recordTime();
+  toGamePick();
   save('jemrix-game',null); try{ localStorage.removeItem('jemrix-name'); localStorage.removeItem('achtfeld-game'); }catch(e){}
   player=''; document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
   setTimeout(()=>{ try{ location.reload(); }catch(e){ location.href=location.href.split('#')[0]; } },380);
-};
+}
+$('quit').onclick=quitGame;
+armQuit($('qbtn'), quitGame);
+$('pausebtn').onclick=()=>{ if (drag || endHold) return; if (!$('over').hidden){ if (pauseMode) closeStanding(); return; } showStanding('Pause'); };
 window.addEventListener('resize',()=>{ if(!drag) renderTray(); });
 
 best=load("jemrix-best",load("achtfeld-best",0)); $('best').textContent=showPts(best);
@@ -2091,7 +2123,9 @@ function showModes(cont){
 window.addEventListener('pageshow',e=>{ if (e.persisted) location.reload(); });
 function wrongOrient(){ return LAND.matches; }
 let resumeTurbo=null, resumeCheck=false;   // gespeicherter Turbo startet erst, wenn das Spiel wirklich losgeht
-playCine(()=>showModes(()=>{ if (resumeCheck){ resumeCheck=false; setTimeout(checkOver,300); } familyIntro(); if (player && $('reg').hidden && isBirthdayKid(player) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; }); if (resumeTurbo){ const r=resumeTurbo; resumeTurbo=null; startTurbo(r.left, r.mul); turboTotal=Math.max(r.left, r.total||r.left); tickTurbo(); persist(); } }));
+const backToPick=(()=>{ try{ const f=sessionStorage.getItem('jje-pick')==='1' && sessionStorage.getItem('remlinger-unlocked')==='1'; sessionStorage.removeItem('jje-pick'); return f; }catch(e){ return false; } })();
+function skipCine(done){ const el=$('cine'); if (el) el.remove(); document.documentElement.classList.remove('intro-on'); done(); }
+(backToPick ? skipCine : playCine)(()=>showModes(()=>{ if (resumeCheck){ resumeCheck=false; setTimeout(checkOver,300); } familyIntro(); if (player && $('reg').hidden && isBirthdayKid(player) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; }); if (resumeTurbo){ const r=resumeTurbo; resumeTurbo=null; startTurbo(r.left, r.mul); turboTotal=Math.max(r.left, r.total||r.left); tickTurbo(); persist(); } }));
 const saved=load("jemrix-game",load("achtfeld-game",null));
 try{
   const okPieces = saved && Array.isArray(saved.pieces) && saved.pieces.length===3 && saved.pieces.every(p=>p===null || (p && Array.isArray(p.shape) && p.shape.length && typeof p.color==='string'));

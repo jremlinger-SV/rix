@@ -368,6 +368,22 @@ body.gameover .over{bottom:0}
 /* Steine: Farben passend zu Jemrix */
 .f-cjk{font-family:"PingFang SC","Hiragino Sans GB","Heiti SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;font-weight:700}
 .f-idx{font-family:var(--display);font-weight:700}
+
+/* Kopf-Knöpfe in allen Spielen: Pause · Beenden (zurück zur Spielauswahl) · Ton – dezent, Beenden mit Rückfrage */
+.hbtns{display:flex;align-items:center;gap:6px}
+.hbtns .sndbtn{margin:0}
+.pausebtn svg{width:14px!important;height:14px!important}
+.qbtn svg{width:17px!important;height:17px!important;flex:none}
+.qbtn .ql{display:none;position:absolute;top:calc(100% + 7px);left:auto;right:-10px;transform:none;z-index:60;padding:5px 11px;border-radius:999px;background:#d9466b;color:#fff;font-family:var(--body);font-weight:800;font-size:.78rem;letter-spacing:.01em;white-space:nowrap;box-shadow:0 6px 16px rgba(10,15,40,.35);pointer-events:none}
+.qbtn .ql::before{content:"";position:absolute;left:auto;right:calc(10px + 50% - 4px);right:calc(var(--qw,30px)/2 + 6px);top:-4px;width:8px;height:8px;margin-left:0;background:inherit;transform:rotate(45deg);border-radius:1px}
+.qbtn.arm{color:#fff!important;background:#d9466b!important;border-color:#d9466b!important;opacity:1!important}
+.qbtn.arm .ql{display:block;animation:qlin .18s ease-out}
+@keyframes qlin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+header.mh .hbtns{justify-self:end}
+header.mh .hbtns .sndbtn{width:30px;height:30px}
+.jjpause{position:fixed;inset:0;z-index:240;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;color:#fff;background:rgba(8,14,34,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.jjpause h2{margin:0;font-family:var(--display);font-weight:700;font-size:2rem}
+.jjpause p{margin:0 0 6px;color:#cfe0ff}
 </style>
 
 <div class="app">
@@ -387,8 +403,9 @@ body.gameover .over{bottom:0}
       <span class="scorewrap"><b id="score">Level 1</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
       <span class="msub">Rekord <b id="best">–</b></span>
     </div>
-    <button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+    <div class="hbtns"><button class="sndbtn pausebtn" id="pausebtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button><button class="sndbtn qbtn" id="qbtn" type="button" aria-label="Beenden – zurück zur Spielauswahl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h3.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M10 8l-4 4 4 4M6.5 12H15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ql">Beenden? Nochmal tippen</span></button><button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button></div>
   </header>
+  <div class="jjpause" id="pausev" hidden role="dialog" aria-labelledby="pauseT"><h2 id="pauseT">Pause</h2><p>Antippen zum Weiterspielen.</p><div class="overbtns"><button type="button" id="presume">Weiter</button><button class="ghostbtn light" id="pquit" type="button">Beenden</button></div></div>
   <div class="boardslot" id="boardslot">
     <div class="park" id="park" aria-label="Ablage mit 4 Plätzen"></div>
     <div class="tablewrap" id="tablewrap">
@@ -1112,7 +1129,7 @@ const SND=(()=>{
 const LAND=matchMedia('(orientation: landscape) and (max-height: 560px)');
 let idleTime=0, tickLast=0;
 ['pointerdown','touchstart','keydown','wheel'].forEach(ev=>window.addEventListener(ev,()=>{ idleTime=0; },{capture:true,passive:true}));
-function gameActive(){ return T.length && !endHold && !busy && !document.hidden && !LAND.matches && $('over').hidden && $('reg').hidden && !document.querySelector('.bday'); }
+function gameActive(){ return T.length && !endHold && !busy && !document.hidden && !LAND.matches && $('over').hidden && $('reg').hidden && $('pausev').hidden && !document.querySelector('.bday'); }
 setInterval(()=>{
   const now=performance.now();
   if (tickLast && gameActive()){
@@ -1150,11 +1167,25 @@ function newGame(){
 $('again').onclick=()=>{ startLevel(overMode==='next' ? getProgress(player) : lvl); };   // startLevel gibt das Feld wieder frei
 /* Beenden: zurück zur Familien-Startseite, Name wird neu gewählt */
 window.addEventListener('pageshow',e=>{ if (e.persisted) location.reload(); });   // Rückkehr aus dem Safari-Zwischenspeicher: frisch laden
-$('quit').onclick=()=>{
+
+/* Beenden-Knopf im Kopf: erster Tipp fragt nach („Beenden?“), zweiter Tipp innerhalb von 3 s beendet */
+function armQuit(btn, go){ let t=0; btn.addEventListener('click',e=>{ e.stopPropagation();
+  if (btn.classList.contains('arm')){ clearTimeout(t); btn.classList.remove('arm'); go(); return; }
+  btn.classList.add('arm'); t=setTimeout(()=>btn.classList.remove('arm'),3000); }); }
+/* zurück zur Spielauswahl (ohne Intro) */
+function toGamePick(){ try{ sessionStorage.setItem('jje-pick','1'); }catch(e){} }
+function quitGame(){
   recordTime(); save('jenmah-game',null); try{ localStorage.removeItem('jenmah-name'); }catch(e){}
-  document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
+  toGamePick(); document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
   setTimeout(()=>{ location.href='./'; },380);
-};
+}
+$('quit').onclick=quitGame;
+armQuit($('qbtn'), quitGame);
+const pv=$('pausev');
+$('pausebtn').onclick=()=>{ if (!$('reg').hidden) return; pv.hidden=!pv.hidden; idleTime=0; };
+$('presume').onclick=e=>{ e.stopPropagation(); pv.hidden=true; idleTime=0; };
+pv.addEventListener('click',e=>{ if (e.target===pv || e.target.tagName==='P' || e.target.tagName==='H2') pv.hidden=true; });
+$('pquit').onclick=e=>{ e.stopPropagation(); quitGame(); };
 
 /* ===================== Spieler und Highscores ===================== */
 let player=load('jenmah-name',''), lastRun=null;
