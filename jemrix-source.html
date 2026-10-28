@@ -688,7 +688,7 @@ header .stats{gap:10px}
 .fscan.ok .fs-pass{visibility:visible}
 /* Hologramm-Glitch: Sechseck mit Emblem, „REMLINGER“ entschlüsselt sich, Farbversatz, Klammern, Statuszeile */
 .fscan .fs-hexa{width:132px;height:150px;opacity:0;transform:scale(.6) rotate(-30deg)}
-.fscan.ok .fs-hexa{animation:fshex .6s cubic-bezier(.2,.9,.3,1.3) .05s forwards}
+.fscan.ok .fs-hexa{animation:fshex .8s cubic-bezier(.2,.9,.3,1.3) .05s forwards}
 @keyframes fshex{to{opacity:1;transform:none}}
 .fscan .fs-hexa svg{width:100%;height:100%;overflow:visible}
 .fscan .fs-hexa .o{fill:none;stroke:#7fe0ff;stroke-width:2;filter:drop-shadow(0 0 6px #4cc9ff)}
@@ -698,15 +698,15 @@ header .stats{gap:10px}
 .fscan .fs-brk{position:relative;margin-top:24px;padding:14px 26px 16px;display:flex;flex-direction:column;align-items:center}
 .fscan .fs-brk::before,.fscan .fs-brk::after{content:"";position:absolute;top:0;bottom:0;width:18px;border:2px solid #7fe0ff;opacity:0;filter:drop-shadow(0 0 4px #4cc9ff)}
 .fscan .fs-brk::before{left:0;border-right:0}.fscan .fs-brk::after{right:0;border-left:0}
-.fscan.ok .fs-brk::before,.fscan.ok .fs-brk::after{animation:fsin .3s ease-out .6s forwards}
+.fscan.ok .fs-brk::before,.fscan.ok .fs-brk::after{animation:fsin .4s ease-out 1s forwards}
 .fscan .fs-word{display:flex;font-family:"Unbounded",var(--display);font-weight:800;font-size:clamp(2.1rem,10.2vw,2.6rem);letter-spacing:.04em;line-height:1.1}
 .fscan .fs-word i{font-style:normal;display:inline-block;color:#fff;text-shadow:-2px 0 rgba(255,40,120,.75),2px 0 rgba(0,230,255,.85),0 0 18px rgba(95,210,255,.6);opacity:0}
 .fscan .fs-word.glitch{animation:fsglitch .25s steps(2) 3}
 @keyframes fsglitch{0%{transform:translate(0)}25%{transform:translate(-3px,1px) skewX(-6deg)}50%{transform:translate(3px,-1px)}75%{transform:translate(-1px,0) skewX(4deg)}100%{transform:none}}
 .fscan .fs-erk{margin-top:10px;font-family:"Unbounded",var(--display);font-weight:600;font-size:15px;letter-spacing:.3em;margin-right:-.3em;text-transform:uppercase;color:#7fe0ff;opacity:0}
-.fscan.ok .fs-erk{animation:fsin .4s ease-out .7s forwards}
+.fscan.ok .fs-erk{animation:fsin .5s ease-out 1.15s forwards}
 .fscan .fs-free{margin-top:26px;display:flex;align-items:center;gap:10px;font-family:"Unbounded",var(--display);font-size:11px;letter-spacing:.3em;margin-right:-.3em;text-transform:uppercase;color:#bfeaff;opacity:0}
-.fscan.ok .fs-free{animation:fsin .4s ease-out .85s forwards}
+.fscan.ok .fs-free{animation:fsin .5s ease-out 1.45s forwards}
 .fscan .fs-free b{display:inline-block;width:9px;height:9px;background:#5fe0a8;border-radius:2px;box-shadow:0 0 10px #5fe0a8;animation:fsblink 1s steps(2) infinite}
 @keyframes fsblink{50%{opacity:.25}}
 @keyframes fsin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -2072,7 +2072,7 @@ markLeader();
    die zurückgegebene Funktion wartet das Ende ab und ruft dann done() */
 function faceScan(){
   // läuft bewusst immer animiert – auch bei „Bewegung reduzieren“ (sonst bleibt nur ein Standbild)
-  const T_OK=3200, T_END=T_OK+2200;   // Scan 3,2 s, danach „Remlinger erkannt“ groß auf leerem Bildschirm   // Uhr läuft erst, wenn das Intro ganz weg ist
+  const T_OK=3200, T_END=T_OK+3200;   // Scan 3,2 s, danach „Remlinger erkannt“ groß auf leerem Bildschirm   // Uhr läuft erst, wenn das Intro ganz weg ist
   const o=document.createElement('div'); o.className='fscan'; o.setAttribute('role','status'); o.setAttribute('aria-label','Gesichtsscan');
   let ticks=''; for (let i=0;i<72;i++){ const lg=i%6===0; ticks+=`<line x1="150" y1="${lg?4:8}" x2="150" y2="16" transform="rotate(${i*5} 150 150)" stroke="${lg?'#9fd8ff':'rgba(95,210,255,.45)'}" stroke-width="${lg?2:1}"/>`; }
   const cube=(x,y,s,c1,c2,c3)=>`<g class="fs-cube"><polygon points="${x},${y-s} ${x+s*.87},${y-s/2} ${x},${y} ${x-s*.87},${y-s/2}" fill="${c1}"/><polygon points="${x-s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x-s*.87},${y+s/2}" fill="${c2}"/><polygon points="${x+s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x+s*.87},${y+s/2}" fill="${c3}"/></g>`;
@@ -2095,11 +2095,11 @@ function faceScan(){
   // „REMLINGER“ entschlüsselt sich Zeichen für Zeichen, danach kurzes Glitch-Zucken
   const decrypt=()=>{
     const w=q('.fs-word'), GLY='▮▯◆◇■□01#%&+=/<>ΞΛΣ', d0=performance.now(); w.innerHTML='';
-    const ls=[...'REMLINGER'].map((ch,i)=>{ const e=document.createElement('i'); e.textContent=ch; w.appendChild(e); return {e,ch,start:150+i*45,end:430+i*45}; });
+    const ls=[...'REMLINGER'].map((ch,i)=>{ const e=document.createElement('i'); e.textContent=ch; w.appendChild(e); return {e,ch,start:300+i*75,end:750+i*75}; });
     const step=()=>{ const t=performance.now()-d0; let busy=false;
       ls.forEach(l=>{ if (t<l.start){ busy=true; return; } l.e.style.opacity=1; if (t<l.end){ busy=true; l.e.textContent=GLY[Math.floor(Math.random()*GLY.length)]; } else l.e.textContent=l.ch; });
       if (busy && !ended) requestAnimationFrame(step); };
-    requestAnimationFrame(step); setTimeout(()=>w.classList.add('glitch'),850);
+    requestAnimationFrame(step); setTimeout(()=>w.classList.add('glitch'),1500);
   };
   let t0=null, ok=false, ended=false, cb=null, raf=0, safety=0;
   const finish=()=>{ if (ended) return; ended=true; cancelAnimationFrame(raf); clearTimeout(safety); o.classList.add('out'); setTimeout(()=>o.remove(),460); if (cb) cb(); };
@@ -2115,7 +2115,10 @@ function faceScan(){
   raf=requestAnimationFrame(tick);
   const start=()=>{ if (t0===null){ t0=performance.now(); safety=setTimeout(finish, T_END+2500); } };   // Sicherheitsnetz, falls Animationsbilder ausbleiben
   // Tippen beschleunigt: sofort erkannt, kurz danach weiter
-  o.addEventListener('click',()=>{ if (t0===null) start(); if (!ok){ t0=performance.now()-T_OK; } else finish(); });
+  // Antippen überspringt – aber nur ein Tipp, der auch auf dem Scan begonnen hat (nicht das Loslassen nach dem Intro-Wisch)
+  let downHere=false;
+  o.addEventListener('pointerdown',()=>{ downHere=true; });
+  o.addEventListener('click',()=>{ if (!downHere) return; downHere=false; if (t0===null || performance.now()-t0<600) return; if (!ok){ t0=performance.now()-T_OK; } else finish(); });
   return done=>{ if (ended){ done(); return; } cb=done; start(); };
 }
 function playCine(done){
