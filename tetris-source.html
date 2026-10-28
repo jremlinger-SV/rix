@@ -875,9 +875,15 @@ cv.addEventListener('pointermove',e=>{
   const now=performance.now(); tp.hist.push([now,e.clientY]); while (tp.hist.length>2 && now-tp.hist[0][0]>60) tp.hist.shift();   // Tempo nur über die letzten ~60 ms
   if (tp.dropped || !canPlay()) return;
   const stepX=C*.9, stepY=C*.85;
-  // waagerecht: kleine Bewegung reicht (Original: „only a small movement is needed“)
-  while (e.clientX-tp.ax>=stepX){ tp.ax+=stepX; move(1); tp.moved=true; }
-  while (tp.ax-e.clientX>=stepX){ tp.ax-=stepX; move(-1); tp.moved=true; }
+  // Richtung festlegen, sobald sich der Finger merklich bewegt: senkrechte Wische verschieben den Stein nie zur Seite
+  const dxT=e.clientX-tp.x0, dyT=e.clientY-tp.y0;
+  if (!tp.axis && Math.hypot(dxT,dyT)>C*.4) tp.axis = Math.abs(dxT)>Math.abs(dyT)*1.15 ? 'x' : 'y';
+  if (!tp.axis) return;
+  if (tp.axis==='x'){
+    // waagerecht: kleine Bewegung reicht (Original: „only a small movement is needed“)
+    while (e.clientX-tp.ax>=stepX){ tp.ax+=stepX; move(1); tp.moved=true; }
+    while (tp.ax-e.clientX>=stepX){ tp.ax-=stepX; move(-1); tp.moved=true; }
+  } else tp.ax=e.clientX;
   const dy=e.clientY-tp.ay;
   if (dy>=stepY && Math.abs(e.clientX-tp.x0)<Math.abs(e.clientY-tp.y0)*1.2){
     // kurzer, schneller Wisch nach unten (unter 0,22 s) = sofort ablegen; langsames Ziehen = Stück für Stück, ohne einzurasten
