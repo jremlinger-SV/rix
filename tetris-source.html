@@ -380,8 +380,8 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
         <ul class="howto">
           <li><b>Tippen</b><span>drehen</span></li>
           <li><b>Wischen ← →</b><span>verschieben</span></li>
-          <li><b>Langsam runter</b><span>schneller fallen</span></li>
-          <li><b>Doppeltippen / schnell runter</b><span>fallen lassen</span></li>
+          <li><b>Runterziehen</b><span>Stück für Stück fallen lassen – am Boden noch eindrehen</span></li>
+          <li><b>Kurz &amp; schnell runterwischen</b><span>ganz fallen lassen</span></li>
           <li><b>Halten-Feld / nach oben</b><span>beiseitelegen</span></li>
         </ul>
         <div class="overbtns"><button type="button" id="helpok">Los geht's</button></div>
@@ -508,6 +508,7 @@ let lookOrder=null, look=LOOKS[0];
 /* ===================== Zustand ===================== */
 let grid=new Array(ROWS*W).fill(0), cur=null, queue=[], bag=[], hold=null, holdUsed=false;
 let score=0, lines=0, level=1, combo=-1, b2b=false, lastRot=false, pieces=0;
+let lockLimit=.5;   // Zeit am Boden bis zum Einrasten; nach langsamem Runterziehen länger (zum Eindrehen)
 let dropAcc=0, lockT=0, lockResets=0, lowestY=0, softHeld=false, clearing=null, ended=false, started=false, paused=false, riseT=0, playTime=0, bestAtStart=0;
 const idx=(x,y)=>y*W+x;
 function cellsOf(p,r=p.r,x=p.x,y=p.y){ return ROT[p.k][r].map(([cx,cy])=>[x+cx,y+cy]); }
@@ -539,7 +540,7 @@ function spawn(k){
   const p={k, r:0, x:3, y:k==='I'?-1:0};
   if (!fits(p,0,p.x,p.y)){ cur=p; topOut(); return; }
   for (let i=0;i<2 && fits(p,0,p.x,p.y+1);i++) p.y++;     // gleich ganz sichtbar
-  cur=p; dropAcc=0; lockT=0; lockResets=0; lowestY=p.y; lastRot=false;
+  cur=p; dropAcc=0; lockT=0; lockResets=0; lowestY=p.y; lastRot=false; lockLimit=.5;
 }
 function markPlaying(){ document.body.classList.toggle('playing', started && !ended); }
 function canPlay(){ return started && !ended && !paused && !clearing && cur && $('over').hidden && $('reg').hidden && $('help').hidden && !document.querySelector('.bday'); }
@@ -838,7 +839,12 @@ function step(dt){
   if (!onGround()){
     lockT=0; dropAcc+=dt;
     while (dropAcc>=g){ dropAcc-=g; if (fits(cur,cur.r,cur.x,cur.y+1)){ cur.y++; lastRot=false; if (softHeld) addScore(1,true); if (cur.y>lowestY){ lowestY=cur.y; lockResets=0; } } else { dropAcc=0; break; } }
-  } else { dropAcc=0; lockT+=dt; if (lockT>=.5 || (softHeld && lockT>=.25)) lock(false); }
+  } else {
+    dropAcc=0; lockT+=dt;
+    // Finger liegt noch nach langsamem Runterziehen: Stein wartet (max. 3 s), damit man ihn danach noch eindrehen kann
+    if (tp && tp.soft) { if (lockT>=3) lock(false); return; }
+    if (lockT>=lockLimit || (softHeld && lockT>=.25)) lock(false);
+  }
 }
 function riseRow(){   // Schwer: alle 40 s schiebt sich unten eine Reihe herein
   for (let x=0;x<W;x++) if (grid[idx(x,0)]){ topOut(); return; }
@@ -847,7 +853,7 @@ function riseRow(){   // Schwer: alle 40 s schiebt sich unten eine Reihe herein
 }
 
 /* ===================== Bedienung wie im Original: tippen, wischen, schnell nach unten wischen ===================== */
-let tp=null, lastTap=null;
+let tp=null;
 cv.addEventListener('pointerdown',e=>{
   if (!canPlay()) return; e.preventDefault();
   try{ cv.setPointerCapture(e.pointerId); }catch(_){}
@@ -863,9 +869,9 @@ cv.addEventListener('pointermove',e=>{
   while (tp.ax-e.clientX>=stepX){ tp.ax-=stepX; move(-1); tp.moved=true; }
   const dy=e.clientY-tp.ay;
   if (dy>=stepY && Math.abs(e.clientX-tp.x0)<Math.abs(e.clientY-tp.y0)*1.2){
-    // schnelles Wischen nach unten = sofort ablegen, langsames Ziehen = schneller fallen
+    // kurzer, schneller Wisch nach unten (unter 0,22 s) = sofort ablegen; langsames Ziehen = Stück für Stück, ohne einzurasten
     const [t1,y1]=tp.hist[0], v=(e.clientY-y1)/Math.max(1,now-t1);
-    if (!tp.soft && v>1.4 && e.clientY-tp.y0>C*2){ tp.dropped=true; tp.moved=true; hardDrop(); return; }
+    if (v>1.8 && e.clientY-tp.y0>C*2.5 && now-tp.t0<220){ tp.dropped=true; tp.moved=true; hardDrop(); return; }   // nur ein kurzer, schneller Wisch legt sofort ab
     while (e.clientY-tp.ay>=stepY){ tp.ay+=stepY; softStep(); tp.moved=true; tp.soft=true; }
   }
   if (tp.y0-e.clientY>C*2.2 && Math.abs(e.clientX-tp.x0)<C && !tp.moved){ tp.moved=true; tp.dropped=true; doHold(); }   // nach oben wischen = halten
@@ -874,21 +880,13 @@ function endTouch(e){
   if (!tp || e.pointerId!==tp.id) return;
   const quick=performance.now()-tp.t0<350, still=Math.hypot(e.clientX-tp.x0,e.clientY-tp.y0)<C*.6;
   if (!tp.moved && quick && still && e.type==='pointerup'){
-    // Doppeltippen = fallen lassen: die Drehung vom ersten Tipp wird zurückgenommen
-    const now=performance.now(), lt=lastTap;
-    if (lt && cur && now-lt.t<300 && lt.n===pieces && lt.k===cur.k && Math.hypot(e.clientX-lt.x,e.clientY-lt.y)<C*1.5){
-      lastTap=null;
-      if (fits(cur,lt.r,lt.px,lt.py)){ cur.r=lt.r; cur.x=lt.px; cur.y=lt.py; }
-      hardDrop();
-    } else {
-      lastTap=cur ? {t:now,x:e.clientX,y:e.clientY,n:pieces,k:cur.k,r:cur.r,px:cur.x,py:cur.y} : null;
-      rotate(1);   // Tippen = drehen
-    }
+    rotate(1);   // Tippen = drehen (kein Doppeltippen mehr)
   }
   else if (!tp.dropped && e.type==='pointerup'){   // schneller Abwärts-Wisch am Ende
     const [t1,y1]=tp.hist[0], v=(e.clientY-y1)/Math.max(1,performance.now()-t1);
-    if (!tp.soft && v>1.4 && e.clientY-tp.y0>C*2 && Math.abs(e.clientX-tp.x0)<Math.abs(e.clientY-tp.y0)) hardDrop();   // nach langsamem Ziehen nie sofort ablegen
+    if (v>1.8 && e.clientY-tp.y0>C*2.5 && performance.now()-tp.t0<260 && Math.abs(e.clientX-tp.x0)<Math.abs(e.clientY-tp.y0)) hardDrop();   // nach langsamem Ziehen nie sofort ablegen
   }
+  if (tp.soft && !tp.dropped && cur){ lockT=0; lockLimit=.9; }   // nach dem Runterziehen bleibt kurz Zeit zum Eindrehen
   tp=null;
 }
 cv.addEventListener('pointerup',endTouch); cv.addEventListener('pointercancel',endTouch);
