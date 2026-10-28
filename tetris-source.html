@@ -381,7 +381,7 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
           <li><b>Tippen</b><span>drehen</span></li>
           <li><b>Wischen ← →</b><span>verschieben</span></li>
           <li><b>Runterziehen</b><span>Stück für Stück fallen lassen – am Boden noch eindrehen</span></li>
-          <li><b>Kurz &amp; schnell runterwischen</b><span>ganz fallen lassen</span></li>
+          <li><b>Schnell runterwischen</b><span>ein großes Stück fallen lassen – bis zur Landung drehbar</span></li>
           <li><b>Halten-Feld / nach oben</b><span>beiseitelegen</span></li>
         </ul>
         <div class="overbtns"><button type="button" id="helpok">Los geht's</button></div>
@@ -508,7 +508,7 @@ let lookOrder=null, look=LOOKS[0];
 /* ===================== Zustand ===================== */
 let grid=new Array(ROWS*W).fill(0), cur=null, queue=[], bag=[], hold=null, holdUsed=false;
 let score=0, lines=0, level=1, combo=-1, b2b=false, lastRot=false, pieces=0;
-let lockLimit=.5;   // Zeit am Boden bis zum Einrasten; nach langsamem Runterziehen länger (zum Eindrehen)
+let lockLimit=.5, fallLeft=0, fallAcc=0;   // fallLeft: Reihen, die der Stein nach einem schnellen Wisch noch zügig fällt   // Zeit am Boden bis zum Einrasten; nach langsamem Runterziehen länger (zum Eindrehen)
 let dropAcc=0, lockT=0, lockResets=0, lowestY=0, softHeld=false, clearing=null, ended=false, started=false, paused=false, riseT=0, playTime=0, bestAtStart=0;
 const idx=(x,y)=>y*W+x;
 function cellsOf(p,r=p.r,x=p.x,y=p.y){ return ROT[p.k][r].map(([cx,cy])=>[x+cx,y+cy]); }
@@ -540,7 +540,7 @@ function spawn(k){
   const p={k, r:0, x:3, y:k==='I'?-1:0};
   if (!fits(p,0,p.x,p.y)){ cur=p; topOut(); return; }
   for (let i=0;i<2 && fits(p,0,p.x,p.y+1);i++) p.y++;     // gleich ganz sichtbar
-  cur=p; dropAcc=0; lockT=0; lockResets=0; lowestY=p.y; lastRot=false; lockLimit=.5;
+  cur=p; dropAcc=0; lockT=0; lockResets=0; lowestY=p.y; lastRot=false; lockLimit=.5; fallLeft=0; fallAcc=0;
 }
 function markPlaying(){ document.body.classList.toggle('playing', started && !ended); }
 function canPlay(){ return started && !ended && !paused && !clearing && cur && $('over').hidden && $('reg').hidden && $('help').hidden && !document.querySelector('.bday'); }
@@ -555,6 +555,10 @@ function rotate(dir){
   return false;
 }
 function softStep(){ if (!canPlay()) return false; if (fits(cur,cur.r,cur.x,cur.y+1)){ cur.y++; lastRot=false; addScore(1,true); dropAcc=0; if (cur.y>lowestY){ lowestY=cur.y; lockResets=0; } return true; } return false; }
+function fastFall(dist){   // Wischlänge × 2 in Reihen (mindestens 4), danach normal weiter
+  if (!canPlay()) return;
+  fallLeft=Math.max(4, Math.round(dist/C*2)); fallAcc=0; SND.tick();
+}
 function hardDrop(){
   if (!canPlay()) return;
   let n=0; const from=cellsOf(cur); while (fits(cur,cur.r,cur.x,cur.y+1)){ cur.y++; n++; }
@@ -835,6 +839,13 @@ function step(dt){
   if (!cur) return;
   const M=MODES[mode];
   if (M.rise){ riseT+=dt; if (riseT>=M.rise){ riseT=0; riseRow(); if (!cur) return; } }
+  // Schnellfall nach einem schnellen Wisch: ein Stück zügig nach unten, drehen und schieben bleibt möglich
+  if (fallLeft>0){
+    fallAcc+=dt;
+    while (fallAcc>=.022 && fallLeft>0){ fallAcc-=.022; if (fits(cur,cur.r,cur.x,cur.y+1)){ cur.y++; fallLeft--; lastRot=false; addScore(1,true); if (cur.y>lowestY){ lowestY=cur.y; lockResets=0; } } else fallLeft=0; }
+    if (fallLeft<=0){ fallAcc=0; dropAcc=0; if (onGround()){ lockT=0; lockLimit=.9; } }
+    if (fallLeft>0) return;
+  }
   const g=softHeld ? Math.min(gravity(level),.035) : gravity(level);
   if (!onGround()){
     lockT=0; dropAcc+=dt;
@@ -871,7 +882,7 @@ cv.addEventListener('pointermove',e=>{
   if (dy>=stepY && Math.abs(e.clientX-tp.x0)<Math.abs(e.clientY-tp.y0)*1.2){
     // kurzer, schneller Wisch nach unten (unter 0,22 s) = sofort ablegen; langsames Ziehen = Stück für Stück, ohne einzurasten
     const [t1,y1]=tp.hist[0], v=(e.clientY-y1)/Math.max(1,now-t1);
-    if (v>1.8 && e.clientY-tp.y0>C*2.5 && now-tp.t0<220){ tp.dropped=true; tp.moved=true; hardDrop(); return; }   // nur ein kurzer, schneller Wisch legt sofort ab
+    if (v>1.8 && e.clientY-tp.y0>C*2.5 && now-tp.t0<220){ tp.dropped=true; tp.moved=true; fastFall(e.clientY-tp.y0); return; }   // kurzer, schneller Wisch: Stein fällt ein Stück, bleibt drehbar
     while (e.clientY-tp.ay>=stepY){ tp.ay+=stepY; softStep(); tp.moved=true; tp.soft=true; }
   }
   if (tp.y0-e.clientY>C*2.2 && Math.abs(e.clientX-tp.x0)<C && !tp.moved){ tp.moved=true; tp.dropped=true; doHold(); }   // nach oben wischen = halten
@@ -884,7 +895,7 @@ function endTouch(e){
   }
   else if (!tp.dropped && e.type==='pointerup'){   // schneller Abwärts-Wisch am Ende
     const [t1,y1]=tp.hist[0], v=(e.clientY-y1)/Math.max(1,performance.now()-t1);
-    if (v>1.8 && e.clientY-tp.y0>C*2.5 && performance.now()-tp.t0<260 && Math.abs(e.clientX-tp.x0)<Math.abs(e.clientY-tp.y0)) hardDrop();   // nach langsamem Ziehen nie sofort ablegen
+    if (v>1.8 && e.clientY-tp.y0>C*2.5 && performance.now()-tp.t0<260 && Math.abs(e.clientX-tp.x0)<Math.abs(e.clientY-tp.y0)) fastFall(e.clientY-tp.y0);   // nach langsamem Ziehen nie sofort ablegen
   }
   if (tp.soft && !tp.dropped && cur){ lockT=0; lockLimit=.9; }   // nach dem Runterziehen bleibt kurz Zeit zum Eindrehen
   tp=null;
