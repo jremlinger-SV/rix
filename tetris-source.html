@@ -1121,7 +1121,7 @@ function addPlaySecs(dt){ if (!player || !(dt>0)) return; const k=tk(mode,player
 function takeSecs(){ const k=tk(mode,player||''); const v=Math.round(unsentSecs[k]||0); delete unsentSecs[k]; ptSave(); return v; }
 function clearTimes(){ unsentSecs={}; localTime={}; ptSave(); }
 function fmtTime(s){ s=Math.round(s||0); if (s<=0) return ''; if (s<60) return '< 1 Min'; const m=Math.floor(s/60); if (m<60) return m+' Min'; return Math.floor(m/60)+' Std '+(m%60)+' Min'; }
-function addTimeTo(el, secs){ const t=fmtTime(secs); if (!t) return; const sm=document.createElement('small'); sm.className='pt'; sm.textContent='Spielzeit '+t; el.appendChild(sm); }
+function addTimeTo(el, secs){}   // Spielzeit wird weiter gezählt, aber in den Listen nicht mehr angezeigt
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden || !player) return; ptSave(); if ((unsentSecs[tk(mode,player)]||0)>=60) recordTime(); });
 
 /* ===================== Highscores: getrennt je Schwierigkeit, eigene Liste über Supabase ===================== */

@@ -462,7 +462,7 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='28.10.2026, 21:38';   // wird beim Bauen gefüllt
+const APP_VERSION='28.10.2026, 21:40';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -1161,7 +1161,7 @@ function addPlaySecs(dt){ if (!player || !(dt>0)) return; const k=tk(mode,player
 function takeSecs(){ const k=tk(mode,player||''); const v=Math.round(unsentSecs[k]||0); delete unsentSecs[k]; ptSave(); return v; }
 function clearTimes(){ unsentSecs={}; localTime={}; ptSave(); }
 function fmtTime(s){ s=Math.round(s||0); if (s<=0) return ''; if (s<60) return '< 1 Min'; const m=Math.floor(s/60); if (m<60) return m+' Min'; return Math.floor(m/60)+' Std '+(m%60)+' Min'; }
-function addTimeTo(el, secs){ const t=fmtTime(secs); if (!t) return; const sm=document.createElement('small'); sm.className='pt'; sm.textContent='Spielzeit '+t; el.appendChild(sm); }
+function addTimeTo(el, secs){}   // Spielzeit wird weiter gezählt, aber in den Listen nicht mehr angezeigt
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden || !player) return; ptSave(); if ((unsentSecs[tk(mode,player)]||0)>=60) recordTime(); });
 
 /* ===================== Highscores: getrennt je Schwierigkeit, eigene Liste über Supabase ===================== */

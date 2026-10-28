@@ -815,7 +815,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='28.10.2026, 21:38';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='28.10.2026, 21:40';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -1846,7 +1846,7 @@ function addPlaySecs(dt){ if (!player || !(dt>0)) return; const k=clean(player).
 function takeSecs(){ const k=clean(player||'').toLowerCase(); const v=Math.round(unsentSecs[k]||0); delete unsentSecs[k]; ptSave(); return v; }
 function clearTimes(){ unsentSecs={}; localTime={}; ptSave(); }
 function fmtTime(s){ s=Math.round(s||0); if (s<=0) return ''; if (s<60) return '< 1 Min'; const m=Math.floor(s/60); if (m<60) return m+' Min'; return Math.floor(m/60)+' Std '+(m%60)+' Min'; }
-function addTimeTo(el, secs){ const t=fmtTime(secs); if (!t) return; const sm=document.createElement('small'); sm.className='pt'; sm.textContent='Spielzeit '+t; el.appendChild(sm); }
+function addTimeTo(el, secs){}   // Spielzeit wird weiter gezählt, aber in den Listen nicht mehr angezeigt
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden || !player) return; ptSave(); if ((unsentSecs[clean(player).toLowerCase()]||0)>=60 && typeof recordTime==='function') recordTime(); });
 // gleiche Regel wie auf dem Server: lateinische Buchstaben, Leerzeichen, Bindestrich, Punkt, Apostroph
 const NAME_OK=/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ' .-]{1,19}$/;
@@ -2012,7 +2012,7 @@ function renderTop2(){
 }
 function renderScores(){
   renderTop2();
-  const tl=topList(), title=tl.title, rows=tl.rows.slice(0, Math.max(3, Math.min(10, Math.floor((($('over').offsetHeight||boardEl.offsetHeight)-235)/44)))); $('hstitle').textContent=title;
+  const tl=topList(), title=tl.title, rows=tl.rows.slice(0, Math.max(3, Math.min(10, Math.floor((($('over').offsetHeight||boardEl.offsetHeight)-235)/34)))); $('hstitle').textContent=title;
   const ol=$('hslist'); ol.innerHTML='';
   if (!rows.length){ const li=document.createElement('li'); li.style.gridTemplateColumns='1fr'; li.textContent='Noch keine Einträge.'; li.style.counterIncrement='none'; ol.appendChild(li); return; }
   let marked=false;
@@ -2264,7 +2264,6 @@ function setupHsOverlay(){
       const li=document.createElement('li'); if (i===0) li.className='top';
       const pl=document.createElement('span'); pl.className='pl'; if (i===0) pl.innerHTML=CROWN; else pl.textContent=(i+1)+'.';
       const nm=document.createElement('span'); nm.className='nm'; nm.textContent=r.name;
-      const t=fmtTime(r.secs); if (t){ const sm=document.createElement('small'); sm.textContent='Spielzeit '+t; nm.appendChild(sm); }
       const b=document.createElement('b'); b.textContent=d.fmt(r.score);
       li.append(pl,nm,b); ol.appendChild(li);
     });
