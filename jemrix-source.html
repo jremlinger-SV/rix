@@ -2294,12 +2294,10 @@ function showModes(cont){
   const pk=$('pick'); if (!pk){ if (cont) cont(); return; }
   // Spielauswahl: Jemrix oder jenMah, jeweils mit dem aktuellen Platz 1
   const rec=(el,rows,fmt)=>{ el.innerHTML=''; const r=rows.find(x=>x && x.score>0); if (!r) return; el.insertAdjacentHTML('afterbegin',CROWN); el.append(clean(r.name)+' · '+(fmt||showPts)(r.score)); };
-  rec($('recJemrix'), topList().rows);
-  const mah=load('jenmah-lv-shared-cache',null)||load('jenmah-lv-scores',[]); rec($('recMah'), (Array.isArray(mah)?mah:[]).slice().sort((a,b)=>b.score-a.score), v=>'Level '+v);
-  // JJE_tetris: bester Wert über alle Schwierigkeiten (Liste ist je Schwierigkeit getrennt)
-  const tet=load('jjetet-shared-cache',null)||load('jjetet-scores',[]), TL={leicht:'Leicht',mittel:'Mittel',schwer:'Schwer'};
-  const tr=(Array.isArray(tet)?tet:[]).filter(r=>r && TL[r.mode]).slice().sort((a,b)=>b.score-a.score)[0];
-  rec($('recTet'), tr?[tr]:[], v=>v.toLocaleString('de-DE')+' · '+TL[tr.mode]);
+  renderRecs();
+  // Platz 1 auf den Karten frisch vom Server holen (sonst zeigen Mahjong/Tetris bis zum Öffnen des Spiels die alte Liste)
+  Promise.resolve(typeof fetchScores==='function' ? fetchScores() : null).then(renderRecs,renderRecs);
+  ['mah','tet'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } }));
   setupHsOverlay();
   let chosen=false;
   $('pickJemrix').onclick=()=>{ if (chosen) return; chosen=true; $('pickJemrix').classList.add('go'); SND.plop(2);
@@ -2312,10 +2310,19 @@ function showModes(cont){
     try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
     setTimeout(()=>{ pk.classList.add('leaving'); setTimeout(()=>{ location.href='tetris.html'; },220); },160); };
 }
+/* Platz 1 je Spiel auf den Karten der Spielauswahl – bevorzugt frisch vom Server */
+function renderRecs(){
+  if (!$('recJemrix')) return;
+  const rec=(el,rows,fmt)=>{ el.innerHTML=''; const r=rows.find(x=>x && x.score>0); if (!r) return; el.insertAdjacentHTML('afterbegin',CROWN); el.append(clean(r.name)+' · '+(fmt||showPts)(r.score)); };
+  rec($('recJemrix'), topList().rows);
+  rec($('recMah'), hsData('mah').rows, v=>'Level '+v);
+  const all=Object.keys(HS_TL).map(m=>{ const r=hsData('tet',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  rec($('recTet'), all?[all]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[all.mode]);
+}
 /* Highscore-Fenster auf der Spielauswahl: je Spiel die Familienliste (Tetris je Schwierigkeit) */
 async function fetchOther(fn){
   if (typeof api!=='function' || typeof ONLINE==='undefined' || !ONLINE) return null;
-  try{ const j=await api(fn); return j && Array.isArray(j.players) ? j.players : null; }catch(e){ return null; }
+  try{ const j=await api(fn); return j && Array.isArray(j.players) ? j : null; }catch(e){ return null; }
 }
 function bestPerName(rows, pend){
   const by=new Map();
@@ -2325,15 +2332,15 @@ function bestPerName(rows, pend){
   return [...by.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10);
 }
 const HS_TL={leicht:'Leicht',mittel:'Mittel',schwer:'Schwer'};
-let hsFresh={mah:null, tet:null};
+let hsFresh={mah:null, tet:null}, hsReset={mah:0, tet:0};
 function hsData(g, m){
   if (g==='blocks'){ const tl=topList(); return {rows:tl.rows, fmt:showPts, sub:tl.title}; }
   if (g==='mah'){
-    const sh=hsFresh.mah || load('jenmah-lv-shared-cache',null), pend=load('jenmah-lv-pending',[]);
+    const sh=hsFresh.mah || load('jenmah-lv-shared-cache',null), pend=load('jenmah-lv-pending',[]).filter(e=>e && (!hsFresh.mah || (e.at||0)>hsReset.mah));
     const rows=Array.isArray(sh) ? bestPerName(sh, pend) : bestPerName(load('jenmah-lv-scores',[]), []);
     return {rows, fmt:v=>'Level '+v, sub:hsSub(hsFresh.mah, sh)};
   }
-  const sh=hsFresh.tet || load('jjetet-shared-cache',null), pend=load('jjetet-pending',[]).filter(e=>e && e.mode===m);
+  const sh=hsFresh.tet || load('jjetet-shared-cache',null), pend=load('jjetet-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.tet || (e.at||0)>hsReset.tet));
   const rows=Array.isArray(sh) ? bestPerName(sh.filter(r=>r && r.mode===m), pend) : bestPerName(load('jjetet-scores',[]).filter(r=>r && r.mode===m), []);
   return {rows, fmt:v=>Number(v).toLocaleString('de-DE'), sub:hsSub(hsFresh.tet, sh)};
 }
@@ -2365,7 +2372,7 @@ function setupHsOverlay(){
     tabs(); render(); ov.hidden=false; try{ SND.plop(1); }catch(e){}
     setTimeout(()=>$('hsx').focus(),50);
     const fn={mah:'get_scores_mah', tet:'get_scores_tet'}[g];
-    if (fn) fetchOther(fn).then(p=>{ if (!p) return; hsFresh[g]=p; if (cur===g && !ov.hidden) render(); });
+    if (fn) fetchOther(fn).then(j=>{ if (!j) return; hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); if (cur===g && !ov.hidden) render(); });
   };
   const close=()=>{ ov.hidden=true; cur=null; };
   document.querySelectorAll('.pk-hs').forEach(b=>b.onclick=e=>{ e.stopPropagation(); open(b.dataset.g); });

@@ -73,7 +73,7 @@ function takeList(j, seq){
     save('jemrix-server-epoch-seen',1);
   }
 }
-function refreshViews(){ updateNet(); if (!$('over').hidden) renderScores(); else renderTop2(); markLeader(); }
+function refreshViews(){ updateNet(); if (!$('over').hidden) renderScores(); else renderTop2(); markLeader(); try{ renderRecs(); }catch(e){} }
 async function fetchScores(){
   if (!ONLINE){ refreshViews(); return; }
   if (fetching) return; fetching=true;
