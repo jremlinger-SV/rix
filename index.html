@@ -130,6 +130,11 @@ body.turbo .board{box-shadow:0 0 0 3px var(--t1),0 0 26px 4px color-mix(in srgb,
 .combo{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-family:var(--display);font-weight:700;font-size:1.9rem;line-height:1.15;text-align:center;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.35);pointer-events:none;opacity:0;width:88%}
 .combo small{display:block;font-size:.9rem;font-weight:600;opacity:.95;text-wrap:balance}
 .combo.show{animation:float 1s ease-out}
+.cbig{position:absolute;left:50%;top:24%;z-index:7;display:flex;align-items:baseline;gap:.25em;transform:translate(-50%,-50%);pointer-events:none;white-space:nowrap;animation:cbig 1.25s cubic-bezier(.2,.9,.3,1.2) forwards}
+.cbig span{font-family:"Lilita One",var(--display);font-size:2.1rem;color:#fff;-webkit-text-stroke:.08em #1d4ed8;paint-order:stroke fill;text-shadow:0 .08em 0 #0b1a45}
+.cbig b{font-family:"Lilita One",var(--display);font-weight:400;font-size:3.4rem;line-height:1;background:linear-gradient(180deg,#fff7c2,#ffd84d 55%,#f5a623);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .06em 0 #7a4b00) drop-shadow(0 0 12px rgba(255,216,77,.7))}
+@keyframes cbig{0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(-6deg)}22%{opacity:1;transform:translate(-50%,-50%) scale(1.12) rotate(2deg)}35%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%) scale(.96)}}
+@media (prefers-reduced-motion: reduce){.cbig{animation-duration:1.25s;animation-name:fadeout2}}
 @keyframes float{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-110%) scale(1)}}
 .tray{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--board);border-radius:14px;padding:10px 10px;width:var(--bw);box-sizing:border-box;align-self:center}
 .foot{width:var(--bw);align-self:center;margin-block:auto;flex:none}
@@ -910,7 +915,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='02.11.2026, 23:34';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='03.11.2026, 00:27';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -1047,7 +1052,7 @@ function giftDue(stress){
    aber nie drei tote Steine. Gibt es gerade keine fast volle Reihe, wird ein 2-Zug-Aufbau angeboten (Aufbauer + passender Vollender). */
 const DIRS4=[[1,0],[-1,0],[0,1],[0,-1]];
 function placeInfo(g,shape){                       // beste Lage einer Form: Linien, Außenkontakt, Punktlandung
-  let best=null; const own=new Set(shape.map(([r,c])=>r+','+c));
+  let best=null, keyAny=false; const own=new Set(shape.map(([r,c])=>r+','+c));
   for (let r=0;r<N;r++) for (let c=0;c<N;c++){
     if (!fitsIn(g,shape,r,c)) continue;
     const t=g.slice(); shape.forEach(([dr,dc])=>t[(r+dr)*N+c+dc]=1);
@@ -1055,18 +1060,23 @@ function placeInfo(g,shape){                       // beste Lage einer Form: Lin
     let touch=0, per=0;
     shape.forEach(([dr,dc])=>DIRS4.forEach(([a,b])=>{ if (own.has((dr+a)+','+(dc+b))) return; per++; const y=r+dr+a, x=c+dc+b; if (y<0||x<0||y>=N||x>=N||g[y*N+x]!==null) touch++; }));
     const exact=touch===per;
-    const val=n*100+touch*2+(exact?15:0);
+    const val=n*100+touch*2+(exact?15:0)+(exact&&shape.length>=3?60:0);   // Schlüssel-Lage: Stein füllt eine Tasche genau aus
     if (!best||val>best.val){ rows.forEach(rr=>{for(let x=0;x<N;x++) t[rr*N+x]=null;}); cols.forEach(cc=>{for(let y=0;y<N;y++) t[y*N+cc]=null;}); best={val,n,touch,per,exact,g:t}; }
+    if (exact && shape.length>=3) keyAny=true;
   }
+  if (best) best.key=keyAny;
   return best;
 }
-function analyzeShapes(g){ return SHAPES.map((shape,id)=>{ const b=placeInfo(g,shape); return b ? {id,shape,size:shape.length,n:b.n,touch:b.touch,per:b.per,exact:b.exact,g:b.g} : null; }).filter(Boolean); }
+function analyzeShapes(g){ return SHAPES.map((shape,id)=>{ const b=placeInfo(g,shape); return b ? {id,shape,size:shape.length,n:b.n,touch:b.touch,per:b.per,exact:b.exact,key:b.key,g:b.g} : null; }).filter(Boolean); }
 function poolOf(id){ return POOLS.findIndex(p=>p.includes(id)); }
 let recentShapes=[];                                // zuletzt angebotene Formen (Abwechslung)
 let recentLines=[];                                 // geräumte Linien je Zug (letzte 15 Züge) – misst die aktuelle Spielstärke
 function skillNow(){ if (recentLines.length<6) return 0.3; const avg=recentLines.reduce((a,b)=>a+b,0)/recentLines.length; return Math.max(0, Math.min(1, (avg-0.3)/0.3)); }
 function nearLines(g){ let k=0; for (let r=0;r<N;r++){ let e=0; for (let c=0;c<N;c++) if (!g[r*N+c]) e++; if (e>0 && e<=2) k++; } for (let c=0;c<N;c++){ let e=0; for (let r=0;r<N;r++) if (!g[r*N+c]) e++; if (e>0 && e<=2) k++; } return k; }
-function shapeWeight(id,d){ const w=poolWeights(d); const k=poolOf(id); let x=(k>=0?w[k]/POOLS[k].length:1); if (recentShapes.includes(id)) x*=0.35; return x; }
+let BIGF=0;   // je Satz: wie stark große Steine bevorzugt werden (0 … 1)
+function shapeWeight(id,d){ const w=poolWeights(d); const k=poolOf(id); let x=(k>=0?w[k]/POOLS[k].length:1); if (recentShapes.includes(id)) x*=0.35;
+  const sz=SHAPES[id].length; if (sz>=4) x*=1+0.9*BIGF; else if (sz<=2) x*=1-0.55*BIGF; return x; }
+function keyW(x,dn){ return x.key && x.size>=3 ? 1+(2.6-1.6*dn)*Math.min(1.6,x.size/5) : 1; }   // Schlüssel-Steine: füllen eine Lücke genau
 function pickWeighted(list,wf){ let tot=0; const ws=list.map(x=>{const w=Math.max(0.0001,wf(x)); tot+=w; return w;}); let r=Math.random()*tot; for (let i=0;i<list.length;i++){ r-=ws[i]; if (r<=0) return list[i]; } return list[list.length-1]; }
 function mkPiece(id,d){ const piece={shape:SHAPES[id], color:pick(COLORS)}; if (d>=1 && Math.random()<0.13) piece.star=Math.floor(Math.random()*piece.shape.length); return piece; }
 function pockets(g){ let p=0; for (let k=0;k<N*N;k++){ if (g[k]) continue; const r=k/N|0, c=k%N; let open=0; DIRS4.forEach(([a,b])=>{ const y=r+a,x=c+b; if (y>=0&&x>=0&&y<N&&x<N&&!g[y*N+x]) open++; }); if (open<=1) p++; } return p; }
@@ -1125,6 +1135,7 @@ function newSet(){
   // Aufwärmphase: in den ersten 2 min passt fast alles, bis 6 min wird sanft auf die normale Schwierigkeit übergeblendet
   const warm = playTime<120 ? 1 : Math.max(0, 1-(playTime-120)/240);
   if (warm>0){ dn*=1-0.85*warm; d*=1-0.8*warm; }
+  BIGF=Math.max(0.1, 1-0.75*dn)*(0.35+0.65*Math.min(1,sk/0.6));   // wer sich schwertut, bekommt weniger Riesen-Steine
   const A=analyzeShapes(grid);
   if (!A.length) return [randPiece(0),randPiece(0),randPiece(0)];
   const Aid=new Set(A.map(x=>x.id));
@@ -1149,6 +1160,11 @@ function newSet(){
   if (sinceClear>=2) pClose=Math.max(pClose, 0.95-0.25*dn);
   if (sinceClear>=4 || tight) pClose=Math.max(pClose, 1-0.35*dn);  // Rettung wird mit der Schwierigkeit seltener, bleibt aber
   if (warm>0) pClose=Math.max(pClose, 0.8+0.2*warm);
+  // B: laufende Combo-Serie schützen – mit wachsender Schwierigkeit lässt der Schutz nach
+  if (combo>=2) pClose=Math.max(pClose, Math.max(0.45, 0.98-0.35*dn-0.25*late-0.2*Math.max(0,sk-0.5)));
+  // E: volles Feld – fast sicher ein Befreiungs-Stein (am liebsten zwei Reihen)
+  if (tight || filled>=38) pClose=Math.max(pClose, 0.97-0.2*late);
+  const pTwin = 0.24*(1-0.5*dn);                   // D: gleiche Form im Doppelpack
   const pCombo = Math.max(gift ? 0.7 : Math.max(0.2, 0.55-0.35*dn) + (combo>=2?0.15:0), 0.3+0.4*warm);   // Zweifach-Räumer sind die Höhepunkte – nie zu selten
   const pChain = warm;                             // Aufwärmphase: auch 2. und 3. Stein räumen nach Möglichkeit eine Reihe
   const pBig   = Math.max(0.15, 0.6-0.4*dn);        // große Aufbauer bei viel Platz
@@ -1162,8 +1178,8 @@ function newSet(){
     let closer=null;
     if (closers.length && Math.random()<pClose){
       const two=closers.filter(x=>x.n>=2);
-      const from = two.length && Math.random()<pCombo ? two : closers;
-      closer=pickWeighted(from, x=>shapeWeight(x.id,d)*(gift||playTime<GRACE||warm>0.4 ? x.size : 1)*(x.exact?1.6+1.4*warm:1.6));
+      const from = two.length && (Math.random()<pCombo || tight || filled>=38) ? two : closers;
+      closer=pickWeighted(from, x=>shapeWeight(x.id,d)*(gift||playTime<GRACE||warm>0.4 ? x.size : 1)*(x.exact?1.6+1.4*warm:1.6)*keyW(x,dn));
       ids.push(closer.id); gAfter=closer.g;
     }
     // 2) Aufbauer – ohne fast volle Reihe: 2-Zug-Aufbau (Aufbauer, danach Vollender auf dem neuen Feld)
@@ -1176,21 +1192,21 @@ function newSet(){
       const cand=B.filter(x=>x.size<=5).sort(()=>Math.random()-.5).slice(0,7);
       if (found!==false) for (const bl of cand){ const C=analyzeShapes(bl.g).filter(x=>x.n>=1 && x.id!==bl.id); if (C.length){ found={bl, cl:pickWeighted(C,x=>shapeWeight(x.id,d))}; break; } }
       if (found){ ids.push(found.bl.id, found.cl.id); gAfter=found.cl.g; builder=null; }
-      else { builder=pickWeighted(B, x=>shapeWeight(x.id,d)*(x.exact?2:1)*(1+x.touch/Math.max(1,x.per))); ids.push(builder.id); gAfter=builder.g; }
+      else { builder=pickWeighted(B, x=>shapeWeight(x.id,d)*(x.exact?2:1)*(1+x.touch/Math.max(1,x.per))*keyW(x,dn)); ids.push(builder.id); gAfter=builder.g; }
     } else if (Math.random()<pChain && (chainC=analyzeShapes(gAfter).filter(x=>x.n>=1 && !ids.includes(x.id) && (!easyMode || Aid.has(x.id)))).length){
       // Kette: der Aufbauer räumt auf dem Feld nach dem Vollender selbst wieder eine Reihe
       const C=chainC;
-      builder=pickWeighted(C, x=>shapeWeight(x.id,d)*(x.exact?1.8:1)*(x.n>=2?1.5:1)*x.size);
+      builder=pickWeighted(C, x=>shapeWeight(x.id,d)*(x.exact?1.8:1)*(x.n>=2?1.5:1)*x.size*keyW(x,dn));
       ids.push(builder.id); gAfter=builder.g;
     } else {
       const wantBig=!tight && Math.random()<pBig;
-      builder=pickWeighted(B, x=>shapeWeight(x.id,d)*(x.exact?(tight?2.5:1.5+warm):1)*(1+x.touch/Math.max(1,x.per))*(wantBig? (x.size>=4?2:0.6) : (tight? (x.size<=3?1.8:0.8):1))*(1+0.35*nearLines(x.g)));
+      builder=pickWeighted(B, x=>shapeWeight(x.id,d)*(x.exact?(tight?2.5:1.5+warm):1)*(1+x.touch/Math.max(1,x.per))*(wantBig? (x.size>=4?2:0.6) : (tight? (x.size<=3?1.8:0.8):1))*(1+0.35*nearLines(x.g))*keyW(x,dn));
       ids.push(builder.id); gAfter=builder.g;
     }
     // 3) Joker – legbar jetzt oder spätestens nach den beiden anderen; mit steigender Schwierigkeit
     //    darf der Joker auch mal (noch) nicht passen – das ist die eigentliche Herausforderung
     let deadJoker=false;
-    const pDead = (gift||tight||sinceClear>=3||playTime<GRACE||sk<0.25) ? 0 : Math.max(0, dn-0.3)*0.7+0.25*late;   // nie bei Spielern, die sich schwertun
+    const pDead = (gift||tight||sinceClear>=3||playTime<GRACE||sk<0.25) ? 0 : (Math.max(0, dn-0.3)*0.7+0.25*late)*0.75;   // nie bei Spielern, die sich schwertun
     while (ids.length<3){
       // Joker: für Spieler, die sich schwertun, immer sofort legbar; sonst spätestens nach den beiden anderen
       const J=(sk<0.4 || dn<0.5) ? A.filter(x=>!ids.includes(x.id)) : analyzeShapes(gAfter).filter(x=>!ids.includes(x.id));
@@ -1198,12 +1214,17 @@ function newSet(){
       if (dead.length && Math.random()<pDead){ ids.push(pickWeighted(dead, id=>shapeWeight(id,d))); deadJoker=true; continue; }
       const pool = J.length ? J : A.filter(x=>!ids.includes(x.id));
       if (!pool.length) break;
+      if (ids.length && Math.random()<pTwin){
+        // gleiche Form noch einmal, wenn sie nach den anderen Steinen (und sofort) wieder genau passt
+        const T=analyzeShapes(gAfter).filter(x=>ids.includes(x.id) && x.size>=3 && Aid.has(x.id) && (x.n>=1 || x.key));
+        if (T.length){ const j=pickWeighted(T, x=>x.size*(x.n>=1?2:1)); ids.push(j.id); gAfter=j.g; continue; }
+      }
       if (warm>0 && Math.random()<pChain){
         // Aufwärmphase: Joker passt auf das Feld nach den anderen Steinen – am liebsten räumend oder genau in eine Lücke
         const W=analyzeShapes(gAfter).filter(x=>!ids.includes(x.id) && Aid.has(x.id));   // passt auch sofort – egal in welcher Reihenfolge gelegt wird
-        if (W.length){ const j=pickWeighted(W, x=>shapeWeight(x.id,d)*(x.n>=1?4:1)*(x.exact?2:1)*(1+x.touch/Math.max(1,x.per))); ids.push(j.id); gAfter=j.g; continue; }
+        if (W.length){ const j=pickWeighted(W, x=>shapeWeight(x.id,d)*(x.n>=1?4:1)*(x.exact?2:1)*(1+x.touch/Math.max(1,x.per))*keyW(x,dn)); ids.push(j.id); gAfter=j.g; continue; }
       }
-      ids.push(pickWeighted(pool, x=>shapeWeight(x.id,d)).id);
+      ids.push(pickWeighted(pool, x=>shapeWeight(x.id,d)*keyW(x,dn)).id);
     }
     if (ids.length<3) break;
     const cand=ids.map(id=>mkPiece(id,d)).sort(()=>Math.random()-.5);
@@ -1680,7 +1701,7 @@ function place(i,r,c){
     combo = sinceClear<3 ? combo+1 : 1;
     sinceClear=0;
     const base=linePoints(n);             // 1:10, 2:50, 3:150, 4:300, 5:500, 6:750 … (Anzeige ×10)
-    const comboMul=1+0.5*(combo-1);       // ×1, ×1.5, ×2 …
+    const comboMul=Math.min(4, 1+0.5*(combo-1));   // ×1, ×1.5, ×2 … höchstens ×4 (ab Combo 7)
     const quickMul=quick?1.5:1;
     gain += Math.round(base*comboMul*quickMul);
     let starHits=0; cleared.forEach((_,k)=>{ if (stars.has(k)){ starHits++; stars.delete(k); } });
@@ -1688,7 +1709,7 @@ function place(i,r,c){
     cleared.forEach((_,k)=>grid[k]=null);
     const names=['','','Doppel!','Dreifach!','Vierfach!','Mega!'];
     lines.push(n>=2 ? (names[Math.min(n,5)]) : 'Reihe!');
-    if (combo>1) lines.push('Serie ×'+comboMul.toString().replace('.',','));
+    if (combo>1) lines.push('Combo '+combo+' ×'+comboMul.toString().replace('.',','));
     if (quick) lines.push('Blitz ×1,5');
     if (grid.every(v=>v===null)){ gain+=CLEAR_BONUS; lines.push(`Feld leer! +${showGain(CLEAR_BONUS)}`); boardCleared=true; skinBump++; applySkin(true); }
   }
@@ -1710,12 +1731,18 @@ function place(i,r,c){
     cb.classList.remove('show'); void cb.offsetWidth; cb.classList.add('show');
     if (boardCleared){ celebrate(); setTimeout(()=>SND.clear(),260); }
     if (n>=2) playFx(n, rows, cols, cleared);
+    if (combo>=5 && combo%5===0) comboBig(combo);
   }
   setScore(score+gain);
   let fresh=false;
   if (pieces.every(x=>!x)){ pieces=newSet(); fresh=true; }
   renderTray(fresh); persist();
   checkOver();
+}
+/* Combo-Meilenstein (5, 10, 15 …): kurz groß über dem Feld */
+function comboBig(c){
+  const el=document.createElement('div'); el.className='cbig'; el.innerHTML='<span>Combo</span><b>'+c+'</b>';
+  wrapEl.appendChild(el); setTimeout(()=>{ try{ SND.star(); }catch(e){} },120); setTimeout(()=>el.remove(),1300);
 }
 /* Mehrfach-Abräumer: kurze, wechselnde Effekte (max. ~0,6 s) */
 const fxEl=$('fx'), wrapEl=boardEl.parentElement;
