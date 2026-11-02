@@ -1026,8 +1026,8 @@ function celebrate(bonus){
   clearTimeout(celebTimer); box.querySelectorAll('.spark,.cbonus,.cwave2').forEach(e=>e.remove());
   const bk=birthdayNow(); const name= bk ? bk.name : CELEB_NAMES[celebIdx%CELEB_NAMES.length];
   celebIdx=(celebIdx+1)%CELEB_NAMES.length; save('jemrix-celeb',celebIdx);
-  nm.innerHTML=''; nm.setAttribute('aria-label',name);
-  [...name].forEach((ch,i)=>{ const sp=document.createElement('span'); sp.className='ch'; sp.style.setProperty('--i',i); sp.textContent=ch; sp.setAttribute('aria-hidden','true'); nm.appendChild(sp); });
+  nm.innerHTML=''; 
+  // Namen werden nicht mehr eingeblendet (nur Bonus, Funken und Welle)
   nm.classList.remove('go'); void nm.offsetWidth; nm.classList.add('go'); box.classList.add('on');
   const cols=['#9fd8ff','#38bdf8','#ffffff','#6c7dff','#c9e3ff'];
   for (let k=0;k<14;k++){ const sp=document.createElement('i'); sp.className='spark'; const a=(k/14)*Math.PI*2+Math.random()*.3, d=80+Math.random()*60;

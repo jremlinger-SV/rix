@@ -462,7 +462,7 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='02.11.2026, 23:33';   // wird beim Bauen gefüllt
+const APP_VERSION='02.11.2026, 23:34';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -999,8 +999,8 @@ function celebrate(bonus){
   clearTimeout(celebTimer); box.querySelectorAll('.spark,.cbonus,.cwave2').forEach(e=>e.remove());
   const bk=birthdayNow(); const name= bk ? bk.name : CELEB_NAMES[celebIdx%CELEB_NAMES.length];
   celebIdx=(celebIdx+1)%CELEB_NAMES.length; save('jemrix-celeb',celebIdx);
-  nm.innerHTML=''; nm.setAttribute('aria-label',name);
-  [...name].forEach((ch,i)=>{ const sp=document.createElement('span'); sp.className='ch'; sp.style.setProperty('--i',i); sp.textContent=ch; sp.setAttribute('aria-hidden','true'); nm.appendChild(sp); });
+  nm.innerHTML=''; 
+  // Namen werden nicht mehr eingeblendet (nur Bonus, Funken und Welle)
   nm.classList.remove('go'); void nm.offsetWidth; nm.classList.add('go'); box.classList.add('on');
   const cols=['#9fd8ff','#38bdf8','#ffffff','#6c7dff','#c9e3ff'];
   for (let k=0;k<14;k++){ const sp=document.createElement('i'); sp.className='spark'; const a=(k/14)*Math.PI*2+Math.random()*.3, d=80+Math.random()*60;
