@@ -386,11 +386,11 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
 /* ===== JJE_arki: helles Blau wie JJE_blocks, dunkles Spielfeld darauf ===== */
 :root:root:root:root{--bg:#cfdff7;--panel:#eef4ff;--fg:#0f1d3d;--muted:#4f6290;--accent:#2563eb;--score-mix:#0b1a45;--score-edge:#ffffff;color-scheme:light}
 html{background:#cfdff7!important}
-body{background:radial-gradient(ellipse at 50% 22%,#e6effd 0%,#cfdff7 52%,#b9cdf1 100%)!important}
+body{background:#cfdff7!important}   /* einfarbig: kein Verlauf am oberen und unteren Rand */
 @media (prefers-color-scheme: dark){
-  :root:root:root:root{--bg:#0f1b3f;--panel:#16244d;--fg:#e8f0ff;--muted:#8fa3d1;--accent:#4d9bff;--score-mix:#ffffff;--score-edge:#0c1328;color-scheme:dark}
-  html{background:#0f1b3f!important}
-  body{background:radial-gradient(ellipse at 50% 30%,#1b2f66 0%,#0f1b3f 58%,#0a1330 100%)!important}
+  :root:root:root:root{--bg:#0c1328;--panel:#16244d;--fg:#e8f0ff;--muted:#8fa3d1;--accent:#4d9bff;--score-mix:#ffffff;--score-edge:#0c1328;color-scheme:dark}
+  html,body{background:#0c1328!important}   /* gleiche Farbe wie die Statusleiste: oben und unten ohne Kante */
+  .mscore #score{color:#eef5ff;-webkit-text-stroke:.07em #0c1328;text-shadow:0 0 14px rgba(77,155,255,.65),0 2px 0 #1d4ed8}
 }
 .msub b.mode{color:var(--accent)}
 .msub{display:inline-flex;align-items:center;gap:4px}
@@ -497,7 +497,7 @@ body.gameover .afoot .top2{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='02.11.2026, 22:18';   // wird beim Bauen gefüllt
+const APP_VERSION='02.11.2026, 23:30';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
