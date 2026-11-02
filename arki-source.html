@@ -357,6 +357,7 @@ body{background:radial-gradient(ellipse at 50% 22%,#e6effd 0%,#cfdff7 52%,#b9cdf
 .lives{display:inline-flex;gap:3px;align-items:center;min-height:9px}
 .lives i{display:block;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0 22%,#9fd8ff 55%,#2f6bff);box-shadow:0 0 0 1px rgba(47,107,255,.25)}
 .play{touch-action:none;-webkit-user-select:none;user-select:none}
+body.playing,body.playing .app{touch-action:none}   /* im Spiel: ganze Fläche ist Wischfläche, nichts scrollt oder zoomt */
 #cv{cursor:default}
 .foot.tfoot.afoot{display:flex!important;justify-content:center!important;padding-top:6px}
 .afoot .top2{flex-wrap:nowrap;justify-content:center}
@@ -989,11 +990,11 @@ function moveBall(b,dt){
   }
 }
 
-/* ===================== Bedienung: überall auf dem Feld wischen, tippen startet ===================== */
-const playEl=$('play');
+/* ===================== Bedienung: der ganze Bildschirm unter dem Kopf ist Wischfläche (auch Fußzeile und Rand unten), tippen startet ===================== */
+const playEl=document;
 playEl.addEventListener('pointerdown',e=>{
-  if (!canPlay() || e.target.closest('.pause,.over')) return; e.preventDefault();
-  try{ playEl.setPointerCapture(e.pointerId); }catch(_){}
+  if (!canPlay() || !e.target.closest || e.target.closest('header,.pause,.over,.bday,button,a,input')) return; e.preventDefault();
+  try{ e.target.setPointerCapture(e.pointerId); }catch(_){}
   tp={id:e.pointerId,x0:e.clientX,y0:e.clientY,lx:e.clientX,t0:performance.now(),moved:0};
 },{passive:false});
 playEl.addEventListener('pointermove',e=>{
