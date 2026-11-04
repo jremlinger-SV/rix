@@ -733,6 +733,17 @@ header .stats{gap:10px}
 .fscan .fs-emb .er2{fill:none;stroke:rgba(159,216,255,.55);stroke-width:1;stroke-dasharray:3 4}
 .fscan .fs-emb rect{stroke:rgba(255,255,255,.75);stroke-width:1.2;filter:drop-shadow(0 0 5px rgba(95,210,255,.9));transform-box:fill-box;transform-origin:center;transform:scale(0)}
 .fscan.ok .fs-emb{opacity:1;transform:scale(1)}
+/* Highscore-Hinweis auf dem Erkannt-Bildschirm: neue Nr. 1 eines anderen Spielers seit dem letzten Öffnen (goldener HUD-Streifen, Krone fällt ein) */
+.fscan .fs-hsn{margin-top:22px;position:relative;padding:12px 22px;display:flex;align-items:center;gap:14px;border-top:1px solid rgba(255,216,77,.45);border-bottom:1px solid rgba(255,216,77,.45);background:linear-gradient(90deg,transparent,rgba(255,216,77,.10),transparent);opacity:0;animation:fshsn .5s ease-out forwards}
+.fscan .fs-hsn .cr{width:38px;height:38px;flex:none;display:block;animation:fscrdrop .7s cubic-bezier(.2,.9,.3,1.3) .15s both,fscrglow 1.6s ease-in-out .85s infinite}
+.fscan .fs-hsn .cr svg{width:100%;height:100%;display:block}
+.fscan .fs-hsn .t{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0}
+.fscan .fs-hsn small{font-family:"Unbounded",var(--display);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#ffd84d}
+.fscan .fs-hsn b{font-family:"Unbounded",var(--display);font-weight:800;font-size:17px;color:#fff;letter-spacing:.02em;margin-top:3px;white-space:nowrap}
+.fscan .fs-hsn span{font-size:12px;color:#bfeaff;letter-spacing:.08em;margin-top:2px;font-weight:700;white-space:nowrap}
+@keyframes fshsn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fscrdrop{0%{opacity:0;transform:translateY(-40px) rotate(-25deg) scale(.4)}60%{opacity:1;transform:translateY(4px) rotate(8deg) scale(1.12)}100%{opacity:1;transform:none}}
+@keyframes fscrglow{0%,100%{filter:drop-shadow(0 0 6px rgba(255,216,77,.7))}50%{filter:drop-shadow(0 0 16px rgba(255,216,77,1))}}
 /* Passed-Screen: Bühne und Fortschritt weg, nur Emblem und große Schrift */
 .fscan .fs-stage,.fscan .fs-bot,.fscan .fs-top{transition:opacity .35s ease,transform .45s ease}
 .fscan.ok .fs-stage{opacity:0;transform:scale(.82)}
@@ -929,7 +940,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='04.11.2026, 22:38';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='04.11.2026, 22:59';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -2175,11 +2186,43 @@ markLeader();
 
 /* Kino-Intro: 6 Sekunden Aufbau, danach geht es per Tipp ins Spiel */
 
+/* Highscore-Hinweis: Platz 1 je Spiel (und Schwierigkeit) mit dem Stand beim letzten Öffnen vergleichen.
+   Gemeldet wird nur eine höhere Nr. 1 eines anderen Spielers; der erste Start merkt sich nur den Stand. */
+const HS_GAMES=[['blocks','JJE_blocks'],['mah','JJE_mahjong'],['tet','JJE_tetris'],['ark','JJE_arki'],['snk','JJE_snake']];
+function hsRefreshAll(){
+  const jobs=[Promise.resolve(typeof fetchScores==='function' ? fetchScores() : null).catch(()=>null)];
+  ['mah','tet','ark','snk'].forEach(g=>jobs.push(fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk'}[g])
+    .then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; } }).catch(()=>null)));
+  return Promise.race([Promise.all(jobs), new Promise(r=>setTimeout(r,4500))]);
+}
+function hsLeaders(){
+  const out={};
+  HS_GAMES.forEach(([g,title])=>{ (g==='tet'||g==='ark'||g==='snk' ? Object.keys(HS_TL) : [null]).forEach(m=>{
+    try{ const d=hsData(g,m), r=d.rows[0]; if (r && r.score>0) out[g+(m?':'+m:'')]={name:clean(r.name), score:r.score, txt:d.fmt(r.score), game:title, mode:m?HS_TL[m]:''}; }catch(e){} }); });
+  return out;
+}
+function hsOwnName(){   // wer auf diesem iPhone spielt: der Name mit den meisten eigenen Ergebnissen
+  const cnt=new Map();
+  ['jemrix-scores','jenmah-lv-scores','jjetet-scores','jjeark-scores','jjesnk-scores'].forEach(k=>{ const a=load(k,[]); if (Array.isArray(a)) a.forEach(e=>{ if (e && e.name){ const n=clean(e.name).toLowerCase(); cnt.set(n,(cnt.get(n)||0)+1); } }); });
+  ['jemrix-name','jenmah-name','jjetet-name','jjeark-name','jjesnk-name'].forEach(k=>{ const n=clean(load(k,'')).toLowerCase(); if (n) cnt.set(n,(cnt.get(n)||0)+3); });
+  let best='', bn=0; cnt.forEach((v,k)=>{ if (v>bn){ bn=v; best=k; } });
+  if (best) save('jje-own-name',best); else best=String(load('jje-own-name','')||'');   // nach einem Monats-Reset sind die Listen leer – Name gemerkt
+  return best;
+}
+function hsNews(){
+  const prev=load('jje-seen-leaders',null), now=hsLeaders(), own=hsOwnName();
+  const snap={}; Object.entries(now).forEach(([k,v])=>snap[k]={n:v.name.toLowerCase(), s:v.score});
+  if (prev && typeof prev==='object') Object.entries(prev).forEach(([k,v])=>{ if (!snap[k] && v) snap[k]=v; });   // Liste gerade leer (Monats-Reset): alten Stand nicht als neu werten
+  save('jje-seen-leaders', snap);
+  if (!prev || typeof prev!=='object') return [];
+  return Object.entries(now).filter(([k,v])=>{ const p=prev[k]; if (v.name.toLowerCase()===own) return false; return !p || v.score>p.s || v.name.toLowerCase()!==p.n; })
+    .map(([,v])=>v).sort((a,b)=>HS_GAMES.findIndex(x=>x[1]===a.game)-HS_GAMES.findIndex(x=>x[1]===b.game));
+}
 /* Gesichtsscan nach dem Intro – nur Show (keine Kamera), jede Anmeldung wird bestätigt. faceScan() legt den Bildschirm sofort an,
    die zurückgegebene Funktion wartet das Ende ab und ruft dann done() */
 function faceScan(){
   // läuft bewusst immer animiert – auch bei „Bewegung reduzieren“ (sonst bleibt nur ein Standbild)
-  const T_OK=3200, T_END=T_OK+3200;   // Scan 3,2 s, danach „Remlinger erkannt“ groß auf leerem Bildschirm   // Uhr läuft erst, wenn das Intro ganz weg ist
+  const T_OK=3200; let T_END=T_OK+3200;   // Scan 3,2 s, danach „Remlinger erkannt“ groß auf leerem Bildschirm   // Uhr läuft erst, wenn das Intro ganz weg ist
   const o=document.createElement('div'); o.className='fscan'; o.setAttribute('role','status'); o.setAttribute('aria-label','Gesichtsscan');
   let ticks=''; for (let i=0;i<72;i++){ const lg=i%6===0; ticks+=`<line x1="150" y1="${lg?4:8}" x2="150" y2="16" transform="rotate(${i*5} 150 150)" stroke="${lg?'#9fd8ff':'rgba(95,210,255,.45)'}" stroke-width="${lg?2:1}"/>`; }
   const cube=(x,y,s,c1,c2,c3)=>`<g class="fs-cube"><polygon points="${x},${y-s} ${x+s*.87},${y-s/2} ${x},${y} ${x-s*.87},${y-s/2}" fill="${c1}"/><polygon points="${x-s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x-s*.87},${y+s/2}" fill="${c2}"/><polygon points="${x+s*.87},${y-s/2} ${x},${y} ${x},${y+s} ${x+s*.87},${y+s/2}" fill="${c3}"/></g>`;
@@ -2209,6 +2252,21 @@ function faceScan(){
     requestAnimationFrame(step); setTimeout(()=>w.classList.add('glitch'),1500);
   };
   let t0=null, ok=false, ended=false, cb=null, raf=0, safety=0;
+  // Highscore-Hinweis: Listen aller Spiele frisch holen, solange der Scan läuft; erscheint nach „Zugang freigegeben“
+  let news=null, newsShown=false;
+  hsRefreshAll().then(()=>{ news=hsNews(); if (ok) showNews(); }, ()=>{ news=hsNews(); if (ok) showNews(); });
+  const showNews=()=>{
+    if (newsShown || ended || !news || !news.length) return; newsShown=true;
+    const n=news[0], el=document.createElement('div'); el.className='fs-hsn'; el.setAttribute('role','status');
+    el.innerHTML=`<i class="cr" aria-hidden="true">${CROWN}</i><div class="t"><small>Neuer Highscore</small><b></b><span></span></div>`;
+    el.querySelector('b').textContent=n.name+' · '+n.txt;
+    el.querySelector('span').textContent=n.game+(n.mode?' · '+n.mode:'')+(news.length>1?' · +'+(news.length-1)+' weitere':'');
+    q('.fs-pass').appendChild(el);
+    el.style.animationDelay=(t0!==null && performance.now()-t0<T_OK+1600 ? 1.7 : 0)+'s';
+    T_END=Math.max(T_END, Math.max(T_OK, t0!==null ? performance.now()-t0 : T_OK)+5000);   // länger stehen lassen, damit man es lesen kann
+    clearTimeout(safety); safety=setTimeout(finish, T_END+2500);
+    setTimeout(()=>{ try{ SND.star(); }catch(e){} }, 1800);
+  };
   const finish=()=>{ if (ended) return; ended=true; cancelAnimationFrame(raf); clearTimeout(safety); o.classList.add('out'); setTimeout(()=>o.remove(),460); if (cb) cb(); };
   const tick=()=>{
     raf=requestAnimationFrame(tick);
@@ -2216,7 +2274,7 @@ function faceScan(){
     const t=performance.now()-t0, k=Math.min(1,t/T_OK);
     bar.style.width=(k*100)+'%'; pct.textContent=ok ? '100 %' : Math.round(k*100)+' %';
     if (!ok){ st.textContent=STEPS[Math.min(STEPS.length-1,Math.floor(k*STEPS.length))]; if (Math.random()<.4){ h1.textContent=hex(); h2.textContent=hex(); } }
-    if (!ok && t>=T_OK){ ok=true; o.classList.add('ok'); st.textContent='Identität bestätigt'; try{ SND.plop(2); }catch(e){} decrypt(); }
+    if (!ok && t>=T_OK){ ok=true; o.classList.add('ok'); st.textContent='Identität bestätigt'; try{ SND.plop(2); }catch(e){} decrypt(); showNews(); }
     if (t>=T_END) finish();
   };
   raf=requestAnimationFrame(tick);
