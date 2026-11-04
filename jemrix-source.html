@@ -694,8 +694,8 @@ header .stats{gap:10px}
 .fscan .fs-emb rect{stroke:rgba(255,255,255,.75);stroke-width:1.2;filter:drop-shadow(0 0 5px rgba(95,210,255,.9));transform-box:fill-box;transform-origin:center;transform:scale(0)}
 .fscan.ok .fs-emb{opacity:1;transform:scale(1)}
 /* Highscore-Hinweis auf dem Erkannt-Bildschirm: neue Nr. 1 eines anderen Spielers seit dem letzten Öffnen (goldener HUD-Streifen, Krone fällt ein) */
-.fscan .fs-hsn{margin-top:22px;position:relative;padding:12px 22px;display:flex;align-items:center;gap:14px;border-top:1px solid rgba(255,216,77,.45);border-bottom:1px solid rgba(255,216,77,.45);background:linear-gradient(90deg,transparent,rgba(255,216,77,.10),transparent);opacity:0;animation:fshsn .5s ease-out forwards}
-.fscan .fs-hsn .cr{width:38px;height:38px;flex:none;display:block;animation:fscrdrop .7s cubic-bezier(.2,.9,.3,1.3) .15s both,fscrglow 1.6s ease-in-out .85s infinite}
+.fscan .fs-hsn{margin-top:22px;position:relative;padding:12px 22px;display:flex;align-items:center;gap:14px;border-top:1px solid rgba(255,216,77,.45);border-bottom:1px solid rgba(255,216,77,.45);background:linear-gradient(90deg,transparent,rgba(255,216,77,.10),transparent);opacity:0;--d:0s;animation:fshsn .5s ease-out var(--d) forwards}
+.fscan .fs-hsn .cr{width:38px;height:38px;flex:none;display:block;animation:fscrdrop .7s cubic-bezier(.2,.9,.3,1.3) calc(var(--d) + .15s) both,fscrglow 1.6s ease-in-out calc(var(--d) + .85s) infinite}
 .fscan .fs-hsn .cr svg{width:100%;height:100%;display:block}
 .fscan .fs-hsn .t{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0}
 .fscan .fs-hsn small{font-family:"Unbounded",var(--display);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#ffd84d}
@@ -2066,7 +2066,7 @@ function champCheck(){ try{
   const key='blocks', t=topList().rows[0]; if (!t || !(t.score>0)) return;
   let s=load('jje-seen-leaders',null); if (!s || typeof s!=='object' || Array.isArray(s)) s={};
   const p=s[key], n=clean(t.name).toLowerCase();
-  if (!p || t.score>p.s || n!==p.n){ if (p || !load('jje-last-champ',null)) save('jje-last-champ',{n:clean(t.name),at:Date.now()}); s[key]={n,s:t.score}; save('jje-seen-leaders',s); }
+  if (!p || t.score!==p.s || n!==p.n){ if (p || !load('jje-last-champ',null)) save('jje-last-champ',{n:clean(t.name),at:Date.now()}); s[key]={n,s:t.score}; save('jje-seen-leaders',s); }
 }catch(e){} }
 function leaderName(){ const c=load('jje-last-champ',null); if (c && c.n) return clean(c.n); const r=topList().rows; return r.length && r[0].score>0 ? clean(r[0].name) : ''; }
 function markLeader(){
@@ -2160,17 +2160,19 @@ function hsOwnName(){   // wer auf diesem iPhone spielt: der Name mit den meiste
   if (best) save('jje-own-name',best); else best=String(load('jje-own-name','')||'');   // nach einem Monats-Reset sind die Listen leer – Name gemerkt
   return best;
 }
-function hsNews(){
-  const prev=load('jje-seen-leaders',null), now=hsLeaders(), own=hsOwnName();
+function hsNews(){   // liefert {list, commit}: der Stand wird erst mit commit() gemerkt – so geht kein Hinweis verloren, wenn der Bildschirm übersprungen wird
+  let prev=load('jje-news-seen',null); if (!prev || typeof prev!=='object' || Array.isArray(prev)) prev=null;
+  const now=hsLeaders(), own=hsOwnName();
   const snap={}; Object.entries(now).forEach(([k,v])=>snap[k]={n:v.name.toLowerCase(), s:v.score});
-  if (prev && typeof prev==='object') Object.entries(prev).forEach(([k,v])=>{ if (!snap[k] && v) snap[k]=v; });   // Liste gerade leer (Monats-Reset): alten Stand nicht als neu werten
-  save('jje-seen-leaders', snap);
-  if (!prev || typeof prev!=='object') return [];
-  const changed=Object.entries(now).filter(([k,v])=>{ const p=prev[k]; return !p || v.score>p.s || v.name.toLowerCase()!==p.n; }).map(([,v])=>v)
+  if (prev) Object.entries(prev).forEach(([k,v])=>{ if (!snap[k] && v) snap[k]=v; });   // Liste gerade leer (Monats-Reset): alten Stand behalten
+  const commit=()=>save('jje-news-seen', snap);
+  if (!prev){ commit(); return {list:[], commit}; }
+  const changed=Object.entries(now).filter(([k,v])=>{ const p=prev[k]; return !p || v.score!==p.s || v.name.toLowerCase()!==p.n; }).map(([,v])=>v)
     .sort((a,b)=>HS_GAMES.findIndex(x=>x[1]===a.game)-HS_GAMES.findIndex(x=>x[1]===b.game));
   const others=changed.filter(v=>v.name.toLowerCase()!==own);
   const champ=others[0]||changed[0]; if (champ){ save('jje-last-champ',{n:champ.name,at:Date.now()}); try{ markLeader(); }catch(e){} }   // Krone wandert zum neuesten Rekordhalter
-  return others;
+  if (!others.length) commit();
+  return {list:others, commit};
 }
 /* Gesichtsscan nach dem Intro – nur Show (keine Kamera), jede Anmeldung wird bestätigt. faceScan() legt den Bildschirm sofort an,
    die zurückgegebene Funktion wartet das Ende ab und ruft dann done() */
@@ -2208,18 +2210,20 @@ function faceScan(){
   let t0=null, ok=false, ended=false, cb=null, raf=0, safety=0;
   // Highscore-Hinweis: Listen aller Spiele frisch holen, solange der Scan läuft; erscheint nach „Zugang freigegeben“
   let news=null, newsShown=false;
-  hsRefreshAll().then(()=>{ news=hsNews(); if (ok) showNews(); }, ()=>{ news=hsNews(); if (ok) showNews(); });
+  const gotNews=()=>{ if (ended) return; try{ news=hsNews(); }catch(e){ news=null; } if (ok) showNews(); };
+  hsRefreshAll().then(gotNews, gotNews);
   const showNews=()=>{
-    if (newsShown || ended || !news || !news.length) return; newsShown=true;
-    const n=news[0], el=document.createElement('div'); el.className='fs-hsn'; el.setAttribute('role','status');
+    if (newsShown || ended || !news || !news.list.length) return; newsShown=true;
+    const all=news.list, n=all[0], el=document.createElement('div'); el.className='fs-hsn'; el.setAttribute('role','status');
     el.innerHTML=`<i class="cr" aria-hidden="true">${CROWN}</i><div class="t"><small>Neuer Highscore</small><b></b><span></span></div>`;
     el.querySelector('b').textContent=n.name+' · '+n.txt;
-    el.querySelector('span').textContent=n.game+(n.mode?' · '+n.mode:'')+(news.length>1?' · +'+(news.length-1)+' weitere':'');
+    el.querySelector('span').textContent=n.game+(n.mode?' · '+n.mode:'')+(all.length>1?' · +'+(all.length-1)+' weitere':'');
     q('.fs-pass').appendChild(el);
-    el.style.animationDelay=(t0!==null && performance.now()-t0<T_OK+1600 ? 1.7 : 0)+'s';
+    el.style.setProperty('--d',(t0!==null && performance.now()-t0<T_OK+1600 ? 1.7 : 0)+'s');
     T_END=Math.max(T_END, Math.max(T_OK, t0!==null ? performance.now()-t0 : T_OK)+5000);   // länger stehen lassen, damit man es lesen kann
     clearTimeout(safety); safety=setTimeout(finish, T_END+2500);
-    setTimeout(()=>{ try{ SND.star(); }catch(e){} }, 1800);
+    setTimeout(()=>{ try{ if (!ended) SND.star(); }catch(e){} }, parseFloat(el.style.getPropertyValue('--d'))*1000+300);
+    setTimeout(()=>{ if (!ended) news.commit(); }, parseFloat(el.style.getPropertyValue('--d'))*1000+1200);   // erst als gesehen merken, wenn er wirklich zu lesen war
   };
   const finish=()=>{ if (ended) return; ended=true; cancelAnimationFrame(raf); clearTimeout(safety); o.classList.add('out'); setTimeout(()=>o.remove(),460); if (cb) cb(); };
   const tick=()=>{

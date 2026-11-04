@@ -1212,7 +1212,7 @@ function champCheck(){ try{
   const key='tet:'+mode, t=topList().rows[0]; if (!t || !(t.score>0)) return;
   let s=load('jje-seen-leaders',null); if (!s || typeof s!=='object' || Array.isArray(s)) s={};
   const p=s[key], n=clean(t.name).toLowerCase();
-  if (!p || t.score>p.s || n!==p.n){ if (p || !load('jje-last-champ',null)) save('jje-last-champ',{n:clean(t.name),at:Date.now()}); s[key]={n,s:t.score}; save('jje-seen-leaders',s); }
+  if (!p || t.score!==p.s || n!==p.n){ if (p || !load('jje-last-champ',null)) save('jje-last-champ',{n:clean(t.name),at:Date.now()}); s[key]={n,s:t.score}; save('jje-seen-leaders',s); }
 }catch(e){} }
 function leaderName(){ const c=load('jje-last-champ',null); if (c && c.n) return clean(c.n); const r=topList().rows; return r.length && r[0].score>0 ? clean(r[0].name) : ''; }
 function markLeader(){

@@ -503,7 +503,7 @@ body.gameover .afoot .top2{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='04.11.2026, 23:03';   // wird beim Bauen gefüllt
+const APP_VERSION='04.11.2026, 23:09';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -1362,7 +1362,7 @@ function champCheck(){ try{
   const key='snk:'+mode, t=topList().rows[0]; if (!t || !(t.score>0)) return;
   let s=load('jje-seen-leaders',null); if (!s || typeof s!=='object' || Array.isArray(s)) s={};
   const p=s[key], n=clean(t.name).toLowerCase();
-  if (!p || t.score>p.s || n!==p.n){ if (p || !load('jje-last-champ',null)) save('jje-last-champ',{n:clean(t.name),at:Date.now()}); s[key]={n,s:t.score}; save('jje-seen-leaders',s); }
+  if (!p || t.score!==p.s || n!==p.n){ if (p || !load('jje-last-champ',null)) save('jje-last-champ',{n:clean(t.name),at:Date.now()}); s[key]={n,s:t.score}; save('jje-seen-leaders',s); }
 }catch(e){} }
 function leaderName(){ const c=load('jje-last-champ',null); if (c && c.n) return clean(c.n); const r=topList().rows; return r.length && r[0].score>0 ? clean(r[0].name) : ''; }
 function markLeader(){
