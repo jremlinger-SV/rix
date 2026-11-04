@@ -1320,13 +1320,22 @@ window.addEventListener('offline',updateNet);
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden) fetchScores(); });
 setInterval(()=>{ if (!document.hidden) fetchScores(); },60000);
 const CROWN='<svg class="crown" viewBox="0 0 24 24" aria-label="Platz 1"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 10H5z" fill="#ffd84d" stroke="#e6b800" stroke-width="1" stroke-linejoin="round"/><circle cx="3" cy="7.5" r="1.6" fill="#ffd84d"/><circle cx="12" cy="4.5" r="1.6" fill="#ffd84d"/><circle cx="21" cy="7.5" r="1.6" fill="#ffd84d"/><rect x="5" y="18.5" width="14" height="2" rx="1" fill="#e6b800"/></svg>';
-function leaderName(){ const r=topList().rows; return r.length && r[0].score>0 ? clean(r[0].name) : ''; }
+/* Krone am Namen: steht bei dem, der als Letztes irgendwo eine neue Nr. 1 geschafft hat – über alle JJE-Spiele (jje-last-champ) */
+function champCheck(){ try{
+  const key='ark:'+mode, t=topList().rows[0]; if (!t || !(t.score>0)) return;
+  let s=load('jje-seen-leaders',null); if (!s || typeof s!=='object' || Array.isArray(s)) s={};
+  const p=s[key], n=clean(t.name).toLowerCase();
+  if (!p || t.score>p.s || n!==p.n){ if (p || !load('jje-last-champ',null)) save('jje-last-champ',{n:clean(t.name),at:Date.now()}); s[key]={n,s:t.score}; save('jje-seen-leaders',s); }
+}catch(e){} }
+function leaderName(){ const c=load('jje-last-champ',null); if (c && c.n) return clean(c.n); const r=topList().rows; return r.length && r[0].score>0 ? clean(r[0].name) : ''; }
 function markLeader(){
+  champCheck();
   const lead=leaderName().toLowerCase();
   if (!$('reg').hidden) document.querySelectorAll('#quick button').forEach(b=>{ const has=b.querySelector('.crown'); const want=lead && (b.dataset.n||'').toLowerCase()===lead;
     if (want && !has) b.insertAdjacentHTML('afterbegin',CROWN); if (!want && has) has.remove(); });
 }
 function renderTop2(){
+  champCheck(); markLeader();
   if ($('over').hidden) updateLiveCrown();
   const box=$('top2'); box.innerHTML='';
   const rows=topList().rows.slice(0,2);

@@ -1999,7 +1999,7 @@ function recordScore(s){
   localScores.sort((a,b)=>b.score-a.score); localScores=localScores.slice(0,20);
   save('jemrix-scores',localScores);
   pending.push({name:player, score:s, at:Date.now()}); save('jemrix-pending',pending);
-  updateNet(); trySync(); renderTop2();
+  updateNet(); trySync(); renderTop2(); champCheck(); markLeader();
 }
 async function trySync(){
   if (syncing || !pending.length || !shared || !myId || !mineLoaded) return;
@@ -2061,8 +2061,16 @@ document.addEventListener('visibilitychange',()=>{ if (!document.hidden){ subscr
 setInterval(()=>{ if (pending.length){ subscribe(); trySync(); } },30000);
 const CROWN='<svg class="crown" viewBox="0 0 24 24" aria-label="Platz 1"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 10H5z" fill="#ffd84d" stroke="#e6b800" stroke-width="1" stroke-linejoin="round"/><circle cx="3" cy="7.5" r="1.6" fill="#ffd84d"/><circle cx="12" cy="4.5" r="1.6" fill="#ffd84d"/><circle cx="21" cy="7.5" r="1.6" fill="#ffd84d"/><rect x="5" y="18.5" width="14" height="2" rx="1" fill="#e6b800"/></svg>';
 /* Krone beim Führenden: im Intro über dem Namen und in der Namenswahl */
-function leaderName(){ const r=topList().rows; return r.length && r[0].score>0 ? clean(r[0].name) : ''; }
+/* Krone am Namen: steht bei dem, der als Letztes irgendwo eine neue Nr. 1 geschafft hat – über alle JJE-Spiele (jje-last-champ) */
+function champCheck(){ try{
+  const key='blocks', t=topList().rows[0]; if (!t || !(t.score>0)) return;
+  let s=load('jje-seen-leaders',null); if (!s || typeof s!=='object' || Array.isArray(s)) s={};
+  const p=s[key], n=clean(t.name).toLowerCase();
+  if (!p || t.score>p.s || n!==p.n){ if (p || !load('jje-last-champ',null)) save('jje-last-champ',{n:clean(t.name),at:Date.now()}); s[key]={n,s:t.score}; save('jje-seen-leaders',s); }
+}catch(e){} }
+function leaderName(){ const c=load('jje-last-champ',null); if (c && c.n) return clean(c.n); const r=topList().rows; return r.length && r[0].score>0 ? clean(r[0].name) : ''; }
 function markLeader(){
+  champCheck();
   const lead=leaderName().toLowerCase();
   const c=$('cine');
   if (c) c.querySelectorAll('.cine-names span').forEach(sp=>{
@@ -2158,8 +2166,11 @@ function hsNews(){
   if (prev && typeof prev==='object') Object.entries(prev).forEach(([k,v])=>{ if (!snap[k] && v) snap[k]=v; });   // Liste gerade leer (Monats-Reset): alten Stand nicht als neu werten
   save('jje-seen-leaders', snap);
   if (!prev || typeof prev!=='object') return [];
-  return Object.entries(now).filter(([k,v])=>{ const p=prev[k]; if (v.name.toLowerCase()===own) return false; return !p || v.score>p.s || v.name.toLowerCase()!==p.n; })
-    .map(([,v])=>v).sort((a,b)=>HS_GAMES.findIndex(x=>x[1]===a.game)-HS_GAMES.findIndex(x=>x[1]===b.game));
+  const changed=Object.entries(now).filter(([k,v])=>{ const p=prev[k]; return !p || v.score>p.s || v.name.toLowerCase()!==p.n; }).map(([,v])=>v)
+    .sort((a,b)=>HS_GAMES.findIndex(x=>x[1]===a.game)-HS_GAMES.findIndex(x=>x[1]===b.game));
+  const others=changed.filter(v=>v.name.toLowerCase()!==own);
+  const champ=others[0]||changed[0]; if (champ){ save('jje-last-champ',{n:champ.name,at:Date.now()}); try{ markLeader(); }catch(e){} }   // Krone wandert zum neuesten Rekordhalter
+  return others;
 }
 /* Gesichtsscan nach dem Intro – nur Show (keine Kamera), jede Anmeldung wird bestätigt. faceScan() legt den Bildschirm sofort an,
    die zurückgegebene Funktion wartet das Ende ab und ruft dann done() */
