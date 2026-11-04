@@ -416,6 +416,13 @@ body.gameover .afoot .top2{visibility:hidden}
 .caps i.rd{min-width:30px;height:4px;border-radius:2px;background:#ff4d5e;box-shadow:0 0 8px #ef4444}
 .play{align-items:center}
 #cv{touch-action:none}
+/* Netz-Hinweis: einzeilig oben im Spielfeld (nicht über Kopf und Knöpfen), kräftiger Kontrast in hell und dunkel */
+.netline{position:absolute!important;top:8px!important;bottom:auto!important;left:50%;transform:translateX(-50%);z-index:9;max-width:calc(100% - 24px);box-sizing:border-box;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--body);font-size:.74rem!important;font-weight:800;letter-spacing:.01em;line-height:1.3;
+  padding:5px 12px 5px 10px!important;border-radius:999px;color:#eaf3ff!important;background:rgba(7,12,31,.82)!important;box-shadow:0 0 0 1px rgba(159,216,255,.28),0 4px 12px rgba(1,4,16,.35)!important;
+  display:flex;align-items:center;gap:7px}
+.netline::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#ffd84d;box-shadow:0 0 6px #ffd84d}
+.netline.sync::before{background:#5fe0a8;box-shadow:0 0 6px #5fe0a8}
 </style>
 
 <div class="app">
@@ -444,6 +451,7 @@ body.gameover .afoot .top2{visibility:hidden}
         <div class="fx" id="fx"></div>
         <div class="celebrate" id="celebrate" aria-live="polite"><span class="nm" id="celebname"></span></div>
         <div class="lvl" id="lvl"></div>
+        <div class="netline" id="netline" hidden></div>
       </div>
       <div class="pause" id="pause" hidden role="dialog" aria-labelledby="pauseT">
         <h2 id="pauseT">Pause</h2>
@@ -494,7 +502,6 @@ body.gameover .afoot .top2{visibility:hidden}
       <div class="top2" id="top2" aria-label="Highscore Platz 1 und 2"></div>
     </div>
   </div>
-  <div class="netline" id="netline" hidden></div>
   <div class="rotate" id="rotate" aria-live="polite"><div class="rot-ph" aria-hidden="true"><i></i></div><b>Bitte hochkant halten</b><span>JJE_snake ist fürs Hochformat gemacht. Das Spiel pausiert so lange.</span></div>
   <footer class="family" id="family"><span class="bits" aria-hidden="true"><i></i><i></i><i></i></span><span>Achtung: nur für <b>Remlingers</b></span><span class="bits r" aria-hidden="true"><i></i><i></i><i></i></span></footer>
 </div>
@@ -503,7 +510,7 @@ body.gameover .afoot .top2{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='04.11.2026, 23:09';   // wird beim Bauen gefüllt
+const APP_VERSION='04.11.2026, 23:18';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -1338,7 +1345,8 @@ function updateNet(){
   const off=navigator.onLine===false || netOk===false, n=pending.length, el=$('netline');
   if (!n && !off){ el.hidden=true; return; }
   el.hidden=false;
-  el.textContent= off ? (n ? `Offline · ${n} Ergebnis${n>1?'se':''} gespeichert, wird später übertragen` : 'Offline · Ergebnisse werden lokal gespeichert') : `${n} Ergebnis${n>1?'se':''} wird übertragen …`;
+  el.classList.toggle('sync',!off);
+  el.textContent= off ? (n ? `Offline · ${n} Ergebnis${n>1?'se':''} gemerkt` : 'Offline · Ergebnisse werden gemerkt') : `${n} Ergebnis${n>1?'se':''} wird übertragen …`;
 }
 function topList(m){
   m=m||mode; const base=sharedRows ? sharedRows : (sharedCache || null);
