@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Baut die Web-App: index.html (Jemrix mit Intro und Spielauswahl) aus jemrix-source.html,
-jenmah.html (Mahjong) aus jenmah-source.html, tetris.html aus tetris-source.html, arki.html aus arki-source.html und sw.js (Offline-Speicher) aus sw.template.js.
+jenmah.html (Mahjong) aus jenmah-source.html, tetris.html aus tetris-source.html, arki.html aus arki-source.html, snake.html aus snake-source.html und sw.js (Offline-Speicher) aus sw.template.js.
 Aufruf:  python3 build.py
 Änderungen an den Spielen werden in den *-source.html-Dateien gemacht und hier nur neu exportiert."""
 import sys, re, pathlib, hashlib, time
@@ -246,8 +246,20 @@ k = head('JJE_arki', 'JJE_arki – Arkanoid nur für die Remlingers') + k.rstrip
 assert 'fonts.googleapis' not in k
 (HERE / 'arki.html').write_text(k, encoding='utf-8')
 
+# 4e) JJE_snake (Snake) aus snake-source.html: gleicher Kopf, gleiche Schriften, gleicher Offline-Speicher
+n = (HERE / 'snake-source.html').read_text(encoding='utf-8')
+assert n.count('<title>JJE_snake</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n') == 1
+n = n.replace('<title>JJE_snake</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n', '')
+n = re.sub(r'<link rel="preconnect" href="https://fonts.googleapis.com">\n', '', n)
+n = re.sub(r'<link rel="stylesheet" href="https://fonts.googleapis.com/[^"]*">\n', '', n)
+assert n.count("const APP_VERSION='';") == 1
+n = n.replace("const APP_VERSION='';", f"const APP_VERSION='{STAMP}';")
+n = head('JJE_snake', 'JJE_snake – Snake nur für die Remlingers') + n.rstrip() + '\n</body>\n</html>\n'
+assert 'fonts.googleapis' not in n
+(HERE / 'snake.html').write_text(n, encoding='utf-8')
+
 # 5) Service Worker mit Versionsstempel (neue Version = neuer Cache)
-h = hashlib.sha1(s.encode()); h.update(m.encode()); h.update(t.encode()); h.update(k.encode())
+h = hashlib.sha1(s.encode()); h.update(m.encode()); h.update(t.encode()); h.update(k.encode()); h.update(n.encode())
 for f in sorted([*(HERE/'fonts').glob('*'), *(HERE/'icons').glob('*'), HERE/'config.js', HERE/'manifest.webmanifest', HERE/'sw.template.js']):
     h.update(f.name.encode()); h.update(f.read_bytes())
 ver = h.hexdigest()[:10]
@@ -255,4 +267,4 @@ sw = (HERE / 'sw.template.js').read_text(encoding='utf-8').replace('__VERSION__'
 for f in re.findall(r"'([^']+\.(?:html|js|webmanifest|png|woff2))'", sw.split('];')[0]):
     assert (HERE / f).exists(), f'Offline-Datei fehlt: {f}'
 (HERE / 'sw.js').write_text(sw, encoding='utf-8')
-print('index.html, jenmah.html, tetris.html, arki.html und sw.js gebaut, Version', ver)
+print('index.html, jenmah.html, tetris.html, arki.html, snake.html und sw.js gebaut, Version', ver)

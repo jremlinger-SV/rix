@@ -561,7 +561,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
   border:1px solid rgba(159,216,255,.28);box-shadow:0 14px 34px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);
   animation:pkin .75s cubic-bezier(.2,.9,.3,1.15) both;transition:transform .15s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
 .pk-card:nth-of-type(1){animation-delay:.08s}.pk-card:nth-of-type(2){animation-delay:.2s}
-.pk-row:nth-of-type(2) .pk-card{animation-delay:.2s}.pk-row:nth-of-type(3) .pk-card{animation-delay:.32s}.pk-row:nth-of-type(4) .pk-card{animation-delay:.44s}.pk-card:nth-of-type(3){animation-delay:.32s}
+.pk-row:nth-of-type(2) .pk-card{animation-delay:.2s}.pk-row:nth-of-type(3) .pk-card{animation-delay:.32s}.pk-row:nth-of-type(4) .pk-card{animation-delay:.44s}.pk-row:nth-of-type(5) .pk-card{animation-delay:.56s}.pk-card:nth-of-type(3){animation-delay:.32s}
 .pk-card:active{transform:scale(.97)}
 .pk-card:focus-visible{outline:3px solid #9fd8ff;outline-offset:3px}
 .pk-card.go{box-shadow:0 0 0 2px #9fd8ff,0 0 40px 6px rgba(56,189,248,.6);transform:scale(1.03)}
@@ -577,6 +577,9 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .pk-beta{position:absolute;top:0;right:0;width:78px;height:78px;overflow:hidden;border-top-right-radius:22px;pointer-events:none}
 .pk-beta b{position:absolute;top:15px;right:-26px;width:108px;transform:rotate(45deg);text-align:center;font-family:"Unbounded",var(--display);font-weight:800;font-size:.6rem;line-height:1.95;letter-spacing:.16em;color:#fff;
   background:linear-gradient(180deg,#f45ae6,#d61fc2);box-shadow:0 2px 10px rgba(214,31,194,.6),inset 0 1px 0 rgba(255,255,255,.35)}
+/* BETA-Schild (Magenta) auf der oberen Ecke der Karte – frei vom Highscore-Knopf */
+.pk-tag{position:absolute;top:-8px;right:14px;z-index:2;padding:3px 9px 2px;border-radius:999px;font-family:"Unbounded",var(--display);font-weight:800;font-size:.56rem;line-height:1.3;letter-spacing:.16em;color:#fff;pointer-events:none;
+  background:linear-gradient(180deg,#f45ae6,#d61fc2);box-shadow:0 2px 10px rgba(214,31,194,.55),inset 0 1px 0 rgba(255,255,255,.35);animation:pkin .75s cubic-bezier(.2,.9,.3,1.15) .6s both}
 /* Highscore-Knopf je Spiel und Highscore-Fenster auf der Spielauswahl */
 .pk-row{position:relative;width:min(100%,380px)}
 .pk-row .pk-card{width:100%;padding-right:64px}
@@ -612,6 +615,9 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .pk-go{position:absolute;right:16px;top:50%;width:26px;height:26px;margin-top:-13px;opacity:.65}
 /* vier Spiele: Karten auf normal großen iPhones etwas kompakter, damit alles ohne Scrollen passt */
 @media (max-height: 900px){.gamepick{gap:clamp(10px,1.8vh,16px)}.pk-card{padding:11px 16px;gap:15px}.pk-art{width:clamp(64px,19vw,80px);border-radius:17px}}
+/* fünf Spiele: auf iPhone 15/16/17 und mit Safari-Leisten noch etwas knapper */
+@media (max-height: 880px){.gamepick{gap:clamp(8px,1.4vh,12px)}.pk-card{padding:9px 14px}.pk-art{width:clamp(58px,16vw,72px)}.pk-rec{margin-top:3px}}
+@media (max-height: 720px){.pk-art{width:52px;border-radius:14px}.pk-txt small{font-size:.85rem}.pk-pre{display:none}}
 .pk-foot{position:relative;display:flex;align-items:center;gap:9px;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#93a6d4;font-weight:700;animation:pkin .7s ease-out .35s both}
 .pk-foot b{font-family:var(--display);font-weight:600;letter-spacing:.06em;color:#4d9bff}
 .gamepick.leaving .pk-card,.gamepick.leaving .pk-pre,.gamepick.leaving .pk-foot{transition:opacity .2s ease,transform .2s ease;opacity:0;transform:scale(.97)}
@@ -814,6 +820,14 @@ header .stats{gap:10px}
       <span class="pk-txt"><b class="pk-name">JJE_arki</b><small>Arkanoid</small><span class="pk-rec" id="recArk"></span></span>
     </button>
     <button class="pk-hs" type="button" data-g="ark" aria-label="Highscores JJE_arki"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z" fill="currentColor"/><path d="M7 6H4.5a.5.5 0 0 0-.5.5C4 9 5.5 10.5 7.4 10.8M17 6h2.5a.5.5 0 0 1 .5.5c0 2.5-1.5 4-3.4 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13v4M8.5 20h7l-.8-3h-5.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="pk-row">
+    <button class="pk-card" id="pickSnk" type="button">
+      <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><g fill="#38bdf8" opacity=".35"><circle cx="7" cy="7" r=".9"/><circle cx="18" cy="7" r=".9"/><circle cx="29" cy="29" r=".9"/><circle cx="7" cy="29" r=".9"/></g><path d="M7.5 28.5V21H17.5V11.5H25" fill="none" stroke="#2f6bff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.5 11.5H25" fill="none" stroke="#9fd8ff" stroke-width="3.2" stroke-linecap="round"/><circle cx="26.3" cy="11.5" r="3" fill="#eef6ff"/><rect x="23.4" y="22.4" width="5.6" height="5.6" rx="1.5" fill="#38bdf8"/><rect x="24.3" y="23.2" width="2.6" height="1.2" rx=".6" fill="#c9e3ff"/></svg></span>
+      <span class="pk-txt"><b class="pk-name">JJE_snake</b><small>Snake</small><span class="pk-rec" id="recSnk"></span></span>
+    </button>
+    <span class="pk-tag" aria-hidden="true">BETA</span>
+    <button class="pk-hs" type="button" data-g="snk" aria-label="Highscores JJE_snake"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z" fill="currentColor"/><path d="M7 6H4.5a.5.5 0 0 0-.5.5C4 9 5.5 10.5 7.4 10.8M17 6h2.5a.5.5 0 0 1 .5.5c0 2.5-1.5 4-3.4 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13v4M8.5 20h7l-.8-3h-5.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="pk-foot"><span>Achtung: nur für <b>Remlingers</b></span></div>
     <div class="hsov" id="hsov" hidden>
@@ -2333,7 +2347,7 @@ function showModes(cont){
   renderRecs();
   // Platz 1 auf den Karten frisch vom Server holen (sonst zeigen Mahjong/Tetris bis zum Öffnen des Spiels die alte Liste)
   Promise.resolve(typeof fetchScores==='function' ? fetchScores() : null).then(renderRecs,renderRecs);
-  ['mah','tet','ark'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } }));
+  ['mah','tet','ark','snk'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } }));
   setupHsOverlay();
   let chosen=false;
   $('pickJemrix').onclick=()=>{ if (chosen) return; chosen=true; $('pickJemrix').classList.add('go'); SND.plop(2);
@@ -2348,6 +2362,9 @@ function showModes(cont){
   $('pickArk').onclick=()=>{ if (chosen) return; chosen=true; $('pickArk').classList.add('go'); SND.plop(2);
     try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
     setTimeout(()=>{ pk.classList.add('leaving'); setTimeout(()=>{ location.href='arki.html'; },220); },160); };
+  $('pickSnk').onclick=()=>{ if (chosen) return; chosen=true; $('pickSnk').classList.add('go'); SND.plop(2);
+    try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
+    setTimeout(()=>{ pk.classList.add('leaving'); setTimeout(()=>{ location.href='snake.html'; },220); },160); };
 }
 /* Platz 1 je Spiel auf den Karten der Spielauswahl – bevorzugt frisch vom Server */
 function renderRecs(){
@@ -2359,6 +2376,8 @@ function renderRecs(){
   rec($('recTet'), all?[all]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[all.mode]);
   const allA=Object.keys(HS_TL).map(m=>{ const r=hsData('ark',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
   if ($('recArk')) rec($('recArk'), allA?[allA]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allA.mode]);
+  const allS=Object.keys(HS_TL).map(m=>{ const r=hsData('snk',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  if ($('recSnk')) rec($('recSnk'), allS?[allS]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allS.mode]);
 }
 /* Highscore-Fenster auf der Spielauswahl: je Spiel die Familienliste (Tetris und Arki je Schwierigkeit) */
 async function fetchOther(fn){
@@ -2373,13 +2392,18 @@ function bestPerName(rows, pend){
   return [...by.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10);
 }
 const HS_TL={leicht:'Leicht',mittel:'Mittel',schwer:'Schwer'};
-let hsFresh={mah:null, tet:null, ark:null}, hsReset={mah:0, tet:0, ark:0};
+let hsFresh={mah:null, tet:null, ark:null, snk:null}, hsReset={mah:0, tet:0, ark:0, snk:0};
 function hsData(g, m){
   if (g==='blocks'){ const tl=topList(); return {rows:tl.rows, fmt:showPts, sub:tl.title}; }
   if (g==='mah'){
     const sh=hsFresh.mah || load('jenmah-lv-shared-cache',null), pend=load('jenmah-lv-pending',[]).filter(e=>e && (!hsFresh.mah || (e.at||0)>hsReset.mah));
     const rows=Array.isArray(sh) ? bestPerName(sh, pend) : bestPerName(load('jenmah-lv-scores',[]), []);
     return {rows, fmt:v=>'Level '+v, sub:hsSub(hsFresh.mah, sh)};
+  }
+  if (g==='snk'){
+    const sh=hsFresh.snk || load('jjesnk-shared-cache',null), pend=load('jjesnk-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.snk || (e.at||0)>hsReset.snk));
+    const rows=Array.isArray(sh) ? bestPerName(sh.filter(r=>r && r.mode===m), pend) : bestPerName(load('jjesnk-scores',[]).filter(r=>r && r.mode===m), []);
+    return {rows, fmt:v=>Number(v).toLocaleString('de-DE'), sub:hsSub(hsFresh.snk, sh)};
   }
   if (g==='ark'){
     const sh=hsFresh.ark || load('jjeark-shared-cache',null), pend=load('jjeark-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.ark || (e.at||0)>hsReset.ark));
@@ -2406,18 +2430,18 @@ function setupHsOverlay(){
     });
   };
   const tabs=()=>{
-    const box=$('hsTabs'); box.innerHTML=''; box.hidden = cur!=='tet' && cur!=='ark'; if (box.hidden) return;
+    const box=$('hsTabs'); box.innerHTML=''; box.hidden = cur!=='tet' && cur!=='ark' && cur!=='snk'; if (box.hidden) return;
     Object.keys(HS_TL).forEach(k=>{ const b=document.createElement('button'); b.type='button'; b.textContent=HS_TL[k]; if (k===curMode) b.className='on';
       b.onclick=()=>{ curMode=k; tabs(); render(); }; box.appendChild(b); });
   };
   const open=g=>{
-    cur=g; const card={blocks:'pickJemrix',mah:'pickMah',tet:'pickTet',ark:'pickArk'}[g];
-    $('hsT').textContent={blocks:'JJE_blocks',mah:'JJE_mahjong',tet:'JJE_tetris',ark:'JJE_arki'}[g];
+    cur=g; const card={blocks:'pickJemrix',mah:'pickMah',tet:'pickTet',ark:'pickArk',snk:'pickSnk'}[g];
+    $('hsT').textContent={blocks:'JJE_blocks',mah:'JJE_mahjong',tet:'JJE_tetris',ark:'JJE_arki',snk:'JJE_snake'}[g];
     const art=$(card).querySelector('.pk-art'); $('hsArt').innerHTML=art ? art.innerHTML : '';
-    if (g==='tet' || g==='ark'){ const pm=load(g==='tet'?'jjetet-mode':'jjeark-mode','leicht'); curMode=HS_TL[pm]?pm:'leicht'; }
+    if (g==='tet' || g==='ark' || g==='snk'){ const pm=load({tet:'jjetet-mode',ark:'jjeark-mode',snk:'jjesnk-mode'}[g],'leicht'); curMode=HS_TL[pm]?pm:'leicht'; }
     tabs(); render(); ov.hidden=false; try{ SND.plop(1); }catch(e){}
     setTimeout(()=>$('hsx').focus(),50);
-    const fn={mah:'get_scores_mah', tet:'get_scores_tet', ark:'get_scores_ark'}[g];
+    const fn={mah:'get_scores_mah', tet:'get_scores_tet', ark:'get_scores_ark', snk:'get_scores_snk'}[g];
     if (fn) fetchOther(fn).then(j=>{ if (!j) return; hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); if (cur===g && !ov.hidden) render(); });
   };
   const close=()=>{ ov.hidden=true; cur=null; };

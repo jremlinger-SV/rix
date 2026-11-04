@@ -1,7 +1,7 @@
 # Jemrix – nur für Remlingers
 
 Das Block-Puzzle der Familie Remlinger als Web-App fürs iPhone (ab iPhone 15, Hochformat).
-Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix), **JJE_mahjong** (Mahjong mit dem Original-Satz von 144 Steinen, früher jenMah) **JJE_tetris** (Tetris mit drei Schwierigkeiten) oder **JJE_arki** (Arkanoid mit drei Schwierigkeiten).
+Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix), **JJE_mahjong** (Mahjong mit dem Original-Satz von 144 Steinen, früher jenMah) **JJE_tetris** (Tetris mit drei Schwierigkeiten), **JJE_arki** (Arkanoid mit drei Schwierigkeiten) oder **JJE_snake** (Snake mit drei Schwierigkeiten, Beta).
 
 ## Spielen
 1. Link in **Safari** öffnen: `https://jremlinger-sv.github.io/rix/`
@@ -16,13 +16,15 @@ Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix), **JJE_m
 
 Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine eigene Liste.
 
-**Aktueller Datenbank-Stand** (in dieser Reihenfolge ausgeführt): `supabase-setup.sql` → `supabase-jenmah.sql` → `supabase-spielzeit.sql` → `supabase-haertung.sql` → `supabase-tetris.sql` → `supabase-monatsreset.sql` → `supabase-arki.sql`. Ältere Dateien (`supabase-update-2.sql`, `supabase-multiplayer.sql`) nicht mehr ausführen – sie würden neuere Funktionen überschreiben.
+**Aktueller Datenbank-Stand** (in dieser Reihenfolge ausgeführt): `supabase-setup.sql` → `supabase-jenmah.sql` → `supabase-spielzeit.sql` → `supabase-haertung.sql` → `supabase-tetris.sql` → `supabase-monatsreset.sql` → `supabase-arki.sql` → `supabase-snake.sql`. Ältere Dateien (`supabase-update-2.sql`, `supabase-multiplayer.sql`) nicht mehr ausführen – sie würden neuere Funktionen überschreiben.
 
 **jenMah-Liste:** einmalig `supabase-jenmah.sql` im SQL Editor ausführen (eigene Liste, gleicher Familien-Code). Zurücksetzen mit `select reset_scores_mah();`.
 
 **JJE_tetris-Liste:** einmalig `supabase-tetris.sql` ausführen (eigene Liste, je Schwierigkeit Leicht/Mittel/Schwer getrennt). Zurücksetzen mit `select reset_scores_tet();`.
 
 **JJE_arki-Liste:** einmalig `supabase-arki.sql` ausführen (eigene Liste je Schwierigkeit, nimmt die Liste auch in den Monats-Reset auf). Zurücksetzen mit `select reset_scores_ark();`.
+
+**JJE_snake-Liste:** einmalig `supabase-snake.sql` ausführen (eigene Liste je Schwierigkeit, nimmt die Liste auch in den Monats-Reset auf). Zurücksetzen mit `select reset_scores_snk();`.
 
 **Liste zurücksetzen:** Im Supabase SQL Editor `select reset_scores();` ausführen. Die Geräte leeren ihre lokalen Listen beim nächsten Start automatisch mit.
 
@@ -33,6 +35,7 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 | `jenmah.html` | jenMah – Mahjong (wird aus `jenmah-source.html` erzeugt) |
 | `tetris.html` | JJE_tetris (wird aus `tetris-source.html` erzeugt) |
 | `arki.html` | JJE_arki – Arkanoid (wird aus `arki-source.html` erzeugt) |
+| `snake.html` | JJE_snake – Snake (wird aus `snake-source.html` erzeugt) |
 | `config.js` | Supabase-Zugang und Familien-Code |
 | `sw.js` | Offline-Speicher |
 | `manifest.webmanifest`, `icons/` | App-Name, Icon, Startbild |
@@ -41,6 +44,7 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 | `supabase-jenmah.sql` | eigene Highscore-Liste für jenMah |
 | `supabase-tetris.sql` | eigene Highscore-Liste für JJE_tetris |
 | `supabase-arki.sql` | eigene Highscore-Liste für JJE_arki (plus Monats-Reset) |
+| `supabase-snake.sql` | eigene Highscore-Liste für JJE_snake (plus Monats-Reset) |
 | `build.py`, `sw.template.js` | Werkzeuge zum Neu-Erzeugen von `index.html` und `sw.js` |
 
 ## Vorschau-Links
