@@ -881,6 +881,7 @@ header .stats{gap:10px}
     </div>
     <div class="pk-row">
     <button class="pk-card" id="pickMaz" type="button">
+      <span class="pk-beta" aria-hidden="true"><b>BETA</b></span>
       <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><path d="M5 5.5H31V30.5H5Z M11.5 12V24 M24.5 12V24 M11.5 12H18" fill="none" stroke="#2f6bff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><g fill="#cfe3ff"><rect x="17.2" y="17" width="1.7" height="1.7" rx=".4"/><rect x="17.2" y="21" width="1.7" height="1.7" rx=".4"/><rect x="21" y="9" width="1.7" height="1.7" rx=".4"/><rect x="25" y="9" width="1.7" height="1.7" rx=".4"/></g><rect x="14.4" y="22.6" width="7.2" height="7.2" rx="1.9" fill="#38bdf8"/><circle cx="16.8" cy="25.6" r="1.05" fill="#fff"/><circle cx="19.3" cy="25.6" r="1.05" fill="#fff"/><path d="M27.5 13.6l1 2.1 2.2-.7-.7 2.2 2.1 1-2.1 1 .7 2.2-2.2-.7-1 2.1-1-2.1-2.2.7.7-2.2-2.1-1 2.1-1-.7-2.2 2.2.7z" fill="#a855f7"/><circle cx="27.5" cy="18.2" r="1.15" fill="#fff"/></svg></span>
       <span class="pk-txt"><b class="pk-name">JJE_maze</b><small>Labyrinth</small><span class="pk-rec" id="recMaz"></span></span>
     </button>
@@ -946,7 +947,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='05.11.2026, 21:46';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='05.11.2026, 21:48';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
