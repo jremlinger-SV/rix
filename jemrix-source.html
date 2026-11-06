@@ -561,7 +561,7 @@ button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
   border:1px solid rgba(159,216,255,.28);box-shadow:0 14px 34px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);
   animation:pkin .75s cubic-bezier(.2,.9,.3,1.15) both;transition:transform .15s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
 .pk-card:nth-of-type(1){animation-delay:.08s}.pk-card:nth-of-type(2){animation-delay:.2s}
-.pk-row:nth-of-type(2) .pk-card{animation-delay:.2s}.pk-row:nth-of-type(3) .pk-card{animation-delay:.32s}.pk-row:nth-of-type(4) .pk-card{animation-delay:.44s}.pk-row:nth-of-type(5) .pk-card{animation-delay:.56s}.pk-row:nth-of-type(6) .pk-card{animation-delay:.68s}.pk-card:nth-of-type(3){animation-delay:.32s}
+.pk-row:nth-of-type(2) .pk-card{animation-delay:.2s}.pk-row:nth-of-type(3) .pk-card{animation-delay:.32s}.pk-row:nth-of-type(4) .pk-card{animation-delay:.44s}.pk-row:nth-of-type(5) .pk-card{animation-delay:.56s}.pk-row:nth-of-type(6) .pk-card{animation-delay:.68s}.pk-row:nth-of-type(7) .pk-card{animation-delay:.8s}.pk-card:nth-of-type(3){animation-delay:.32s}
 .pk-card:active{transform:scale(.97)}
 .pk-card:focus-visible{outline:3px solid #9fd8ff;outline-offset:3px}
 .pk-card.go{box-shadow:0 0 0 2px #9fd8ff,0 0 40px 6px rgba(56,189,248,.6);transform:scale(1.03)}
@@ -845,6 +845,14 @@ header .stats{gap:10px}
       <span class="pk-txt"><b class="pk-name">JJE_maze</b><small>Labyrinth</small><span class="pk-rec" id="recMaz"></span></span>
     </button>
     <button class="pk-hs" type="button" data-g="maz" aria-label="Highscores JJE_maze"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z" fill="currentColor"/><path d="M7 6H4.5a.5.5 0 0 0-.5.5C4 9 5.5 10.5 7.4 10.8M17 6h2.5a.5.5 0 0 1 .5.5c0 2.5-1.5 4-3.4 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13v4M8.5 20h7l-.8-3h-5.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="pk-row">
+    <button class="pk-card" id="pickSol" type="button">
+      <span class="pk-tag" aria-hidden="true">BETA</span>
+      <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><rect x="4.5" y="9" width="13" height="18.5" rx="2.4" fill="#2f6bff" transform="rotate(-16 11 18.2)"/><rect x="6.6" y="11.3" width="8.8" height="13.8" rx="1.4" fill="none" stroke="#9fd8ff" stroke-width=".9" opacity=".7" transform="rotate(-16 11 18.2)"/><rect x="11.5" y="7" width="13" height="18.5" rx="2.4" fill="#cfe3ff" transform="rotate(-3 18 16.2)"/><rect x="18.5" y="8" width="13" height="18.5" rx="2.4" fill="#eef4ff" transform="rotate(12 25 17.2)"/><path d="M25.3 22.6c-2.6-1.8-4.4-3.5-4.4-5.6a2.2 2.2 0 0 1 4.4-.9 2.2 2.2 0 0 1 4.4.9c0 2.1-1.8 3.8-4.4 5.6z" fill="#38bdf8" transform="rotate(12 25 17.2)"/><text x="21" y="14.2" font-family="Fredoka,sans-serif" font-weight="700" font-size="5.4" fill="#1d4ed8" transform="rotate(12 25 17.2)">A</text><rect x="7" y="29.5" width="22" height="2.6" rx="1.3" fill="#38bdf8" opacity=".35"/></svg></span>
+      <span class="pk-txt"><b class="pk-name">JJE_solitaire</b><small>Solitaire</small><span class="pk-rec" id="recSol"></span></span>
+    </button>
+    <button class="pk-hs" type="button" data-g="sol" aria-label="Highscores JJE_solitaire"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z" fill="currentColor"/><path d="M7 6H4.5a.5.5 0 0 0-.5.5C4 9 5.5 10.5 7.4 10.8M17 6h2.5a.5.5 0 0 1 .5.5c0 2.5-1.5 4-3.4 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13v4M8.5 20h7l-.8-3h-5.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="pk-foot"><span>Achtung: nur für <b>Remlingers</b></span></div>
     <div class="hsov" id="hsov" hidden>
@@ -2145,23 +2153,23 @@ markLeader();
 
 /* Highscore-Hinweis: Platz 1 je Spiel (und Schwierigkeit) mit dem Stand beim letzten Öffnen vergleichen.
    Gemeldet wird nur eine höhere Nr. 1 eines anderen Spielers; der erste Start merkt sich nur den Stand. */
-const HS_GAMES=[['blocks','JJE_blocks'],['mah','JJE_mahjong'],['tet','JJE_tetris'],['ark','JJE_arki'],['snk','JJE_snake'],['maz','JJE_maze']];
+const HS_GAMES=[['blocks','JJE_blocks'],['mah','JJE_mahjong'],['tet','JJE_tetris'],['ark','JJE_arki'],['snk','JJE_snake'],['maz','JJE_maze'],['sol','JJE_solitaire']];
 function hsRefreshAll(){
   const jobs=[Promise.resolve(typeof fetchScores==='function' ? fetchScores() : null).catch(()=>null)];
-  ['mah','tet','ark','snk','maz'].forEach(g=>jobs.push(fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz'}[g])
+  ['mah','tet','ark','snk','maz','sol'].forEach(g=>jobs.push(fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol'}[g])
     .then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; } }).catch(()=>null)));
   return Promise.race([Promise.all(jobs), new Promise(r=>setTimeout(r,4500))]);
 }
 function hsLeaders(){
   const out={};
-  HS_GAMES.forEach(([g,title])=>{ (g==='tet'||g==='ark'||g==='snk'||g==='maz' ? Object.keys(HS_TL) : [null]).forEach(m=>{
+  HS_GAMES.forEach(([g,title])=>{ (g==='tet'||g==='ark'||g==='snk'||g==='maz'||g==='sol' ? Object.keys(HS_TL) : [null]).forEach(m=>{
     try{ const d=hsData(g,m), r=d.rows[0]; if (r && r.score>0) out[g+(m?':'+m:'')]={name:clean(r.name), score:r.score, txt:d.fmt(r.score), game:title, mode:m?HS_TL[m]:''}; }catch(e){} }); });
   return out;
 }
 function hsOwnName(){   // wer auf diesem iPhone spielt: der Name mit den meisten eigenen Ergebnissen
   const cnt=new Map();
-  ['jemrix-scores','jenmah-lv-scores','jjetet-scores','jjeark-scores','jjesnk-scores','jjemaz-scores'].forEach(k=>{ const a=load(k,[]); if (Array.isArray(a)) a.forEach(e=>{ if (e && e.name){ const n=clean(e.name).toLowerCase(); cnt.set(n,(cnt.get(n)||0)+1); } }); });
-  ['jemrix-name','jenmah-name','jjetet-name','jjeark-name','jjesnk-name','jjemaz-name'].forEach(k=>{ const n=clean(load(k,'')).toLowerCase(); if (n) cnt.set(n,(cnt.get(n)||0)+3); });
+  ['jemrix-scores','jenmah-lv-scores','jjetet-scores','jjeark-scores','jjesnk-scores','jjemaz-scores','jjesol-scores'].forEach(k=>{ const a=load(k,[]); if (Array.isArray(a)) a.forEach(e=>{ if (e && e.name){ const n=clean(e.name).toLowerCase(); cnt.set(n,(cnt.get(n)||0)+1); } }); });
+  ['jemrix-name','jenmah-name','jjetet-name','jjeark-name','jjesnk-name','jjemaz-name','jjesol-name'].forEach(k=>{ const n=clean(load(k,'')).toLowerCase(); if (n) cnt.set(n,(cnt.get(n)||0)+3); });
   let best='', bn=0; cnt.forEach((v,k)=>{ if (v>bn){ bn=v; best=k; } });
   if (best) save('jje-own-name',best); else best=String(load('jje-own-name','')||'');   // nach einem Monats-Reset sind die Listen leer – Name gemerkt
   return best;
@@ -2426,7 +2434,7 @@ function showModes(cont){
   renderRecs();
   // Platz 1 auf den Karten frisch vom Server holen (sonst zeigen Mahjong/Tetris bis zum Öffnen des Spiels die alte Liste)
   Promise.resolve(typeof fetchScores==='function' ? fetchScores() : null).then(renderRecs,renderRecs);
-  ['mah','tet','ark','snk','maz'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } }));
+  ['mah','tet','ark','snk','maz','sol'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } }));
   setupHsOverlay();
   let chosen=false;
   $('pickJemrix').onclick=()=>{ if (chosen) return; chosen=true; $('pickJemrix').classList.add('go'); SND.plop(2);
@@ -2447,6 +2455,9 @@ function showModes(cont){
   $('pickMaz').onclick=()=>{ if (chosen) return; chosen=true; $('pickMaz').classList.add('go'); SND.plop(2);
     try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
     setTimeout(()=>{ pk.classList.add('leaving'); setTimeout(()=>{ location.href='maze.html'; },220); },160); };
+  $('pickSol').onclick=()=>{ if (chosen) return; chosen=true; $('pickSol').classList.add('go'); SND.plop(2);
+    try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
+    setTimeout(()=>{ pk.classList.add('leaving'); setTimeout(()=>{ location.href='solitaire.html'; },220); },160); };
 }
 /* Platz 1 je Spiel auf den Karten der Spielauswahl – bevorzugt frisch vom Server */
 function renderRecs(){
@@ -2462,6 +2473,8 @@ function renderRecs(){
   if ($('recSnk')) rec($('recSnk'), allS?[allS]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allS.mode]);
   const allZ=Object.keys(HS_TL).map(m=>{ const r=hsData('maz',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
   if ($('recMaz')) rec($('recMaz'), allZ?[allZ]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allZ.mode]);
+  const allO=Object.keys(HS_TL).map(m=>{ const r=hsData('sol',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  if ($('recSol')) rec($('recSol'), allO?[allO]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allO.mode]);
 }
 /* Highscore-Fenster auf der Spielauswahl: je Spiel die Familienliste (Tetris und Arki je Schwierigkeit) */
 async function fetchOther(fn){
@@ -2476,7 +2489,7 @@ function bestPerName(rows, pend){
   return [...by.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10);
 }
 const HS_TL={leicht:'Leicht',mittel:'Mittel',schwer:'Schwer'};
-let hsFresh={mah:null, tet:null, ark:null, snk:null, maz:null}, hsReset={mah:0, tet:0, ark:0, snk:0, maz:0};
+let hsFresh={mah:null, tet:null, ark:null, snk:null, maz:null, sol:null}, hsReset={mah:0, tet:0, ark:0, snk:0, maz:0, sol:0};
 function hsData(g, m){
   if (g==='blocks'){ const tl=topList(); return {rows:tl.rows, fmt:showPts, sub:tl.title}; }
   if (g==='mah'){
@@ -2493,6 +2506,11 @@ function hsData(g, m){
     const sh=hsFresh.maz || load('jjemaz-shared-cache',null), pend=load('jjemaz-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.maz || (e.at||0)>hsReset.maz));
     const rows=Array.isArray(sh) ? bestPerName(sh.filter(r=>r && r.mode===m), pend) : bestPerName(load('jjemaz-scores',[]).filter(r=>r && r.mode===m), []);
     return {rows, fmt:v=>Number(v).toLocaleString('de-DE'), sub:hsSub(hsFresh.maz, sh)};
+  }
+  if (g==='sol'){
+    const sh=hsFresh.sol || load('jjesol-shared-cache',null), pend=load('jjesol-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.sol || (e.at||0)>hsReset.sol));
+    const rows=Array.isArray(sh) ? bestPerName(sh.filter(r=>r && r.mode===m), pend) : bestPerName(load('jjesol-scores',[]).filter(r=>r && r.mode===m), []);
+    return {rows, fmt:v=>Number(v).toLocaleString('de-DE'), sub:hsSub(hsFresh.sol, sh)};
   }
   if (g==='ark'){
     const sh=hsFresh.ark || load('jjeark-shared-cache',null), pend=load('jjeark-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.ark || (e.at||0)>hsReset.ark));
@@ -2519,18 +2537,18 @@ function setupHsOverlay(){
     });
   };
   const tabs=()=>{
-    const box=$('hsTabs'); box.innerHTML=''; box.hidden = cur!=='tet' && cur!=='ark' && cur!=='snk' && cur!=='maz'; if (box.hidden) return;
+    const box=$('hsTabs'); box.innerHTML=''; box.hidden = cur!=='tet' && cur!=='ark' && cur!=='snk' && cur!=='maz' && cur!=='sol'; if (box.hidden) return;
     Object.keys(HS_TL).forEach(k=>{ const b=document.createElement('button'); b.type='button'; b.textContent=HS_TL[k]; if (k===curMode) b.className='on';
       b.onclick=()=>{ curMode=k; tabs(); render(); }; box.appendChild(b); });
   };
   const open=g=>{
-    cur=g; const card={blocks:'pickJemrix',mah:'pickMah',tet:'pickTet',ark:'pickArk',snk:'pickSnk',maz:'pickMaz'}[g];
-    $('hsT').textContent={blocks:'JJE_blocks',mah:'JJE_mahjong',tet:'JJE_tetris',ark:'JJE_arki',snk:'JJE_snake',maz:'JJE_maze'}[g];
+    cur=g; const card={blocks:'pickJemrix',mah:'pickMah',tet:'pickTet',ark:'pickArk',snk:'pickSnk',maz:'pickMaz',sol:'pickSol'}[g];
+    $('hsT').textContent={blocks:'JJE_blocks',mah:'JJE_mahjong',tet:'JJE_tetris',ark:'JJE_arki',snk:'JJE_snake',maz:'JJE_maze',sol:'JJE_solitaire'}[g];
     const art=$(card).querySelector('.pk-art'); $('hsArt').innerHTML=art ? art.innerHTML : '';
-    if (g==='tet' || g==='ark' || g==='snk' || g==='maz'){ const pm=load({tet:'jjetet-mode',ark:'jjeark-mode',snk:'jjesnk-mode',maz:'jjemaz-mode'}[g],'leicht'); curMode=HS_TL[pm]?pm:'leicht'; }
+    if (g==='tet' || g==='ark' || g==='snk' || g==='maz' || g==='sol'){ const pm=load({tet:'jjetet-mode',ark:'jjeark-mode',snk:'jjesnk-mode',maz:'jjemaz-mode',sol:'jjesol-mode'}[g],'leicht'); curMode=HS_TL[pm]?pm:'leicht'; }
     tabs(); render(); ov.hidden=false; try{ SND.plop(1); }catch(e){}
     setTimeout(()=>$('hsx').focus(),50);
-    const fn={mah:'get_scores_mah', tet:'get_scores_tet', ark:'get_scores_ark', snk:'get_scores_snk', maz:'get_scores_maz'}[g];
+    const fn={mah:'get_scores_mah', tet:'get_scores_tet', ark:'get_scores_ark', snk:'get_scores_snk', maz:'get_scores_maz', sol:'get_scores_sol'}[g];
     if (fn) fetchOther(fn).then(j=>{ if (!j) return; hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); if (cur===g && !ov.hidden) render(); });
   };
   const close=()=>{ ov.hidden=true; cur=null; };
