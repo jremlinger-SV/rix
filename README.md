@@ -1,7 +1,7 @@
 # Jemrix – nur für Remlingers
 
 Das Block-Puzzle der Familie Remlinger als Web-App fürs iPhone (ab iPhone 15, Hochformat).
-Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix), **JJE_mahjong** (Mahjong mit dem Original-Satz von 144 Steinen, früher jenMah) **JJE_tetris** (Tetris mit drei Schwierigkeiten), **JJE_arki** (Arkanoid mit drei Schwierigkeiten) **JJE_snake** (Snake mit drei Schwierigkeiten) **JJE_maze** (Labyrinth: Jemmi sammelt Steinchen, Funken jagen ihn; drei Schwierigkeiten) oder **JJE_solitaire** (Klondike-Solitaire, Beta: Leicht = immer lösbar, Mittel = 3 Durchgänge, Schwer = 3 Karten ziehen).
+Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix), **JJE_mahjong** (Mahjong mit dem Original-Satz von 144 Steinen, früher jenMah) **JJE_tetris** (Tetris mit drei Schwierigkeiten), **JJE_arki** (Arkanoid mit drei Schwierigkeiten) **JJE_snake** (Snake mit drei Schwierigkeiten) **JJE_maze** (Labyrinth: Jemmi sammelt Steinchen, Funken jagen ihn; drei Schwierigkeiten) oder **JJE_solitaire** (Klondike-Solitaire: Leicht = immer lösbar, Mittel = 3 Durchgänge, Schwer = 3 Karten ziehen).
 
 ## Spielen
 1. Link in **Safari** öffnen: `https://jremlinger-sv.github.io/rix/`
@@ -28,7 +28,7 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 
 **JJE_maze-Liste:** einmalig `supabase-maze.sql` ausführen (eigene Liste je Schwierigkeit, nimmt die Liste auch in den Monats-Reset auf). Zurücksetzen mit `select reset_scores_maz();`.
 
-**JJE_solitaire-Liste:** einmalig `supabase-solitaire.sql` ausführen (eigene Liste je Schwierigkeit, nimmt die Liste auch in den Monats-Reset auf). Zurücksetzen mit `select reset_scores_sol();`. Bis dahin merkt sich jedes iPhone seine Ergebnisse und überträgt sie danach automatisch.
+**JJE_solitaire-Liste:** einmalig `supabase-solitaire.sql` ausführen (eigene Liste je Schwierigkeit, nimmt die Liste auch in den Monats-Reset auf). Zurücksetzen mit `select reset_scores_sol();`.
 
 **Liste zurücksetzen:** Im Supabase SQL Editor `select reset_scores();` ausführen. Die Geräte leeren ihre lokalen Listen beim nächsten Start automatisch mit.
 
