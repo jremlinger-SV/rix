@@ -782,6 +782,21 @@ header .stats{gap:10px}
 @keyframes fsfl{0%{opacity:1}100%{opacity:0}}
 .fscan.out{animation:fsout .45s ease-in forwards;pointer-events:none}
 @keyframes fsout{to{opacity:0;transform:scale(1.06);filter:blur(4px)}}
+
+/* Netz-Status als Punkt in der Kopfzeile (einheitlich in allen Spielen, 07.11.2026) */
+.hbtns{position:relative}
+.netdot{position:absolute;left:-7px;top:50%;margin-top:-26px;width:20px;height:20px;padding:0;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;z-index:5;-webkit-tap-highlight-color:transparent}
+.netdot[hidden]{display:none!important}
+.netdot::before{content:"";width:9px;height:9px;border-radius:50%;background:#ffd84d;box-shadow:0 0 7px #ffd84d}
+.netdot.sync::before{background:#5fe0a8;box-shadow:0 0 7px #5fe0a8;animation:netpulse 1.1s ease-in-out infinite}
+@keyframes netpulse{50%{opacity:.35}}
+.netline{display:none!important}
+.netline.peek{display:flex!important;align-items:center;gap:7px;position:fixed!important;top:var(--netpeek,70px)!important;bottom:auto!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;z-index:80!important;max-width:calc(100% - 32px)!important;width:max-content!important;box-sizing:border-box;white-space:nowrap;pointer-events:none;font-size:.74rem!important;font-weight:700;padding:5px 12px!important;border-radius:999px;color:#eaf2ff!important;background:rgba(12,22,52,.92)!important;box-shadow:0 4px 14px rgba(0,0,0,.3)!important;animation:netin .18s ease-out}
+.netline.peek::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#ffd84d;box-shadow:0 0 6px #ffd84d}
+.netline.peek.sync::before{background:#5fe0a8;box-shadow:0 0 6px #5fe0a8}
+@keyframes netin{from{opacity:0;transform:translate(-50%,-4px)}}
+.netnote{margin:6px 0 2px;text-align:center;font-size:.74rem;font-weight:700;opacity:.75}
+.netnote[hidden]{display:none}
 </style>
 
 <div class="app">
@@ -953,7 +968,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='06.11.2026, 22:39';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='07.11.2026, 08:54';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -2118,7 +2133,7 @@ function updateNet(){
   const el=$('netline');
   if (!n && !off){ el.hidden=true; return; }
   el.hidden=false;
-  el.textContent = off ? (n ? `Offline · ${n} Ergebnis${n>1?'se':''} gespeichert, wird später übertragen` : 'Offline · Ergebnisse werden lokal gespeichert')
+  el.textContent = off ? (n ? `Offline · ${n} Ergebnis${n>1?'se':''} gemerkt` : 'Offline · Ergebnisse werden gemerkt')
                        : `${n} Ergebnis${n>1?'se':''} wird übertragen …`;
 }
 function topList(){
@@ -2649,6 +2664,23 @@ try{
   } else newGame();
 }catch(err){ newGame(); }
 applyPreview();
+})();
+
+/* Netz-Status: Punkt in der Kopfzeile (gelb = offline, grün pulsierend = wird übertragen), Antippen zeigt kurz den Text, am Spielende kleine Zeile unter der Liste */
+(function(){
+  const el=document.getElementById('netline'), bar=document.querySelector('.hbtns'); if (!el || !bar) return;
+  const dot=document.createElement('button'); dot.type='button'; dot.className='netdot'; dot.hidden=true; dot.setAttribute('aria-label','Verbindungsstatus');
+  bar.appendChild(dot);
+  const note=document.createElement('p'); note.className='netnote'; note.hidden=true;
+  const hs=document.getElementById('hslist'); if (hs && hs.parentNode) hs.parentNode.insertBefore(note, hs.nextSibling);
+  let t=0;
+  const sync=()=>{ const on=!el.hidden && !!el.textContent; const s=!/^Offline/.test(el.textContent||'');
+    dot.hidden=!on; dot.classList.toggle('sync',s); el.classList.toggle('sync',s);
+    note.hidden=!on; note.textContent=on?el.textContent:''; if (!on) el.classList.remove('peek'); };
+  new MutationObserver(sync).observe(el,{attributes:true,attributeFilter:['hidden'],childList:true,characterData:true,subtree:true}); sync();
+  dot.addEventListener('click',e=>{ e.stopPropagation(); if (dot.hidden) return;
+    const h=dot.closest('header')||bar; document.documentElement.style.setProperty('--netpeek', Math.round(h.getBoundingClientRect().bottom+6)+'px');
+    el.classList.add('peek'); clearTimeout(t); t=setTimeout(()=>el.classList.remove('peek'),2200); });
 })();
 </script>
 </body>

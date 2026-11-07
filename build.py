@@ -104,7 +104,7 @@ function updateNet(){
   const el=$('netline');
   if (!n && !off){ el.hidden=true; return; }
   el.hidden=false;
-  el.textContent = off ? (n ? `Offline · ${n} Ergebnis${n>1?'se':''} gespeichert, wird später übertragen` : 'Offline · Ergebnisse werden lokal gespeichert')
+  el.textContent = off ? (n ? `Offline · ${n} Ergebnis${n>1?'se':''} gemerkt` : 'Offline · Ergebnisse werden gemerkt')
                        : `${n} Ergebnis${n>1?'se':''} wird übertragen …`;
 }
 function topList(){
