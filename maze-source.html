@@ -4,6 +4,11 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Unbounded:wght@400;600;800&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700&display=swap">
 <script>/* Zugang nur über die Familien-Startseite (Intro mit den drei Steinen) */
 try{ if (!window.JJE_PREVIEW && location.protocol!=='file:' && sessionStorage.getItem('remlinger-unlocked')!=='1') location.replace('./'); }catch(e){}</script>
+<script>/* Home-Bildschirm-App: iOS meldet 100% um die Statusleiste zu kurz, 100lvh war zu lang -> Höhe = Bildschirmhöhe (Hochformat) */
+(function(){ try{ if (!(matchMedia('(display-mode: standalone)').matches || navigator.standalone)) return;
+  var fix=function(){ if (innerWidth>innerHeight) { document.documentElement.style.removeProperty('--apph'); return; }
+    document.documentElement.style.setProperty('--apph', Math.max(screen.width,screen.height)+'px'); };
+  fix(); addEventListener('resize',fix); addEventListener('orientationchange',function(){ setTimeout(fix,200); }); }catch(e){} })();</script>
 <style>
 /* JJE_maze – Labyrinth-Spiel im JJE-Look: Jemmi sammelt Steinchen, Funken jagen ihn. Hülle aus JJE_snake/JJE_arki. Grundgestaltung aus JJE_tetris (dieses wiederum aus JJE_blocks/JJE_mahjong), darunter die Arki-Teile. */
 /* --- aus JJE_mahjong übernommen --- */
@@ -411,9 +416,8 @@ body.gameover .afoot .top2{visibility:hidden}
 
 .quick .gastbtn .crown + svg{display:none}   /* mit Krone ersetzt sie das Personen-Symbol */
 
-/* iPhone-App (Home-Bildschirm): 100% war dort um die Statusleisten-Höhe zu kurz -> Streifen unten, Spielfeld gequetscht.
-   lvh = volle Bildschirmhöhe (07.11.2026) */
-@media (display-mode: standalone){ html,body{height:100lvh!important;min-height:100%} }
+/* iPhone-App (Home-Bildschirm): Höhe kommt per Skript aus der Bildschirmhöhe (--apph), 07.11.2026 */
+@media (display-mode: standalone){ html,body{height:var(--apph,100%)!important} }
 </style>
 
 <div class="app">
