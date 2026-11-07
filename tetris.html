@@ -404,6 +404,8 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
 .quick .gastbtn.cur{border-style:solid}
 .quick .gastbtn svg{width:15px;height:15px;flex:none}
 #regname[hidden]{display:none!important}
+
+.quick .gastbtn .crown + svg{display:none}   /* mit Krone ersetzt sie das Personen-Symbol */
 </style>
 
 <div class="app">
@@ -484,7 +486,7 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='07.11.2026, 09:04';   // wird beim Bauen gefüllt
+const APP_VERSION='07.11.2026, 09:08';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -1292,7 +1294,7 @@ function leaderName(){ const c=load('jje-last-champ',null); if (c && c.n) return
 function markLeader(){
   champCheck();
   const lead=leaderName().toLowerCase();
-  if (!$('reg').hidden) document.querySelectorAll('#quick button').forEach(b=>{ const has=b.querySelector('.crown'); const want=lead && (b.dataset.n||'').toLowerCase()===lead;
+  if (!$('reg').hidden) document.querySelectorAll('#quick button').forEach(b=>{ const has=b.querySelector('.crown'); const want=lead && ((b.dataset.n||'').toLowerCase()===lead || (b.classList.contains('gastbtn') && !['emma','jenny','jens'].includes(lead)));   // Gast-Knopf trägt die Krone, wenn zuletzt ein Gast den Highscore geholt hat
     if (want && !has) b.insertAdjacentHTML('afterbegin',CROWN); if (!want && has) has.remove(); });
 }
 function renderTop2(){

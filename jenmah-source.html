@@ -406,6 +406,8 @@ header.mh .hbtns .sndbtn{width:30px;height:30px}
 .quick .gastbtn.cur{border-style:solid}
 .quick .gastbtn svg{width:15px;height:15px;flex:none}
 #regname[hidden]{display:none!important}
+
+.quick .gastbtn .crown + svg{display:none}   /* mit Krone ersetzt sie das Personen-Symbol */
 </style>
 
 <div class="app">
@@ -1356,7 +1358,7 @@ function leaderName(){ const c=load('jje-last-champ',null); if (c && c.n) return
 function markLeader(){
   champCheck();
   const lead=leaderName().toLowerCase();
-  if (!$('reg').hidden) document.querySelectorAll('#quick button').forEach(b=>{ const has=b.querySelector('.crown'); const want=lead && (b.dataset.n||'').toLowerCase()===lead;
+  if (!$('reg').hidden) document.querySelectorAll('#quick button').forEach(b=>{ const has=b.querySelector('.crown'); const want=lead && ((b.dataset.n||'').toLowerCase()===lead || (b.classList.contains('gastbtn') && !['emma','jenny','jens'].includes(lead)));   // Gast-Knopf trägt die Krone, wenn zuletzt ein Gast den Highscore geholt hat
     if (want && !has) b.insertAdjacentHTML('afterbegin',CROWN); if (!want && has) has.remove(); });
 }
 function renderTop2(){
