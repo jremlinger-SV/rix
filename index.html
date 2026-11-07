@@ -998,7 +998,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='07.11.2026, 09:15';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='07.11.2026, 09:20';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -1033,7 +1033,6 @@ const POOLS=[
 const MAXLVL=12;
 function diff(sc){ return Math.sqrt(Math.max(0,sc)/60); }
 function levelFor(sc){ return Math.min(MAXLVL, 1+Math.floor(Math.sqrt(Math.max(0,sc)/150))); }   // Stufe 2 ab 150, 3 ab 600, 4 ab 1.350 … (intern)
-function assistFor(sc){ return Math.max(0.08, Math.min(1, 1-diff(sc)/7)); }
 function poolWeights(d){ return [Math.max(4,10-d*0.7), 2+Math.min(1.5,d*0.2), Math.min(9,d*1.1)]; }
 function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
 function randPiece(d){
@@ -1831,13 +1830,6 @@ function comboBig(c){
 const fxEl=$('fx'), wrapEl=boardEl.parentElement;
 let lastFx=-1;
 function cellBox(k){ const el=cells[k]; return {x:el.offsetLeft, y:el.offsetTop, s:el.offsetWidth}; }
-function lineCenter(rows,cols){
-  let xs=[],ys=[];
-  rows.forEach(r=>{ const a=cellBox(r*N), b=cellBox(r*N+N-1); xs.push((a.x+b.x+b.s)/2); ys.push(a.y+a.s/2); });
-  cols.forEach(c=>{ const a=cellBox(c), b=cellBox((N-1)*N+c); xs.push(a.x+a.s/2); ys.push((a.y+b.y+b.s)/2); });
-  if (rows.length && cols.length){ const a=cellBox(rows[0]*N+cols[0]); return {x:a.x+a.s/2, y:a.y+a.s/2}; }
-  return {x:xs.reduce((p,v)=>p+v,0)/xs.length, y:ys.reduce((p,v)=>p+v,0)/ys.length};
-}
 function addFx(el){ fxEl.appendChild(el); setTimeout(()=>el.remove(),900); return el; }
 function retrigger(el,cls,ms){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(()=>el.classList.remove(cls),ms); }
 function fxBeams(rows,cols){
@@ -2006,10 +1998,6 @@ function holdEnd(title, then){
     then();
   },1000);
 }
-function cancelHold(){
-  if (endHold){ clearInterval(endHold); endHold=null; }
-  $('endhold').hidden=true; $('endhold').classList.remove('run'); document.body.classList.remove('ending');
-}
 function finishGame(title){
   if (endHold) return;
   // Ergebnis sofort sichern, dann 10 s das letzte Feld zeigen
@@ -2050,7 +2038,6 @@ function ptSave(){ save(PT_KEY+'-unsent-secs',unsentSecs); save(PT_KEY+'-time-lo
 function addPlaySecs(dt){ if (!player || !(dt>0)) return; const k=clean(player).toLowerCase(); unsentSecs[k]=(unsentSecs[k]||0)+dt; localTime[k]=(localTime[k]||0)+dt; const n=Date.now(); if (n-ptSaveAt>10000){ ptSaveAt=n; ptSave(); } }
 function takeSecs(){ const k=clean(player||'').toLowerCase(); const v=Math.round(unsentSecs[k]||0); delete unsentSecs[k]; ptSave(); return v; }
 function clearTimes(){ unsentSecs={}; localTime={}; ptSave(); }
-function fmtTime(s){ s=Math.round(s||0); if (s<=0) return ''; if (s<60) return '< 1 Min'; const m=Math.floor(s/60); if (m<60) return m+' Min'; return Math.floor(m/60)+' Std '+(m%60)+' Min'; }
 function addTimeTo(el, secs){}   // Spielzeit wird weiter gezählt, aber in den Listen nicht mehr angezeigt
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden || !player) return; ptSave(); if ((unsentSecs[clean(player).toLowerCase()]||0)>=60 && typeof recordTime==='function') recordTime(); });
 // gleiche Regel wie auf dem Server: lateinische Buchstaben, Leerzeichen, Bindestrich, Punkt, Apostroph
@@ -2547,7 +2534,7 @@ function showModes(cont){
   renderRecs();
   // Platz 1 auf den Karten frisch vom Server holen (sonst zeigen Mahjong/Tetris bis zum Öffnen des Spiels die alte Liste)
   Promise.resolve(typeof fetchScores==='function' ? fetchScores() : null).then(renderRecs,renderRecs);
-  ['mah','tet','ark','snk','maz','sol'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } }));
+  Promise.resolve(syncOthers()).catch(()=>null).then(()=>['mah','tet','ark','snk','maz','sol'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } })));
   setupHsOverlay();
   let chosen=false;
   $('pickJemrix').onclick=()=>{ if (chosen) return; chosen=true; $('pickJemrix').classList.add('go'); SND.plop(2);
@@ -2590,6 +2577,27 @@ function renderRecs(){
   if ($('recSol')) rec($('recSol'), allO?[allO]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allO.mode]);
 }
 /* Highscore-Fenster auf der Spielauswahl: je Spiel die Familienliste (Tetris und Arki je Schwierigkeit) */
+/* Wartende Ergebnisse der anderen Spiele (offline oder vor Anlage der Liste erzielt) gleich von der Spielauswahl aus übertragen,
+   nicht erst beim nächsten Öffnen des jeweiligen Spiels. Doppeltes Senden schadet nicht: pro Name zählt nur der beste Wert. */
+const OTHER_PENDING=[['jenmah-lv-pending','submit_scores_mah'],['jjetet-pending','submit_scores_tet'],['jjeark-pending','submit_scores_ark'],
+  ['jjesnk-pending','submit_scores_snk'],['jjemaz-pending','submit_scores_maz'],['jjesol-pending','submit_scores_sol']];
+let othersSyncing=false;
+async function syncOthers(){
+  if (othersSyncing || typeof api!=='function' || typeof ONLINE==='undefined' || !ONLINE || typeof FAMILY_CODE==='undefined' || navigator.onLine===false) return;
+  othersSyncing=true;
+  try{
+    for (const [key,fn] of OTHER_PENDING){
+      const list=load(key,[]); if (!Array.isArray(list) || !list.length) continue;
+      const batch=list.filter(e=>e && e.name).slice(0,50); if (!batch.length) continue;
+      try{
+        await api(fn,{p_code:FAMILY_CODE, p_entries:batch.map(e=>{ const o={name:e.name, score:Math.round(+e.score||0), secs:Math.round(+e.secs||0), id:e.id||''}; if (e.mode) o.mode=e.mode; return o; })});
+        const sent=new Set(batch.map(e=>JSON.stringify(e))), now=load(key,[]);
+        save(key,(Array.isArray(now)?now:[]).filter(e=>!sent.has(JSON.stringify(e))));
+      }catch(e){}   // Liste fehlt oder kein Netz: bleibt gemerkt und wird später erneut versucht
+    }
+  } finally { othersSyncing=false; }
+}
+window.addEventListener('online',()=>{ try{ syncOthers(); }catch(e){} });
 async function fetchOther(fn){
   if (typeof api!=='function' || typeof ONLINE==='undefined' || !ONLINE) return null;
   try{ const j=await api(fn); return j && Array.isArray(j.players) ? j : null; }catch(e){ return null; }

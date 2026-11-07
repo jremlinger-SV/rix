@@ -9,7 +9,7 @@ Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix), **JJE_m
 3. Jemrix startet ab jetzt wie eine App: Vollbild, eigenes Icon, funktioniert auch offline.
 
 ## Gemeinsame Highscore-Liste (Supabase, einmalig einrichten)
-1. Auf <https://supabase.com> kostenlos registrieren → **New project**, Region **Frankfurt (eu-central-1)**.
+1. Auf <https://supabase.com> kostenlos registrieren → **New project**, Region **London (eu-west-2)** (für das Projekt „jemrix“ so angelegt; Frankfurt eu-central-1 wäre ebenso möglich).
 2. Im Projekt: **SQL Editor → New query**, den Inhalt von `supabase-setup.sql` einfügen → **Run**.
 3. **Project Settings → API**: „Project URL“ und den **anon public** Key kopieren.
 4. Beides in `config.js` eintragen (`supabaseUrl`, `supabaseKey`) und speichern/committen.

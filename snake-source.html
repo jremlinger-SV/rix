@@ -1273,7 +1273,6 @@ function ptSave(){ save('jjesnk-unsent-secs',unsentSecs); save('jjesnk-time-loca
 function addPlaySecs(dt){ if (!player || !(dt>0)) return; const k=tk(mode,player); unsentSecs[k]=(unsentSecs[k]||0)+dt; localTime[k]=(localTime[k]||0)+dt; const n=Date.now(); if (n-ptSaveAt>10000){ ptSaveAt=n; ptSave(); } }
 function takeSecs(){ const k=tk(mode,player||''); const v=Math.round(unsentSecs[k]||0); delete unsentSecs[k]; ptSave(); return v; }
 function clearTimes(){ unsentSecs={}; localTime={}; ptSave(); }
-function fmtTime(s){ s=Math.round(s||0); if (s<=0) return ''; if (s<60) return '< 1 Min'; const m=Math.floor(s/60); if (m<60) return m+' Min'; return Math.floor(m/60)+' Std '+(m%60)+' Min'; }
 function addTimeTo(el, secs){}   // Spielzeit wird weiter gezählt, aber in den Listen nicht mehr angezeigt
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden || !player) return; ptSave(); if ((unsentSecs[tk(mode,player)]||0)>=60) recordTime(); });
 

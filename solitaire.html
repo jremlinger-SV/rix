@@ -609,7 +609,7 @@ body.gameover .tools{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='07.11.2026, 09:15';   // wird beim Bauen gefüllt
+const APP_VERSION='07.11.2026, 09:20';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -1369,9 +1369,9 @@ function setPlayer(n){
   idleTime=0; player=n; save('jjesol-name',n); $('reg').hidden=true; SND.start();
   newGame();
   const go=()=>{ if (!load('jjesol-help-seen',false)){ $('help').hidden=false; } };
-  if (isBirthdayKid(n) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; lastFrame=0; go(); }); else go();
+  if (isBirthdayKid(n) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; go(); }); else go();
 }
-$('helpok').onclick=()=>{ save('jjesol-help-seen',true); $('help').hidden=true; lastFrame=0; };
+$('helpok').onclick=()=>{ save('jjesol-help-seen',true); $('help').hidden=true; };
 $('phelp').onclick=()=>{ $('help').hidden=false; };
 $('regform').addEventListener('submit',e=>{ e.preventDefault(); const n=clean($('regname').value);
   if (n.length<2){ $('regerr').textContent='Bitte mindestens 2 Buchstaben eingeben.'; return; }
@@ -1402,7 +1402,6 @@ function ptSave(){ save('jjesol-unsent-secs',unsentSecs); save('jjesol-time-loca
 function addPlaySecs(dt){ if (!player || !(dt>0)) return; const k=tk(mode,player); unsentSecs[k]=(unsentSecs[k]||0)+dt; localTime[k]=(localTime[k]||0)+dt; const n=Date.now(); if (n-ptSaveAt>10000){ ptSaveAt=n; ptSave(); } }
 function takeSecs(){ const k=tk(mode,player||''); const v=Math.round(unsentSecs[k]||0); delete unsentSecs[k]; ptSave(); return v; }
 function clearTimes(){ unsentSecs={}; localTime={}; ptSave(); }
-function fmtTime(s){ s=Math.round(s||0); if (s<=0) return ''; if (s<60) return '< 1 Min'; const m=Math.floor(s/60); if (m<60) return m+' Min'; return Math.floor(m/60)+' Std '+(m%60)+' Min'; }
 function addTimeTo(el, secs){}   // Spielzeit wird weiter gezählt, aber in den Listen nicht mehr angezeigt
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden || !player) return; ptSave(); if ((unsentSecs[tk(mode,player)]||0)>=60) recordTime(); });
 

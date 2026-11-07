@@ -723,7 +723,6 @@ function refreshFree(){
   T.forEach((t,i)=>{ const el=tileEls[i]; if (el) el.classList.toggle('free', fr.has(i)); });
   updateBoost();
 }
-function tileCenter(i){ const el=tileEls[i]; return {x:el.offsetLeft+el.offsetWidth/2, y:el.offsetTop+el.offsetHeight/2}; }
 
 /* ===================== Ablauf ===================== */
 function toast(text){ const t=$('lvl'); t.textContent=text; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); }
@@ -1229,7 +1228,6 @@ function ptSave(){ save(PT_KEY+'-unsent-secs',unsentSecs); save(PT_KEY+'-time-lo
 function addPlaySecs(dt){ if (!player || !(dt>0)) return; const k=clean(player).toLowerCase(); unsentSecs[k]=(unsentSecs[k]||0)+dt; localTime[k]=(localTime[k]||0)+dt; const n=Date.now(); if (n-ptSaveAt>10000){ ptSaveAt=n; ptSave(); } }
 function takeSecs(){ const k=clean(player||'').toLowerCase(); const v=Math.round(unsentSecs[k]||0); delete unsentSecs[k]; ptSave(); return v; }
 function clearTimes(){ unsentSecs={}; localTime={}; ptSave(); }
-function fmtTime(s){ s=Math.round(s||0); if (s<=0) return ''; if (s<60) return '< 1 Min'; const m=Math.floor(s/60); if (m<60) return m+' Min'; return Math.floor(m/60)+' Std '+(m%60)+' Min'; }
 function addTimeTo(el, secs){}   // Spielzeit wird weiter gezählt, aber in den Listen nicht mehr angezeigt
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden || !player) return; ptSave(); if ((unsentSecs[clean(player).toLowerCase()]||0)>=60 && typeof recordTime==='function') recordTime(); });
 const NAME_OK=/^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ' .-]{1,19}$/;
