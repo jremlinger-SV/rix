@@ -513,6 +513,10 @@ body.gameover .tools{visibility:hidden}
 #regname[hidden]{display:none!important}
 
 .quick .gastbtn .crown + svg{display:none}   /* mit Krone ersetzt sie das Personen-Symbol */
+
+/* iPhone-App (Home-Bildschirm): 100% war dort um die Statusleisten-Höhe zu kurz -> Streifen unten, Spielfeld gequetscht.
+   lvh = volle Bildschirmhöhe (07.11.2026) */
+@media (display-mode: standalone){ html,body{height:100lvh!important;min-height:100%} }
 </style>
 
 <div class="app">
@@ -609,7 +613,7 @@ body.gameover .tools{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='07.11.2026, 09:20';   // wird beim Bauen gefüllt
+const APP_VERSION='07.11.2026, 09:27';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }

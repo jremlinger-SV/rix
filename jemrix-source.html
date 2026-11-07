@@ -785,6 +785,10 @@ header .stats{gap:10px}
 .pk-list .pk-hs svg{width:20px;height:20px}
 .pk-list .pk-beta{top:6px;right:34px;width:auto;height:auto;overflow:visible;border-radius:0}
 .pk-list .pk-beta b{position:static;display:block;width:auto;transform:none;padding:1px 6px;border-radius:6px;font-size:8px}
+
+/* iPhone-App (Home-Bildschirm): 100% war dort um die Statusleisten-Höhe zu kurz -> Streifen unten, Spielfeld gequetscht.
+   lvh = volle Bildschirmhöhe (07.11.2026) */
+@media (display-mode: standalone){ html,body{height:100lvh!important;min-height:100%} }
 </style>
 
 <div class="app">
