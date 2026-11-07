@@ -528,7 +528,7 @@ function load(k,d){ try{ const v=localStorage.getItem(k); if (!v) return d; cons
   if (d!==null && d!==undefined && (typeof r!==typeof d || Array.isArray(r)!==Array.isArray(d) || r===null)) return d;
   return r; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='07.11.2026, 09:27';   // wird beim Bauen gefüllt
+const APP_VERSION='07.11.2026, 10:09';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JENMAH_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 const pick=a=>a[rnd(a.length)];
@@ -1243,8 +1243,8 @@ function armQuit(btn, go){ let t=0; btn.addEventListener('click',e=>{ e.stopProp
 function toGamePick(){ try{ sessionStorage.setItem('jje-pick','1'); }catch(e){} }
 function quitGame(){
   recordTime(); save('jenmah-game',null); try{ localStorage.removeItem('jenmah-name'); }catch(e){}
-  toGamePick(); document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
-  setTimeout(()=>{ location.href='./'; },380);
+  toGamePick(); document.body.style.transition='opacity .14s ease-in'; document.body.style.opacity='0';
+  setTimeout(()=>{ location.href='./'; },150);
 }
 $('quit').onclick=quitGame;
 armQuit($('qbtn'), quitGame);

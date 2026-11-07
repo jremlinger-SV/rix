@@ -829,6 +829,19 @@ header .stats{gap:10px}
 /* iPhone-App (Home-Bildschirm): 100% war dort um die Statusleisten-Höhe zu kurz -> Streifen unten, Spielfeld gequetscht.
    lvh = volle Bildschirmhöhe (07.11.2026) */
 @media (display-mode: standalone){ html,body{height:100lvh!important;min-height:100%} }
+
+/* Spielauswahl baut sich zügig Zeile für Zeile auf (07.11.2026, gesamt gut eine halbe Sekunde) */
+.gamepick .pk-pre{animation:pkfade .22s ease-out both}
+.pk-list{animation:pkfade .18s ease-out both}
+.pk-list .pk-row{animation:pkrow .26s cubic-bezier(.2,.8,.2,1) both}
+.pk-list .pk-hs{animation:none}   /* Pokal kommt mit seiner Zeile */
+.pk-list .pk-row:nth-child(1){animation-delay:.03s}.pk-list .pk-row:nth-child(2){animation-delay:.06s}.pk-list .pk-row:nth-child(3){animation-delay:.09s}
+.pk-list .pk-row:nth-child(4){animation-delay:.12s}.pk-list .pk-row:nth-child(5){animation-delay:.15s}.pk-list .pk-row:nth-child(6){animation-delay:.18s}
+.pk-list .pk-row:nth-child(7){animation-delay:.21s}.pk-list .pk-row:nth-child(n+8){animation-delay:.24s}
+.gamepick .pk-foot{animation:pkfade .22s ease-out .26s both}
+@keyframes pkfade{from{opacity:0}}
+@keyframes pkrow{from{opacity:0;transform:translateY(10px)}}
+@media (prefers-reduced-motion: reduce){.pk-list,.pk-list .pk-row,.gamepick .pk-pre,.gamepick .pk-foot{animation:none}}
 </style>
 
 <div class="app">
@@ -1002,7 +1015,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='07.11.2026, 09:27';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='07.11.2026, 10:09';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -2484,8 +2497,8 @@ function quitGame(){
   else if (typeof recordTime==='function') recordTime();
   toGamePick();
   save('jemrix-game',null); try{ localStorage.removeItem('jemrix-name'); localStorage.removeItem('achtfeld-game'); }catch(e){}
-  player=''; document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
-  setTimeout(()=>{ try{ location.reload(); }catch(e){ location.href=location.href.split('#')[0]; } },380);
+  player=''; document.body.style.transition='opacity .14s ease-in'; document.body.style.opacity='0';
+  setTimeout(()=>{ try{ location.reload(); }catch(e){ location.href=location.href.split('#')[0]; } },150);
 }
 $('quit').onclick=quitGame;
 armQuit($('qbtn'), quitGame);

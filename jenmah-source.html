@@ -1203,8 +1203,8 @@ function armQuit(btn, go){ let t=0; btn.addEventListener('click',e=>{ e.stopProp
 function toGamePick(){ try{ sessionStorage.setItem('jje-pick','1'); }catch(e){} }
 function quitGame(){
   recordTime(); save('jenmah-game',null); try{ localStorage.removeItem('jenmah-name'); }catch(e){}
-  toGamePick(); document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
-  setTimeout(()=>{ location.href='./'; },380);
+  toGamePick(); document.body.style.transition='opacity .14s ease-in'; document.body.style.opacity='0';
+  setTimeout(()=>{ location.href='./'; },150);
 }
 $('quit').onclick=quitGame;
 armQuit($('qbtn'), quitGame);

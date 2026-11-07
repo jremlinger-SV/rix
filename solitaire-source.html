@@ -1345,8 +1345,8 @@ $('again').onclick=()=>{ SND.start(); newGame(); };
 function leave(){
   if (started && !ended && score>0) recordScore(score); else recordTime();
   started=false; save('jjesol-game',null); try{ localStorage.removeItem('jjesol-name'); }catch(e){}
-  document.body.style.transition='opacity .35s'; document.body.style.opacity='0';
-  toGamePick(); setTimeout(()=>{ location.href='./'; },380);
+  document.body.style.transition='opacity .14s ease-in'; document.body.style.opacity='0';
+  toGamePick(); setTimeout(()=>{ location.href='./'; },150);
 }
 $('quit').onclick=leave;
 /* Beenden-Knopf im Kopf: erster Tipp fragt nach („Beenden?“), zweiter Tipp innerhalb von 3 s beendet */
