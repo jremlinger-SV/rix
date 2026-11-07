@@ -357,6 +357,13 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
 @keyframes netin{from{opacity:0;transform:translate(-50%,-4px)}}
 .netnote{margin:6px 0 2px;text-align:center;font-size:.74rem;font-weight:700;opacity:.75}
 .netnote[hidden]{display:none}
+
+/* Gast-Option auf „Wer spielt?“ (07.11.2026) */
+.quick .qbreak{flex-basis:100%;height:0}
+.quick .gastbtn{border-style:dashed;display:inline-flex;align-items:center;gap:5px}
+.quick .gastbtn.cur{border-style:solid}
+.quick .gastbtn svg{width:15px;height:15px;flex:none}
+#regname[hidden]{display:none!important}
 </style>
 
 <div class="app">
@@ -413,7 +420,7 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
       </div>
       <div class="over reg" id="reg" hidden>
         <h2>Wer spielt?</h2>
-        <p>Namen antippen oder neu eingeben.</p>
+        <p>Namen antippen – oder als Gast spielen.</p>
         <form id="regform" novalidate>
           <div class="quick" id="quick" aria-label="Schnellauswahl"></div>
           <input id="regname" name="regname" type="text" maxlength="20" autocomplete="given-name" placeholder="Vorname" aria-label="Vorname">
@@ -1090,12 +1097,24 @@ let localScores=load('jjetet-scores',[]); if (!Array.isArray(localScores)) local
 function askName(){
   $('reg').hidden=false; $('regname').value=player||''; $('regerr').textContent=''; renderModes();
   const names=[]; const seen=new Set();
-  ['Emma','Jenny','Jens', ...localScores.map(e=>e.name)].forEach(n=>{ const c=clean(n); const k=c.toLowerCase(); if (c && !seen.has(k) && names.length<6){ seen.add(k); names.push(c); } });
+  ['Emma','Jenny','Jens'].forEach(n=>{ const c=clean(n); const k=c.toLowerCase(); if (c && !seen.has(k) && names.length<6){ seen.add(k); names.push(c); } });
   const q=$('quick'); q.innerHTML='';
   names.forEach(n=>{ const b=document.createElement('button'); b.type='button'; b.dataset.n=n; b.append(document.createTextNode(n));
     if (isBirthdayKid(n)){ const c=document.createElement('i'); c.className='cakei'; b.appendChild(c); }
     if (player && n.toLowerCase()===player.toLowerCase()) b.classList.add('cur');
     b.onclick=()=>{ q.querySelectorAll('button').forEach(x=>x.classList.toggle('cur',x===b)); $('regname').value=n; }; q.appendChild(b); });
+  { // Gast: eigener Knopf in zweiter Reihe, Namensfeld nur für Gäste
+    const fam=['emma','jenny','jens'], inp=$('regname');
+    const br=document.createElement('span'); br.className='qbreak'; q.appendChild(br);
+    const g=document.createElement('button'); g.type='button'; g.className='gastbtn';
+    g.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Gast';
+    const guest=on=>{ g.classList.toggle('cur',on); inp.hidden=!on; if (on) q.querySelectorAll('button').forEach(x=>{ if (x!==g) x.classList.remove('cur'); }); };
+    q.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>guest(false)));
+    g.onclick=()=>{ $('regerr').textContent=''; if (fam.includes(clean(inp.value).toLowerCase())) inp.value=''; guest(true); setTimeout(()=>{ try{ inp.focus(); }catch(e){} },30); };
+    inp.placeholder='Name des Gastes'; inp.setAttribute('aria-label','Name des Gastes'); inp.setAttribute('autocomplete','off');
+    q.appendChild(g);
+    guest(!!player && !fam.includes(clean(player).toLowerCase()));
+  }
   markLeader();
 }
 function setPlayer(n){
