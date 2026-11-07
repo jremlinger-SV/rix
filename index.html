@@ -42,11 +42,6 @@ img{max-width:100%}
 </style>
 </head>
 <body>
-<script>/* Home-Bildschirm-App: iOS meldet 100% um die Statusleiste zu kurz, 100lvh war zu lang -> Höhe = Bildschirmhöhe (Hochformat) */
-(function(){ try{ if (!(matchMedia('(display-mode: standalone)').matches || navigator.standalone)) return;
-  var fix=function(){ if (innerWidth>innerHeight) { document.documentElement.style.removeProperty('--apph'); return; }
-    document.documentElement.style.setProperty('--apph', Math.max(screen.width,screen.height)+'px'); };
-  fix(); addEventListener('resize',fix); addEventListener('orientationchange',function(){ setTimeout(fix,200); }); }catch(e){} })();</script>
 <style>
 /* Layout: one-screen spielfeld — logo + score strip, 8×8 board, three-piece tray. Deep-navy tray, seven separable blues; turbo swaps to a violet/teal set. */
 :root{
@@ -831,8 +826,6 @@ header .stats{gap:10px}
 .pk-list .pk-beta{top:6px;right:34px;width:auto;height:auto;overflow:visible;border-radius:0}
 .pk-list .pk-beta b{position:static;display:block;width:auto;transform:none;padding:1px 6px;border-radius:6px;font-size:8px}
 
-/* iPhone-App (Home-Bildschirm): Höhe kommt per Skript aus der Bildschirmhöhe (--apph), 07.11.2026 */
-@media (display-mode: standalone){ html,body{height:var(--apph,100%)!important} }
 
 /* Spielauswahl baut sich zügig Zeile für Zeile auf (07.11.2026, gesamt gut eine halbe Sekunde) */
 .gamepick .pk-pre{animation:pkfade .22s ease-out both}
@@ -1019,7 +1012,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='07.11.2026, 10:18';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='07.11.2026, 10:36';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen

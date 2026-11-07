@@ -44,11 +44,6 @@ img{max-width:100%}
 <body>
 <script>/* Zugang nur über die Familien-Startseite (Intro mit den drei Steinen) */
 try{ if (!window.JJE_PREVIEW && location.protocol!=='file:' && sessionStorage.getItem('remlinger-unlocked')!=='1') location.replace('./'); }catch(e){}</script>
-<script>/* Home-Bildschirm-App: iOS meldet 100% um die Statusleiste zu kurz, 100lvh war zu lang -> Höhe = Bildschirmhöhe (Hochformat) */
-(function(){ try{ if (!(matchMedia('(display-mode: standalone)').matches || navigator.standalone)) return;
-  var fix=function(){ if (innerWidth>innerHeight) { document.documentElement.style.removeProperty('--apph'); return; }
-    document.documentElement.style.setProperty('--apph', Math.max(screen.width,screen.height)+'px'); };
-  fix(); addEventListener('resize',fix); addEventListener('orientationchange',function(){ setTimeout(fix,200); }); }catch(e){} })();</script>
 <style>
 /* JJE_tetris – Tetris im JJE-Look. Grundgestaltung aus JJE_blocks/JJE_mahjong übernommen, darunter die Tetris-Teile. */
 /* --- aus JJE_mahjong übernommen --- */
@@ -412,8 +407,6 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
 
 .quick .gastbtn .crown + svg{display:none}   /* mit Krone ersetzt sie das Personen-Symbol */
 
-/* iPhone-App (Home-Bildschirm): Höhe kommt per Skript aus der Bildschirmhöhe (--apph), 07.11.2026 */
-@media (display-mode: standalone){ html,body{height:var(--apph,100%)!important} }
 </style>
 
 <div class="app">
@@ -494,7 +487,7 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='07.11.2026, 10:18';   // wird beim Bauen gefüllt
+const APP_VERSION='07.11.2026, 10:36';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
