@@ -455,6 +455,11 @@ body.gameover .afoot .top2{visibility:hidden}
 .tools button:disabled{opacity:.4}
 .tools button:active:not(:disabled){transform:scale(.95)}
 .tools .give svg{color:var(--muted)}
+.tools .tog.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tools .tog.on svg{color:#fff}
+.tools{gap:6px}
+.tools button{padding:6px 11px;white-space:nowrap}
+.tools .tog:not(.on) svg{color:var(--muted)}
 .tools .give.arm{background:#d9466b;border-color:#d9466b;color:#fff}
 .tools .give.arm svg{color:#fff}
 body.gameover .tools{visibility:hidden}
@@ -593,14 +598,14 @@ body.gameover .tools{visibility:hidden}
         <ul class="howto">
           <li><b>Antippen</b><span>Figur wählen, dann Zielfeld</span></li>
           <li><b>Ziehen</b><span>Figur aufs Feld schieben</span></li>
-          <li><b>Punkte</b><span>zeigen erlaubte Züge</span></li>
+          <li><b>Hilfe</b><span>unten an- und ausschalten</span></li>
           <li><b>Ziel</b><span>den König mattsetzen</span></li>
         </ul>
         <div class="mlabel">Gut zu wissen</div>
         <ul class="caps sch">
           <li><i style="--c:#d4a72c">+</i>Schlagen bringt Punkte</li>
-          <li><i style="--c:#38bdf8">?</i>Falscher Zug: du bekommst Hilfe</li>
-          <li><i style="--c:#d9466b">!</i>Leicht/Mittel: Warnung vor Fehlern</li>
+          <li><i style="--c:#38bdf8">?</i>Knopf „Hilfe“: Züge zeigen, Fehler erklären</li>
+          <li><i style="--c:#d9466b">!</i>mit Hilfe: Warnung vor Fehlern (Leicht/Mittel)</li>
           <li><i style="--c:#2563eb">↶</i>Zurück und Tipp kosten etwas</li>
         </ul>
         <div class="overbtns"><button type="button" id="helpok">Los geht's</button></div>
@@ -629,7 +634,7 @@ body.gameover .tools{visibility:hidden}
       </div>
     </div>
     <div class="tools" id="tools">
-      <button type="button" id="tundo" aria-label="Zug zurücknehmen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7L4.5 11.5 9 16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 11.5h9a5.5 5.5 0 0 1 0 11h-2" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" transform="translate(0 -4)"/></svg><span>Zurück</span></button>
+      <button type="button" id="thelp" class="tog" aria-label="Hilfe an oder aus" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.3" fill="currentColor"/></svg><span>Hilfe</span></button><button type="button" id="tundo" aria-label="Zug zurücknehmen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7L4.5 11.5 9 16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 11.5h9a5.5 5.5 0 0 1 0 11h-2" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" transform="translate(0 -4)"/></svg><span>Zurück</span></button>
       <button type="button" id="thint" aria-label="Tipp zeigen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z" fill="currentColor"/><rect x="9.5" y="17.4" width="5" height="2" rx="1" fill="currentColor"/><rect x="10.3" y="20.2" width="3.4" height="1.8" rx=".9" fill="currentColor"/></svg><span>Tipp</span></button>
       <button type="button" id="tgive" class="give" aria-label="Aufgeben und Ergebnis zeigen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M6.5 4.5h11l-2.4 4 2.4 4h-11z" fill="currentColor"/></svg><span>Aufgeben</span></button>
     </div>
@@ -1082,6 +1087,7 @@ let playTime=0, bestAtStart=0, runTime=0, undoStack=[], thinking=false, aiSeq=0,
 let drag=null;   // für die gemeinsame Pause-Logik
 const LAND=matchMedia('(orientation: landscape) and (max-height: 560px)');
 let gamesPlayed=load('jjesch-games',0);
+let helpOn=load('jjesch-help',false)===true;   // Hilfe (Zugpunkte, Erklärungen, Warnungen) – standardmäßig aus
 function persist(){ if (ended || !started) return;
   save('jjesch-game',{who:(player||'').toLowerCase(),mode,score,playTime,bestAtStart,lookOrder,lookN:gamesPlayed,runTime,moves:E.moves(),undo:undoStack.slice(-60),tips:tipsUsed}); }
 
@@ -1108,7 +1114,7 @@ function playerMove(m){
   clearSel(); clearMarks('bad'); clearMarks('hint');
   undoStack.push(score);
   E.play(m); render(true); moveSound(m);
-  if (MODES[mode].warn){
+  if (MODES[mode].warn && helpOn){
     const w=E.warnAfter(m);
     if (w){ pendingWarn={m,w}; showWarn(w); updTools(); return; }
   }
@@ -1151,7 +1157,7 @@ async function computerTurn(){
   if (m.c){ const p=sqXY(m.t); showGainAt('', E.NAME[Math.abs(m.c)]+' weg', null, p.x+GEO.sz/2, p.y); }
   persist(); updTools(); showStats();
   if (checkEnd()) return;
-  if (E.inCheck(1)) { coach('<b class="no">Schach!</b> Dein König wird angegriffen – schütze ihn.', null, 'check'); SND.clink(); }
+  if (E.inCheck(1)) { if (helpOn) coach('<b class="no">Schach!</b> Dein König wird angegriffen – schütze ihn.', null, 'check'); SND.clink(); }
 }
 function moveSound(m){ if (m.c){ SND.pop(3,1); SND.swoosh(1); } else SND.plop(2); if (E.status().check) setTimeout(()=>SND.clink(),120); }
 function checkEnd(){
@@ -1353,7 +1359,7 @@ function clearMarks(c){ sqsEl.querySelectorAll('.'+c).forEach(e=>e.classList.rem
 function clearSel(){ sel=null; clearMarks('sel'); clearMarks('dot'); clearMarks('ring'); }
 function select(s){
   clearSel(); sel=s; markSq(s,'sel');
-  E.legal().filter(m=>m.f===s).forEach(m=>markSq(m.t, E.at(m.t)||m.fl===2 ? 'ring' : 'dot'));
+  if (helpOn) E.legal().filter(m=>m.f===s).forEach(m=>markSq(m.t, E.at(m.t)||m.fl===2 ? 'ring' : 'dot'));
 }
 function coach(html, btns, kind){
   const c=$('coach'); coachKind=html?(kind||'info'):'';
@@ -1379,7 +1385,7 @@ function tryMove(f,t){
   const txt=E.explain(f,t); const el=pieceEls.find(e=>+e.dataset.s===f);
   if (el){ el.classList.remove('nope'); void el.offsetWidth; el.classList.add('nope'); setTimeout(()=>el.classList.remove('nope'),400); }
   clearMarks('bad'); markSq(t,'bad'); setTimeout(()=>clearMarks('bad'),1400);
-  coach(`<b class="ok">Fast!</b> ${txt}`, null, 'explain'); SND.thud();
+  if (helpOn) coach(`<b class="ok">Fast!</b> ${txt}`, null, 'explain'); else coach(''); SND.thud();
   select(f); return false;
 }
 boardEl.addEventListener('pointerdown',e=>{
@@ -1397,7 +1403,7 @@ boardEl.addEventListener('pointerdown',e=>{
     SND.tick(0); return;
   }
   if (sel){ tryMove(sel,s); return; }
-  if (v<0){ coach(`<b class="ok">Hallo!</b> Du spielst <b>Weiß</b>. Tippe eine weiße Figur an – die Punkte zeigen dann, wohin sie kann.`, null, 'explain'); SND.thud(); }
+  if (v<0 && helpOn){ coach(`<b class="ok">Hallo!</b> Du spielst <b>Weiß</b>. Tippe eine weiße Figur an – die Punkte zeigen dann, wohin sie kann.`, null, 'explain'); SND.thud(); }
 },{passive:false});
 boardEl.addEventListener('pointermove',e=>{
   if (!drag || e.pointerId!==drag.id) return; e.preventDefault();
@@ -1429,6 +1435,13 @@ function askPromo(opts){
 $('promoNo').onclick=()=>{ $('promo').hidden=true; clearSel(); render(true); };
 $('tundo').onclick=()=>undo();
 $('thint').onclick=()=>showHint();
+/* Hilfe an/aus (gemerkt, standardmäßig aus) */
+function updHelpBtn(){ const b=$('thelp'); b.classList.toggle('on',helpOn); b.setAttribute('aria-pressed',helpOn?'true':'false'); b.setAttribute('aria-label',helpOn?'Hilfe ist an – antippen zum Ausschalten':'Hilfe ist aus – antippen zum Einschalten'); }
+$('thelp').onclick=()=>{ helpOn=!helpOn; save('jjesch-help',helpOn); updHelpBtn(); SND.tick(helpOn?1:0);
+  if (sel) select(sel);
+  if (!helpOn && coachKind && coachKind!=='warn') coach('');
+  toast(helpOn ? 'Hilfe an: Züge zeigen, Fehler erklären' : 'Hilfe aus'); };
+updHelpBtn();
 (function(){ const b=$('tgive'), lbl=b.querySelector('span'); let t=0;
   b.addEventListener('click',()=>{ if (!started || ended) return;
     if (b.classList.contains('arm')){ clearTimeout(t); b.classList.remove('arm'); lbl.textContent='Aufgeben'; finishRun(); return; }
