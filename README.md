@@ -1,7 +1,7 @@
 # Jemrix – nur für Remlingers
 
 Das Block-Puzzle der Familie Remlinger als Web-App fürs iPhone (ab iPhone 15, Hochformat).
-Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix), **JJE_mahjong** (Mahjong mit dem Original-Satz von 144 Steinen, früher jenMah) **JJE_tetris** (Tetris mit drei Schwierigkeiten), **JJE_arki** (Arkanoid mit drei Schwierigkeiten) **JJE_snake** (Snake mit drei Schwierigkeiten) **JJE_maze** (Labyrinth: Jemmi sammelt Steinchen, Funken jagen ihn; drei Schwierigkeiten) oder **JJE_solitaire** (Klondike-Solitaire: Leicht = immer lösbar, Mittel = 3 Durchgänge, Schwer = 3 Karten ziehen).
+Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix), **JJE_mahjong** (Mahjong mit dem Original-Satz von 144 Steinen, früher jenMah) **JJE_tetris** (Tetris mit drei Schwierigkeiten), **JJE_arki** (Arkanoid mit drei Schwierigkeiten) **JJE_snake** (Snake mit drei Schwierigkeiten) **JJE_maze** (Labyrinth: Jemmi sammelt Steinchen, Funken jagen ihn; drei Schwierigkeiten), **JJE_solitaire** (Klondike-Solitaire: Leicht = immer lösbar, Mittel = 3 Durchgänge, Schwer = 3 Karten ziehen) oder **JJE_chess** (Schach gegen den Computer, kindgerecht: Hilfe bei falschen Zügen, Warnung vor Fehlern, drei Schwierigkeiten).
 
 ## Spielen
 1. Link in **Safari** öffnen: `https://jremlinger-sv.github.io/rix/`
@@ -29,6 +29,7 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 **JJE_maze-Liste:** einmalig `supabase-maze.sql` ausführen (eigene Liste je Schwierigkeit, nimmt die Liste auch in den Monats-Reset auf). Zurücksetzen mit `select reset_scores_maz();`.
 
 **JJE_solitaire-Liste:** einmalig `supabase-solitaire.sql` ausführen (eigene Liste je Schwierigkeit, nimmt die Liste auch in den Monats-Reset auf). Zurücksetzen mit `select reset_scores_sol();`.
+**JJE_chess-Liste:** einmalig `supabase-chess.sql` ausführen (eigene Liste je Schwierigkeit, nimmt die Liste auch in den Monats-Reset auf). Zurücksetzen mit `select reset_scores_sch();`.
 
 **Liste zurücksetzen:** Im Supabase SQL Editor `select reset_scores();` ausführen. Die Geräte leeren ihre lokalen Listen beim nächsten Start automatisch mit.
 
@@ -42,6 +43,7 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 | `snake.html` | JJE_snake – Snake (wird aus `snake-source.html` erzeugt) |
 | `maze.html` | JJE_maze – Labyrinth (wird aus `maze-source.html` erzeugt) |
 | `solitaire.html` | JJE_solitaire – Klondike (wird aus `solitaire-source.html` erzeugt) |
+| `chess.html` | JJE_chess – Schach gegen den Computer, kindgerecht mit Korrekturhilfe (wird aus `chess-source.html` erzeugt) |
 | `config.js` | Supabase-Zugang und Familien-Code |
 | `sw.js` | Offline-Speicher |
 | `manifest.webmanifest`, `icons/` | App-Name, Icon, Startbild |
@@ -53,6 +55,7 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 | `supabase-snake.sql` | eigene Highscore-Liste für JJE_snake (plus Monats-Reset) |
 | `supabase-maze.sql` | eigene Highscore-Liste für JJE_maze (plus Monats-Reset) |
 | `supabase-solitaire.sql` | eigene Highscore-Liste für JJE_solitaire (plus Monats-Reset) |
+| `supabase-chess.sql` | eigene Highscore-Liste für JJE_chess (plus Monats-Reset) |
 | `build.py`, `sw.template.js` | Werkzeuge zum Neu-Erzeugen von `index.html` und `sw.js` |
 
 ## Vorschau-Links

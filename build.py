@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Baut die Web-App: index.html (Jemrix mit Intro und Spielauswahl) aus jemrix-source.html,
-jenmah.html (Mahjong) aus jenmah-source.html, tetris.html aus tetris-source.html, arki.html aus arki-source.html, snake.html aus snake-source.html, maze.html aus maze-source.html, solitaire.html aus solitaire-source.html und sw.js (Offline-Speicher) aus sw.template.js.
+jenmah.html (Mahjong) aus jenmah-source.html, tetris.html aus tetris-source.html, arki.html aus arki-source.html, snake.html aus snake-source.html, maze.html aus maze-source.html, solitaire.html aus solitaire-source.html, chess.html aus chess-source.html und sw.js (Offline-Speicher) aus sw.template.js.
 Aufruf:  python3 build.py
 Änderungen an den Spielen werden in den *-source.html-Dateien gemacht und hier nur neu exportiert."""
 import sys, re, pathlib, hashlib, time
@@ -282,8 +282,20 @@ o = head('JJE_solitaire', 'JJE_solitaire – Solitaire nur für die Remlingers')
 assert 'fonts.googleapis' not in o
 (HERE / 'solitaire.html').write_text(o, encoding='utf-8')
 
+# 4h) JJE_chess (Schach gegen den Computer) aus chess-source.html: gleicher Kopf, gleiche Schriften, gleicher Offline-Speicher
+c = (HERE / 'chess-source.html').read_text(encoding='utf-8')
+assert c.count('<title>JJE_chess</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n') == 1
+c = c.replace('<title>JJE_chess</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n', '')
+c = re.sub(r'<link rel="preconnect" href="https://fonts.googleapis.com">\n', '', c)
+c = re.sub(r'<link rel="stylesheet" href="https://fonts.googleapis.com/[^"]*">\n', '', c)
+assert c.count("const APP_VERSION='';") == 1
+c = c.replace("const APP_VERSION='';", f"const APP_VERSION='{STAMP}';")
+c = head('JJE_chess', 'JJE_chess – Schach nur für die Remlingers') + c.rstrip() + '\n</body>\n</html>\n'
+assert 'fonts.googleapis' not in c
+(HERE / 'chess.html').write_text(c, encoding='utf-8')
+
 # 5) Service Worker mit Versionsstempel (neue Version = neuer Cache)
-h = hashlib.sha1(s.encode()); h.update(m.encode()); h.update(t.encode()); h.update(k.encode()); h.update(n.encode()); h.update(z.encode()); h.update(o.encode())
+h = hashlib.sha1(s.encode()); h.update(m.encode()); h.update(t.encode()); h.update(k.encode()); h.update(n.encode()); h.update(z.encode()); h.update(o.encode()); h.update(c.encode())
 for f in sorted([*(HERE/'fonts').glob('*'), *(HERE/'icons').glob('*'), HERE/'config.js', HERE/'manifest.webmanifest', HERE/'sw.template.js']):
     h.update(f.name.encode()); h.update(f.read_bytes())
 ver = h.hexdigest()[:10]
@@ -291,4 +303,4 @@ sw = (HERE / 'sw.template.js').read_text(encoding='utf-8').replace('__VERSION__'
 for f in re.findall(r"'([^']+\.(?:html|js|webmanifest|png|woff2))'", sw.split('];')[0]):
     assert (HERE / f).exists(), f'Offline-Datei fehlt: {f}'
 (HERE / 'sw.js').write_text(sw, encoding='utf-8')
-print('index.html, jenmah.html, tetris.html, arki.html, snake.html, maze.html, solitaire.html und sw.js gebaut, Version', ver)
+print('index.html, jenmah.html, tetris.html, arki.html, snake.html, maze.html, solitaire.html, chess.html und sw.js gebaut, Version', ver)

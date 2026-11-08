@@ -839,6 +839,10 @@ header .stats{gap:10px}
 @keyframes pkfade{from{opacity:0}}
 @keyframes pkrow{from{opacity:0;transform:translateY(10px)}}
 @media (prefers-reduced-motion: reduce){.pk-list,.pk-list .pk-row,.gamepick .pk-pre,.gamepick .pk-foot{animation:none}}
+
+/* BETA-Schild am Pokal-Knopf (Highscore-Liste noch nicht verbunden) */
+.pk-list .pk-hs .pk-beta.hsb{position:absolute;top:-5px;right:auto;left:50%;transform:translateX(-50%);width:auto;height:auto;overflow:visible;border-radius:0;pointer-events:none}
+.pk-list .pk-hs .pk-beta.hsb b{position:static;display:block;width:auto;transform:none;padding:1px 5px;border-radius:6px;font-size:7px;line-height:1.6;letter-spacing:.06em}
 </style>
 
 <div class="app">
@@ -951,6 +955,13 @@ header .stats{gap:10px}
     </button>
     <button class="pk-hs" type="button" data-g="sol" aria-label="Highscores JJE_solitaire"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z" fill="currentColor"/><path d="M7 6H4.5a.5.5 0 0 0-.5.5C4 9 5.5 10.5 7.4 10.8M17 6h2.5a.5.5 0 0 1 .5.5c0 2.5-1.5 4-3.4 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13v4M8.5 20h7l-.8-3h-5.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
     </div>
+    <div class="pk-row">
+    <button class="pk-card" id="pickSch" type="button">
+      <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><rect x="5" y="5" width="13" height="13" rx="2.5" fill="#2f6bff"/><rect x="18" y="18" width="13" height="13" rx="2.5" fill="#2f6bff"/><rect x="18" y="5" width="13" height="13" rx="2.5" fill="#9fd8ff" opacity=".35"/><rect x="5" y="18" width="13" height="13" rx="2.5" fill="#9fd8ff" opacity=".35"/><svg x="6" y="4" width="25" height="28" viewBox="0 0 100 100"><g fill="#ffffff" stroke="#0f1d3d" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><rect x="22" y="79" width="56" height="11" rx="5"/><path d="M31 79c0-12 5-19 13-26-6 1-12 4-17 1-5-4-3-11 2-16 6-6 11-11 13-19l4 7c13-1 26 9 29 27 2 10 0 19-3 26z"/><circle cx="43" cy="33" r="3.2" fill="#0f1d3d" stroke="none"/></g></svg></svg></span>
+      <span class="pk-txt"><b class="pk-name">JJE_chess</b><small>Schach</small><span class="pk-rec" id="recSch"></span></span>
+    </button>
+    <button class="pk-hs" type="button" data-g="sch" aria-label="Highscores JJE_chess"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z" fill="currentColor"/><path d="M7 6H4.5a.5.5 0 0 0-.5.5C4 9 5.5 10.5 7.4 10.8M17 6h2.5a.5.5 0 0 1 .5.5c0 2.5-1.5 4-3.4 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13v4M8.5 20h7l-.8-3h-5.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span class="pk-beta hsb" aria-hidden="true"><b>BETA</b></span></button>
+    </div>
     </div>
     <div class="pk-foot"><span>Achtung: nur für <b>Remlingers</b></span></div>
     <div class="hsov" id="hsov" hidden>
@@ -1012,7 +1023,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='07.11.2026, 10:36';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='08.11.2026, 22:19';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -2267,23 +2278,23 @@ markLeader();
 
 /* Highscore-Hinweis: Platz 1 je Spiel (und Schwierigkeit) mit dem Stand beim letzten Öffnen vergleichen.
    Gemeldet wird nur eine höhere Nr. 1 eines anderen Spielers; der erste Start merkt sich nur den Stand. */
-const HS_GAMES=[['blocks','JJE_blocks'],['mah','JJE_mahjong'],['tet','JJE_tetris'],['ark','JJE_arki'],['snk','JJE_snake'],['maz','JJE_maze'],['sol','JJE_solitaire']];
+const HS_GAMES=[['blocks','JJE_blocks'],['mah','JJE_mahjong'],['tet','JJE_tetris'],['ark','JJE_arki'],['snk','JJE_snake'],['maz','JJE_maze'],['sol','JJE_solitaire'],['sch','JJE_chess']];
 function hsRefreshAll(){
   const jobs=[Promise.resolve(typeof fetchScores==='function' ? fetchScores() : null).catch(()=>null)];
-  ['mah','tet','ark','snk','maz','sol'].forEach(g=>jobs.push(fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol'}[g])
+  ['mah','tet','ark','snk','maz','sol','sch'].forEach(g=>jobs.push(fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol',sch:'get_scores_sch'}[g])
     .then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; } }).catch(()=>null)));
   return Promise.race([Promise.all(jobs), new Promise(r=>setTimeout(r,4500))]);
 }
 function hsLeaders(){
   const out={};
-  HS_GAMES.forEach(([g,title])=>{ (g==='tet'||g==='ark'||g==='snk'||g==='maz'||g==='sol' ? Object.keys(HS_TL) : [null]).forEach(m=>{
+  HS_GAMES.forEach(([g,title])=>{ (g==='tet'||g==='ark'||g==='snk'||g==='maz'||g==='sol'||g==='sch' ? Object.keys(HS_TL) : [null]).forEach(m=>{
     try{ const d=hsData(g,m), r=d.rows[0]; if (r && r.score>0) out[g+(m?':'+m:'')]={name:clean(r.name), score:r.score, txt:d.fmt(r.score), game:title, mode:m?HS_TL[m]:''}; }catch(e){} }); });
   return out;
 }
 function hsOwnName(){   // wer auf diesem iPhone spielt: der Name mit den meisten eigenen Ergebnissen
   const cnt=new Map();
-  ['jemrix-scores','jenmah-lv-scores','jjetet-scores','jjeark-scores','jjesnk-scores','jjemaz-scores','jjesol-scores'].forEach(k=>{ const a=load(k,[]); if (Array.isArray(a)) a.forEach(e=>{ if (e && e.name){ const n=clean(e.name).toLowerCase(); cnt.set(n,(cnt.get(n)||0)+1); } }); });
-  ['jemrix-name','jenmah-name','jjetet-name','jjeark-name','jjesnk-name','jjemaz-name','jjesol-name'].forEach(k=>{ const n=clean(load(k,'')).toLowerCase(); if (n) cnt.set(n,(cnt.get(n)||0)+3); });
+  ['jemrix-scores','jenmah-lv-scores','jjetet-scores','jjeark-scores','jjesnk-scores','jjemaz-scores','jjesol-scores','jjesch-scores'].forEach(k=>{ const a=load(k,[]); if (Array.isArray(a)) a.forEach(e=>{ if (e && e.name){ const n=clean(e.name).toLowerCase(); cnt.set(n,(cnt.get(n)||0)+1); } }); });
+  ['jemrix-name','jenmah-name','jjetet-name','jjeark-name','jjesnk-name','jjemaz-name','jjesol-name','jjesch-name'].forEach(k=>{ const n=clean(load(k,'')).toLowerCase(); if (n) cnt.set(n,(cnt.get(n)||0)+3); });
   let best='', bn=0; cnt.forEach((v,k)=>{ if (v>bn){ bn=v; best=k; } });
   if (best) save('jje-own-name',best); else best=String(load('jje-own-name','')||'');   // nach einem Monats-Reset sind die Listen leer – Name gemerkt
   return best;
@@ -2548,7 +2559,7 @@ function showModes(cont){
   renderRecs();
   // Platz 1 auf den Karten frisch vom Server holen (sonst zeigen Mahjong/Tetris bis zum Öffnen des Spiels die alte Liste)
   Promise.resolve(typeof fetchScores==='function' ? fetchScores() : null).then(renderRecs,renderRecs);
-  Promise.resolve(syncOthers()).catch(()=>null).then(()=>['mah','tet','ark','snk','maz','sol'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } })));
+  Promise.resolve(syncOthers()).catch(()=>null).then(()=>['mah','tet','ark','snk','maz','sol','sch'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol',sch:'get_scores_sch'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } })));
   setupHsOverlay();
   let chosen=false;
   $('pickJemrix').onclick=()=>{ if (chosen) return; chosen=true; $('pickJemrix').classList.add('go'); SND.plop(2);
@@ -2572,6 +2583,9 @@ function showModes(cont){
   $('pickSol').onclick=()=>{ if (chosen) return; chosen=true; $('pickSol').classList.add('go'); SND.plop(2);
     try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
     setTimeout(()=>{ pk.classList.add('leaving'); setTimeout(()=>{ location.href='solitaire.html'; },220); },160); };
+  $('pickSch').onclick=()=>{ if (chosen) return; chosen=true; $('pickSch').classList.add('go'); SND.plop(2);
+    try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
+    setTimeout(()=>{ pk.classList.add('leaving'); setTimeout(()=>{ location.href='chess.html'; },220); },160); };
 }
 /* Platz 1 je Spiel auf den Karten der Spielauswahl – bevorzugt frisch vom Server */
 function renderRecs(){
@@ -2589,12 +2603,14 @@ function renderRecs(){
   if ($('recMaz')) rec($('recMaz'), allZ?[allZ]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allZ.mode]);
   const allO=Object.keys(HS_TL).map(m=>{ const r=hsData('sol',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
   if ($('recSol')) rec($('recSol'), allO?[allO]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allO.mode]);
+  const allC=Object.keys(HS_TL).map(m=>{ const r=hsData('sch',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  if ($('recSch')) rec($('recSch'), allC?[allC]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allC.mode]);
 }
 /* Highscore-Fenster auf der Spielauswahl: je Spiel die Familienliste (Tetris und Arki je Schwierigkeit) */
 /* Wartende Ergebnisse der anderen Spiele (offline oder vor Anlage der Liste erzielt) gleich von der Spielauswahl aus übertragen,
    nicht erst beim nächsten Öffnen des jeweiligen Spiels. Doppeltes Senden schadet nicht: pro Name zählt nur der beste Wert. */
 const OTHER_PENDING=[['jenmah-lv-pending','submit_scores_mah'],['jjetet-pending','submit_scores_tet'],['jjeark-pending','submit_scores_ark'],
-  ['jjesnk-pending','submit_scores_snk'],['jjemaz-pending','submit_scores_maz'],['jjesol-pending','submit_scores_sol']];
+  ['jjesnk-pending','submit_scores_snk'],['jjemaz-pending','submit_scores_maz'],['jjesol-pending','submit_scores_sol'],['jjesch-pending','submit_scores_sch']];
 let othersSyncing=false;
 async function syncOthers(){
   if (othersSyncing || typeof api!=='function' || typeof ONLINE==='undefined' || !ONLINE || typeof FAMILY_CODE==='undefined' || navigator.onLine===false) return;
@@ -2624,7 +2640,7 @@ function bestPerName(rows, pend){
   return [...by.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10);
 }
 const HS_TL={leicht:'Leicht',mittel:'Mittel',schwer:'Schwer'};
-let hsFresh={mah:null, tet:null, ark:null, snk:null, maz:null, sol:null}, hsReset={mah:0, tet:0, ark:0, snk:0, maz:0, sol:0};
+let hsFresh={mah:null, tet:null, ark:null, snk:null, maz:null, sol:null, sch:null}, hsReset={mah:0, tet:0, ark:0, snk:0, maz:0, sol:0, sch:0};
 function hsData(g, m){
   if (g==='blocks'){ const tl=topList(); return {rows:tl.rows, fmt:showPts, sub:tl.title}; }
   if (g==='mah'){
@@ -2646,6 +2662,11 @@ function hsData(g, m){
     const sh=hsFresh.sol || load('jjesol-shared-cache',null), pend=load('jjesol-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.sol || (e.at||0)>hsReset.sol));
     const rows=Array.isArray(sh) ? bestPerName(sh.filter(r=>r && r.mode===m), pend) : bestPerName(load('jjesol-scores',[]).filter(r=>r && r.mode===m), []);
     return {rows, fmt:v=>Number(v).toLocaleString('de-DE'), sub:hsSub(hsFresh.sol, sh)};
+  }
+  if (g==='sch'){
+    const sh=hsFresh.sch || load('jjesch-shared-cache',null), pend=load('jjesch-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.sch || (e.at||0)>hsReset.sch));
+    const rows=Array.isArray(sh) ? bestPerName(sh.filter(r=>r && r.mode===m), pend) : bestPerName(load('jjesch-scores',[]).filter(r=>r && r.mode===m), []);
+    return {rows, fmt:v=>Number(v).toLocaleString('de-DE'), sub:hsSub(hsFresh.sch, sh)};
   }
   if (g==='ark'){
     const sh=hsFresh.ark || load('jjeark-shared-cache',null), pend=load('jjeark-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.ark || (e.at||0)>hsReset.ark));
@@ -2672,18 +2693,18 @@ function setupHsOverlay(){
     });
   };
   const tabs=()=>{
-    const box=$('hsTabs'); box.innerHTML=''; box.hidden = cur!=='tet' && cur!=='ark' && cur!=='snk' && cur!=='maz' && cur!=='sol'; if (box.hidden) return;
+    const box=$('hsTabs'); box.innerHTML=''; box.hidden = cur!=='tet' && cur!=='ark' && cur!=='snk' && cur!=='maz' && cur!=='sol' && cur!=='sch'; if (box.hidden) return;
     Object.keys(HS_TL).forEach(k=>{ const b=document.createElement('button'); b.type='button'; b.textContent=HS_TL[k]; if (k===curMode) b.className='on';
       b.onclick=()=>{ curMode=k; tabs(); render(); }; box.appendChild(b); });
   };
   const open=g=>{
-    cur=g; const card={blocks:'pickJemrix',mah:'pickMah',tet:'pickTet',ark:'pickArk',snk:'pickSnk',maz:'pickMaz',sol:'pickSol'}[g];
-    $('hsT').textContent={blocks:'JJE_blocks',mah:'JJE_mahjong',tet:'JJE_tetris',ark:'JJE_arki',snk:'JJE_snake',maz:'JJE_maze',sol:'JJE_solitaire'}[g];
+    cur=g; const card={blocks:'pickJemrix',mah:'pickMah',tet:'pickTet',ark:'pickArk',snk:'pickSnk',maz:'pickMaz',sol:'pickSol',sch:'pickSch'}[g];
+    $('hsT').textContent={blocks:'JJE_blocks',mah:'JJE_mahjong',tet:'JJE_tetris',ark:'JJE_arki',snk:'JJE_snake',maz:'JJE_maze',sol:'JJE_solitaire',sch:'JJE_chess'}[g];
     const art=$(card).querySelector('.pk-art'); $('hsArt').innerHTML=art ? art.innerHTML : '';
-    if (g==='tet' || g==='ark' || g==='snk' || g==='maz' || g==='sol'){ const pm=load({tet:'jjetet-mode',ark:'jjeark-mode',snk:'jjesnk-mode',maz:'jjemaz-mode',sol:'jjesol-mode'}[g],'leicht'); curMode=HS_TL[pm]?pm:'leicht'; }
+    if (g==='tet' || g==='ark' || g==='snk' || g==='maz' || g==='sol' || g==='sch'){ const pm=load({tet:'jjetet-mode',ark:'jjeark-mode',snk:'jjesnk-mode',maz:'jjemaz-mode',sol:'jjesol-mode',sch:'jjesch-mode'}[g],'leicht'); curMode=HS_TL[pm]?pm:'leicht'; }
     tabs(); render(); ov.hidden=false; try{ SND.plop(1); }catch(e){}
     setTimeout(()=>$('hsx').focus(),50);
-    const fn={mah:'get_scores_mah', tet:'get_scores_tet', ark:'get_scores_ark', snk:'get_scores_snk', maz:'get_scores_maz', sol:'get_scores_sol'}[g];
+    const fn={mah:'get_scores_mah', tet:'get_scores_tet', ark:'get_scores_ark', snk:'get_scores_snk', maz:'get_scores_maz', sol:'get_scores_sol', sch:'get_scores_sch'}[g];
     if (fn) fetchOther(fn).then(j=>{ if (!j) return; hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); if (cur===g && !ov.hidden) render(); });
   };
   const close=()=>{ ov.hidden=true; cur=null; };
