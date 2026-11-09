@@ -217,7 +217,7 @@ body.ending .slot.dead{box-shadow:inset 0 0 0 2px rgba(248,113,113,.7);backgroun
 .cine-rays{position:absolute;left:50%;top:38%;width:140vmax;height:140vmax;margin:-70vmax 0 0 -70vmax;will-change:transform,opacity;background:repeating-conic-gradient(from 0deg,rgba(140,195,255,.16) 0deg 3deg,transparent 3deg 12deg);-webkit-mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 22%,transparent 55%);mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 22%,transparent 55%);opacity:0;animation:craysin 2.67s ease-out 2.93s forwards,crayspin 80s linear infinite}
 @keyframes craysin{to{opacity:1}}
 @keyframes crayspin{to{transform:rotate(360deg)}}
-.cine-cam{position:absolute;inset:0;will-change:transform;animation:ccam 8.27s cubic-bezier(.2,.6,.2,1) both}
+.cine-cam{position:absolute;inset:0;will-change:transform;animation:ccam 2.7s cubic-bezier(.2,.6,.2,1) both}   /* Zoom fertig, bevor die Steine kommen (flüssiger auf dem iPhone) */
 @keyframes ccam{0%{transform:scale(1.22)}100%{transform:scale(1)}}
 .cine.hit .cine-emblem,.cine.hit .cine-title{animation:cshake .6s ease-out}
 @keyframes cshake{0%,100%{translate:0 0}20%{translate:-.8vmin .5vmin}40%{translate:.7vmin -.6vmin}60%{translate:-.4vmin .3vmin}80%{translate:.2vmin -.1vmin}}
@@ -233,16 +233,17 @@ body.ending .slot.dead{box-shadow:inset 0 0 0 2px rgba(248,113,113,.7);backgroun
 .cine-wave{position:absolute;left:50%;top:50%;width:30vmin;height:30vmin;margin:-15vmin 0 0 -15vmin;border-radius:50%;border:.6vmin solid #dff1ff;box-shadow:0 0 4vmin #4d9bff,inset 0 0 4vmin #4d9bff;opacity:0;will-change:transform,opacity}
 .cine.hit .cine-wave{animation:cwave 1.6s cubic-bezier(.1,.6,.3,1) forwards}
 @keyframes cwave{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(5.5)}}
-.cine-emblem{perspective:90vmin}
-.cb{position:absolute;left:50%;top:50%;width:14vmin;height:14vmin;margin:-7vmin 0 0 -7vmin;opacity:0;transform-style:preserve-3d;will-change:transform,opacity;backface-visibility:hidden}
+.cine-emblem{}
+.cb{position:absolute;left:50%;top:50%;width:14vmin;height:14vmin;margin:-7vmin 0 0 -7vmin;opacity:0;will-change:transform,opacity}
 .cbi{position:absolute;inset:0;display:block;border-radius:2.6vmin;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 40%,#fff),var(--c) 55%,color-mix(in srgb,var(--c) 65%,#000));box-shadow:inset 0 0 0 .3vmin rgba(255,255,255,.55),inset 0 -1vmin 1.4vmin rgba(0,0,0,.25),0 0 5vmin color-mix(in srgb,var(--c) 75%,transparent),0 0 1.2vmin color-mix(in srgb,var(--c) 90%,#fff);overflow:hidden}
-.cbi::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 60deg,rgba(255,255,255,.55) 90deg,transparent 120deg 240deg,rgba(160,230,255,.45) 270deg,transparent 300deg);animation:cholo 4.27s linear infinite;opacity:.38;will-change:transform}
+.cbi::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 60deg,rgba(255,255,255,.55) 90deg,transparent 120deg 240deg,rgba(160,230,255,.45) 270deg,transparent 300deg);opacity:.38}
+.cine.hit .cbi::before{animation:cholo 4.27s linear infinite}
 @keyframes cholo{to{transform:rotate(360deg)}}
 .cbi::after{content:"";position:absolute;left:12%;top:10%;width:46%;height:22%;border-radius:1.2vmin;background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,0))}
-.cb1{--c:#38bdf8;--tx:0;--ty:-8vmin;--fx:-30vmin;--fy:-100vmin;--rx:70deg;--ry:-540deg;animation:cfly 1.8s cubic-bezier(.12,.7,.2,1.06) 2.8s forwards}
-.cb2{--c:#6c7dff;--tx:-8vmin;--ty:7.6vmin;--fx:-120vmin;--fy:70vmin;--rx:-60deg;--ry:420deg;animation:cfly 1.8s cubic-bezier(.12,.7,.2,1.06) 3.07s forwards}
-.cb3{--c:#2f6bff;--tx:8vmin;--ty:7.6vmin;--fx:120vmin;--fy:60vmin;--rx:80deg;--ry:-360deg;animation:cfly 1.8s cubic-bezier(.12,.7,.2,1.06) 3.33s forwards}
-@keyframes cfly{0%{opacity:0;transform:translate3d(var(--fx),var(--fy),40vmin) rotateX(var(--rx)) rotateY(var(--ry)) scale(2.6)}30%{opacity:1}100%{opacity:1;transform:translate3d(var(--tx),var(--ty),0) rotateX(0) rotateY(0) scale(1)}}
+.cb1{--c:#38bdf8;--tx:0;--ty:-8vmin;--fx:-30vmin;--fy:-100vmin;--rz:-200deg;animation:cfly 1.8s cubic-bezier(.12,.7,.2,1.06) 2.8s forwards}
+.cb2{--c:#6c7dff;--tx:-8vmin;--ty:7.6vmin;--fx:-120vmin;--fy:70vmin;--rz:160deg;animation:cfly 1.8s cubic-bezier(.12,.7,.2,1.06) 3.07s forwards}
+.cb3{--c:#2f6bff;--tx:8vmin;--ty:7.6vmin;--fx:120vmin;--fy:60vmin;--rz:-140deg;animation:cfly 1.8s cubic-bezier(.12,.7,.2,1.06) 3.33s forwards}
+@keyframes cfly{0%{opacity:0;transform:translate3d(var(--fx),var(--fy),0) rotate(var(--rz)) scale(2.6)}30%{opacity:1}100%{opacity:1;transform:translate3d(var(--tx),var(--ty),0) rotate(0) scale(1)}}   /* flach statt 3D: deutlich weniger Rechenlast */
 .cine.hit .cbi{animation:cfloat 4.8s ease-in-out 1.2s infinite}
 .cine.hit .cb2 .cbi{animation-delay:1.3s}.cine.hit .cb3 .cbi{animation-delay:1.7s}
 @keyframes cfloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-1vmin) rotate(2deg)}}
