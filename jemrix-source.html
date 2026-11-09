@@ -214,10 +214,10 @@ body.ending .slot.dead{box-shadow:inset 0 0 0 2px rgba(248,113,113,.7);backgroun
 .cine::before{content:"";position:absolute;inset:-10%;background:radial-gradient(ellipse at 50% 42%,#1a3a8a 0%,#0b1a45 30%,#050a1c 60%,#02040b 85%);opacity:0;animation:cfade 2.13s ease-out .27s forwards}
 @keyframes cfade{to{opacity:1}}
 .cine-stars{position:absolute;inset:0;width:100%;height:100%}
-.cine-rays{position:absolute;left:50%;top:38%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;background:repeating-conic-gradient(from 0deg,rgba(140,195,255,.16) 0deg 3deg,transparent 3deg 12deg);-webkit-mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 22%,transparent 55%);mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 22%,transparent 55%);opacity:0;animation:craysin 2.67s ease-out 2.93s forwards,crayspin 80s linear infinite}
+.cine-rays{position:absolute;left:50%;top:38%;width:140vmax;height:140vmax;margin:-70vmax 0 0 -70vmax;will-change:transform,opacity;background:repeating-conic-gradient(from 0deg,rgba(140,195,255,.16) 0deg 3deg,transparent 3deg 12deg);-webkit-mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 22%,transparent 55%);mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 22%,transparent 55%);opacity:0;animation:craysin 2.67s ease-out 2.93s forwards,crayspin 80s linear infinite}
 @keyframes craysin{to{opacity:1}}
 @keyframes crayspin{to{transform:rotate(360deg)}}
-.cine-cam{position:absolute;inset:0;animation:ccam 8.27s cubic-bezier(.2,.6,.2,1) both}
+.cine-cam{position:absolute;inset:0;will-change:transform;animation:ccam 8.27s cubic-bezier(.2,.6,.2,1) both}
 @keyframes ccam{0%{transform:scale(1.22)}100%{transform:scale(1)}}
 .cine.hit .cine-emblem,.cine.hit .cine-title{animation:cshake .6s ease-out}
 @keyframes cshake{0%,100%{translate:0 0}20%{translate:-.8vmin .5vmin}40%{translate:.7vmin -.6vmin}60%{translate:-.4vmin .3vmin}80%{translate:.2vmin -.1vmin}}
@@ -230,40 +230,42 @@ body.ending .slot.dead{box-shadow:inset 0 0 0 2px rgba(248,113,113,.7);backgroun
 @keyframes cringspin{from{transform:rotate(-160deg)}to{transform:rotate(0)}}
 .cine.hit .cine-ring circle:first-of-type{animation:cring 2.13s cubic-bezier(.6,0,.2,1) 1.47s forwards,cglow 1.87s ease-out}
 @keyframes cglow{0%{filter:drop-shadow(0 0 14px #fff) drop-shadow(0 0 30px #4d9bff)}100%{filter:drop-shadow(0 0 2.5px #7cc4ff)}}
-.cine-wave{position:absolute;left:50%;top:50%;width:30vmin;height:30vmin;margin:-15vmin 0 0 -15vmin;border-radius:50%;border:.6vmin solid #dff1ff;box-shadow:0 0 4vmin #4d9bff,inset 0 0 4vmin #4d9bff;opacity:0}
+.cine-wave{position:absolute;left:50%;top:50%;width:30vmin;height:30vmin;margin:-15vmin 0 0 -15vmin;border-radius:50%;border:.6vmin solid #dff1ff;box-shadow:0 0 4vmin #4d9bff,inset 0 0 4vmin #4d9bff;opacity:0;will-change:transform,opacity}
 .cine.hit .cine-wave{animation:cwave 1.6s cubic-bezier(.1,.6,.3,1) forwards}
-@keyframes cwave{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(5.5);border-width:.1vmin}}
+@keyframes cwave{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(5.5)}}
 .cine-emblem{perspective:90vmin}
-.cb{position:absolute;left:50%;top:50%;width:14vmin;height:14vmin;margin:-7vmin 0 0 -7vmin;opacity:0;transform-style:preserve-3d}
+.cb{position:absolute;left:50%;top:50%;width:14vmin;height:14vmin;margin:-7vmin 0 0 -7vmin;opacity:0;transform-style:preserve-3d;will-change:transform,opacity;backface-visibility:hidden}
 .cbi{position:absolute;inset:0;display:block;border-radius:2.6vmin;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 40%,#fff),var(--c) 55%,color-mix(in srgb,var(--c) 65%,#000));box-shadow:inset 0 0 0 .3vmin rgba(255,255,255,.55),inset 0 -1vmin 1.4vmin rgba(0,0,0,.25),0 0 5vmin color-mix(in srgb,var(--c) 75%,transparent),0 0 1.2vmin color-mix(in srgb,var(--c) 90%,#fff);overflow:hidden}
-.cbi::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 60deg,rgba(255,255,255,.55) 90deg,transparent 120deg 240deg,rgba(160,230,255,.45) 270deg,transparent 300deg);animation:cholo 4.27s linear infinite;mix-blend-mode:screen;opacity:.7}
+.cbi::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 60deg,rgba(255,255,255,.55) 90deg,transparent 120deg 240deg,rgba(160,230,255,.45) 270deg,transparent 300deg);animation:cholo 4.27s linear infinite;opacity:.38;will-change:transform}
 @keyframes cholo{to{transform:rotate(360deg)}}
 .cbi::after{content:"";position:absolute;left:12%;top:10%;width:46%;height:22%;border-radius:1.2vmin;background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,0))}
 .cb1{--c:#38bdf8;--tx:0;--ty:-8vmin;--fx:-30vmin;--fy:-100vmin;--rx:70deg;--ry:-540deg;animation:cfly 1.8s cubic-bezier(.12,.7,.2,1.06) 2.8s forwards}
 .cb2{--c:#6c7dff;--tx:-8vmin;--ty:7.6vmin;--fx:-120vmin;--fy:70vmin;--rx:-60deg;--ry:420deg;animation:cfly 1.8s cubic-bezier(.12,.7,.2,1.06) 3.07s forwards}
 .cb3{--c:#2f6bff;--tx:8vmin;--ty:7.6vmin;--fx:120vmin;--fy:60vmin;--rx:80deg;--ry:-360deg;animation:cfly 1.8s cubic-bezier(.12,.7,.2,1.06) 3.33s forwards}
-@keyframes cfly{0%{opacity:0;transform:translate3d(var(--fx),var(--fy),40vmin) rotateX(var(--rx)) rotateY(var(--ry)) scale(2.6);filter:blur(1.4vmin)}30%{opacity:1}100%{opacity:1;transform:translate3d(var(--tx),var(--ty),0) rotateX(0) rotateY(0) scale(1);filter:blur(0)}}
+@keyframes cfly{0%{opacity:0;transform:translate3d(var(--fx),var(--fy),40vmin) rotateX(var(--rx)) rotateY(var(--ry)) scale(2.6)}30%{opacity:1}100%{opacity:1;transform:translate3d(var(--tx),var(--ty),0) rotateX(0) rotateY(0) scale(1)}}
 .cine.hit .cbi{animation:cfloat 4.8s ease-in-out 1.2s infinite}
 .cine.hit .cb2 .cbi{animation-delay:1.3s}.cine.hit .cb3 .cbi{animation-delay:1.7s}
 @keyframes cfloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-1vmin) rotate(2deg)}}
-.cine-orbit{position:absolute;inset:0;opacity:0}
+.cine-orbit{position:absolute;inset:0;opacity:0;will-change:transform,opacity}
 .cine.hit .cine-orbit{animation:cfade 1.07s ease .8s forwards,corbit 9.33s linear .8s infinite}
 @keyframes corbit{to{transform:rotate(360deg)}}
 .cine-orbit i{position:absolute;left:50%;top:50%;width:1.6vmin;height:1.6vmin;margin:-.8vmin;border-radius:50%;background:#fff;box-shadow:0 0 1.2vmin .3vmin var(--c),0 0 3.5vmin 1vmin var(--c);transform:rotate(var(--a)) translateY(-29.6vmin)}
 .cine-orbit i::after{content:"";position:absolute;right:50%;top:50%;width:9vmin;height:.4vmin;margin-top:-.2vmin;border-radius:.4vmin;background:linear-gradient(270deg,var(--c),transparent);opacity:.8}
 .cine-title{position:absolute;left:0;right:0;top:63%;display:flex;flex-direction:column;align-items:center;gap:2.2vmin;padding-inline:4vmin;text-align:center}
 .cine-pre{font-family:"Unbounded",var(--display);font-weight:400;font-size:3.2vmin;letter-spacing:.8em;margin-right:-.8em;text-transform:uppercase;color:#9fc4ff;opacity:0;animation:cpre 1.6s cubic-bezier(.2,.7,.2,1) 4.93s forwards}
-@keyframes cpre{from{opacity:0;letter-spacing:1.8em;margin-right:-1.8em;filter:blur(.8vmin)}to{opacity:1;letter-spacing:.8em;margin-right:-.8em;filter:blur(0)}}
+@keyframes cpre{from{opacity:0;transform:scaleX(1.5)}to{opacity:1;transform:none}}
 .cine-word{display:flex;justify-content:center;font-family:"Unbounded",var(--display);font-weight:800;font-size:min(9.8vmin,8vh);line-height:1.05;letter-spacing:0}
 .cine-word i{font-style:normal;display:inline-block;text-align:center;background:linear-gradient(100deg,transparent 0 40%,rgba(255,255,255,.95) 48%,transparent 56%) 120% 0/300% 100% no-repeat,linear-gradient(180deg,#ffffff 0%,#e3f0ff 40%,#8fc2ff 62%,#4d8dff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:0;animation:cletter 1.33s cubic-bezier(.16,.84,.24,1) calc(5.2s + var(--i)*93.33ms) forwards,cshine 2.13s ease-in-out 6.93s forwards,cshine2 2.4s ease-in-out 12.67s infinite}
-@keyframes cletter{0%{opacity:0;transform:translateY(-1vmin) scale(2.4);filter:blur(1.6vmin) drop-shadow(-1.2vmin 0 0 rgba(0,240,255,.9)) drop-shadow(1.2vmin 0 0 rgba(90,80,255,.9))}55%{opacity:1;filter:blur(0) drop-shadow(-.5vmin 0 0 rgba(0,240,255,.7)) drop-shadow(.5vmin 0 0 rgba(90,80,255,.7))}100%{opacity:1;transform:none;filter:blur(0) drop-shadow(0 0 0 transparent) drop-shadow(0 0 2.2vmin rgba(77,155,255,.55))}}
+@keyframes cletter{0%{opacity:0;transform:translateY(-1vmin) scale(2.4)}55%{opacity:1}100%{opacity:1;transform:none}}
+.cine-word{filter:drop-shadow(0 0 2.2vmin rgba(77,155,255,.55))}   /* Leuchten fest statt animiert (flüssiger) */
+.cine-word i{will-change:transform,opacity}
 @keyframes cshine{from{background-position:120% 0,0 0}to{background-position:-60% 0,0 0}}
 @keyframes cshine2{0%{background-position:120% 0,0 0}40%,100%{background-position:-60% 0,0 0}}
 .cine-bar{width:80vmin;height:.35vmin;border-radius:1vmin;background:linear-gradient(90deg,transparent,#4d9bff 20%,#e8f4ff 50%,#4d9bff 80%,transparent);box-shadow:0 0 2vmin rgba(77,155,255,.8);transform:scaleX(0);animation:cbar 1.33s cubic-bezier(.6,0,.2,1) 6.4s forwards}
 @keyframes cbar{to{transform:scaleX(1)}}
 .cine-names{display:flex;align-items:center;gap:3vmin;font-family:"Unbounded",var(--display);font-weight:600;font-size:3.6vmin;color:#e8f4ff;letter-spacing:.18em;text-transform:uppercase;opacity:0;animation:cnames 1.33s ease-out 6.8s forwards}
 .cine-names b{width:1.1vmin;height:1.1vmin;border-radius:.25vmin;background:#4d9bff;box-shadow:0 0 1.4vmin #4d9bff;transform:rotate(45deg)}
-@keyframes cnames{from{opacity:0;letter-spacing:.6em}to{opacity:1;letter-spacing:.18em}}
+@keyframes cnames{from{opacity:0;transform:scaleX(1.25)}to{opacity:1;transform:none}}
 .cine-flare{position:absolute;left:-60%;top:calc(63% + 13.4vmin);width:60%;height:.5vmin;background:linear-gradient(90deg,transparent,#dff1ff 45%,#fff 50%,#dff1ff 55%,transparent);box-shadow:0 0 3vmin 1vmin rgba(125,190,255,.6);opacity:0;animation:cflare 1.73s cubic-bezier(.5,0,.3,1) 6.53s forwards}
 @keyframes cflare{0%{opacity:0;transform:translateX(0)}20%{opacity:1}100%{opacity:0;transform:translateX(330%)}}
 .cine-flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.9),rgba(125,190,255,.35) 30%,transparent 60%);opacity:0;pointer-events:none}
@@ -2366,7 +2368,7 @@ function playCine(done){
   let W=0,H=0,raf=0;
   const resize=()=>{ const d=Math.min(2,window.devicePixelRatio||1); W=cv.clientWidth; H=cv.clientHeight; cv.width=W*d; cv.height=H*d; cx.setTransform(d,0,0,d,0,0); };
   resize(); window.addEventListener('resize',resize);
-  const S=Array.from({length:260},()=>({x:(Math.random()-.5)*2,y:(Math.random()-.5)*2,z:Math.random()*1+.05,h:Math.random()<.3?200:215+Math.random()*20}));
+  const S=Array.from({length:220},()=>{ const h=Math.random()<.3?200:215+Math.random()*20; return {x:(Math.random()-.5)*2,y:(Math.random()-.5)*2,z:Math.random()*1+.05,c:`hsl(${h},90%,85%)`}; });
   const frame=(now)=>{
     if (!alive) return;
     const t=(now-t0)/1000;
@@ -2378,11 +2380,12 @@ function playCine(done){
       const sx=fx+p.x/p.z*f*0.5, sy=fy+p.y/p.z*f*0.5;
       if (sx<-20||sx>W+20||sy<-20||sy>H+20) continue;
       const sz=Math.max(.4,(1.1-p.z)*2.4), a=Math.min(1,(1.1-p.z))*Math.min(1,t/0.8);
-      cx.fillStyle=`hsla(${p.h},90%,85%,${a})`;
+      cx.globalAlpha=a;
       if (speed>0.2){ const px=fx+p.x/(p.z+speed*0.05)*f*0.5, py=fy+p.y/(p.z+speed*0.05)*f*0.5;
-        cx.strokeStyle=cx.fillStyle; cx.lineWidth=sz; cx.beginPath(); cx.moveTo(px,py); cx.lineTo(sx,sy); cx.stroke(); }
-      else { cx.beginPath(); cx.arc(sx,sy,sz/2,0,Math.PI*2); cx.fill(); }
+        cx.strokeStyle=p.c; cx.lineWidth=sz; cx.beginPath(); cx.moveTo(px,py); cx.lineTo(sx,sy); cx.stroke(); }
+      else { cx.fillStyle=p.c; cx.fillRect(sx-sz/2,sy-sz/2,sz,sz); }
     }
+    cx.globalAlpha=1;
     raf=requestAnimationFrame(frame);
   };
   raf=requestAnimationFrame(frame);
