@@ -803,6 +803,14 @@ header .stats{gap:10px}
 /* BETA-Schild am Pokal-Knopf (Highscore-Liste noch nicht verbunden) */
 .pk-list .pk-hs .pk-beta.hsb{position:absolute;top:-5px;right:auto;left:50%;transform:translateX(-50%);width:auto;height:auto;overflow:visible;border-radius:0;pointer-events:none}
 .pk-list .pk-hs .pk-beta.hsb b{position:static;display:block;width:auto;transform:none;padding:1px 5px;border-radius:6px;font-size:7px;line-height:1.6;letter-spacing:.06em}
+
+/* Geburtstagsbonus „🎂 ×2“ als kleiner Aufkleber oben links an der Punktzahl (09.11.2026) */
+.scorewrap .bdx2{position:absolute;left:0;bottom:100%;transform:translate(-40%,13px) rotate(-8deg);z-index:3;display:inline-flex;align-items:center;gap:2px;padding:2px 7px 2px 5px;border-radius:999px;
+  font-family:var(--display);font-style:normal;font-weight:700;font-size:.6rem;line-height:1.3;color:#fff;-webkit-text-stroke:0;text-shadow:none;white-space:nowrap;pointer-events:none;
+  background:linear-gradient(90deg,#c026d3,#2563eb);box-shadow:0 2px 8px rgba(37,99,235,.35)}
+.scorewrap .bdx2[hidden]{display:none}
+.scorewrap .bdx2.flash{animation:bdflash .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bdflash{40%{transform:translate(-40%,13px) rotate(-8deg) scale(1.3)}}
 </style>
 
 <div class="app">
@@ -1510,6 +1518,14 @@ function birthdayNow(now){
   return BIRTHDAYS.find(b=>now.getMonth()+1===b.m && now.getDate()===b.d) || null;
 }
 function isBirthdayKid(n){ const b=BIRTHDAYS.find(x=>{ const d=new Date(); return d.getMonth()+1===x.m && d.getDate()===x.d; }); return !!(b && n && b.name.toLowerCase()===String(n).toLowerCase()); }
+/* Geburtstagsbonus (09.11.2026): am eigenen Geburtstag zählen die Punkte doppelt – sichtbar mit „🎂 ×2“ an der Punktzahl */
+function bdayX2(){ try{ return !!(player && isBirthdayKid(player)); }catch(e){ return false; } }
+let bdayBadge=null, bdayFlashAt=0;
+(function(){ const w=document.querySelector('.scorewrap'); if (!w) return; bdayBadge=document.createElement('i'); bdayBadge.className='bdx2'; bdayBadge.hidden=true;
+  bdayBadge.setAttribute('role','img'); bdayBadge.setAttribute('aria-label','Geburtstagsbonus: Punkte doppelt'); bdayBadge.textContent='🎂 ×2'; w.appendChild(bdayBadge); })();
+function updBday(){ if (bdayBadge) bdayBadge.hidden=!bdayX2(); }
+function bdayFlash(){ updBday(); if (!bdayBadge || bdayBadge.hidden) return; const t=Date.now(); if (t-bdayFlashAt<250) return; bdayFlashAt=t; bdayBadge.classList.remove('flash'); void bdayBadge.offsetWidth; bdayBadge.classList.add('flash'); }
+setInterval(updBday,1000); updBday();
 function seasonalNow(now){
   now=now||new Date(); const y=now.getFullYear(), D=864e5;
   const dn=d=>Math.round(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/D);   // Kalendertag, unabhängig von Sommerzeit
@@ -1781,6 +1797,7 @@ function place(i,r,c){
     if (grid.every(v=>v===null)){ gain+=CLEAR_BONUS; lines.push(`Feld leer! +${showGain(CLEAR_BONUS)}`); boardCleared=true; skinBump++; applySkin(true); }
   }
   if (turbo){ gain*=turboMul; if (n) lines.push('Turbo ×'+turboMul); }
+  if (bdayX2()){ gain*=2; if (n) lines.push('Geburtstag ×2'); bdayFlash(); }   // Geburtstag: doppelte Punkte (statt des früheren ×5-Turbos)
   if (n>=2) setTimeout(()=>SND.turbo(Math.min(n,5)),330);   // Mehrfach-Räumung: Punkte stecken direkt in der Linienwertung
   if (!n){ sinceClear++; if (sinceClear>=3) combo=0; }
   recentLines.push(n); if (recentLines.length>15) recentLines.shift();
@@ -2697,4 +2714,5 @@ applyPreview();
     const h=dot.closest('header')||bar; document.documentElement.style.setProperty('--netpeek', Math.round(h.getBoundingClientRect().bottom+6)+'px');
     el.classList.add('peek'); clearTimeout(t); t=setTimeout(()=>el.classList.remove('peek'),2200); });
 })();
+
 </script>

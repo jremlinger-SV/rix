@@ -474,6 +474,14 @@ body.gameover .tools{visibility:hidden}
 
 .quick .gastbtn .crown + svg{display:none}   /* mit Krone ersetzt sie das Personen-Symbol */
 
+
+/* Geburtstagsbonus „🎂 ×2“ als kleiner Aufkleber oben links an der Punktzahl (09.11.2026) */
+.scorewrap .bdx2{position:absolute;left:0;bottom:100%;transform:translate(-40%,13px) rotate(-8deg);z-index:3;display:inline-flex;align-items:center;gap:2px;padding:2px 7px 2px 5px;border-radius:999px;
+  font-family:var(--display);font-style:normal;font-weight:700;font-size:.6rem;line-height:1.3;color:#fff;-webkit-text-stroke:0;text-shadow:none;white-space:nowrap;pointer-events:none;
+  background:linear-gradient(90deg,#c026d3,#2563eb);box-shadow:0 2px 8px rgba(37,99,235,.35)}
+.scorewrap .bdx2[hidden]{display:none}
+.scorewrap .bdx2.flash{animation:bdflash .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bdflash{40%{transform:translate(-40%,13px) rotate(-8deg) scale(1.3)}}
 </style>
 
 <div class="app">
@@ -924,7 +932,7 @@ function showHint(){
 let shownScore=0, countRaf=0;
 function renderOdo(v){ $('score').textContent=fmt(v); }
 function addScore(v, quiet){
-  if (!v) return; score=Math.max(0,score+v);
+  if (!v) return; if (v>0 && bdayX2()){ v*=2; bdayFlash(); } score=Math.max(0,score+v);   // Geburtstag: doppelt
   const el=$('score'); cancelAnimationFrame(countRaf);
   if (quiet || v<0 || matchMedia('(prefers-reduced-motion: reduce)').matches){ shownScore=score; renderOdo(score); }
   else { const from=shownScore, to=score, t0=performance.now(), dur=Math.min(900,350+(to-from)/8);
@@ -1499,6 +1507,14 @@ function birthdayNow(now){ const d=now||new Date(); const h=(location.hash||'').
   const pv=BIRTHDAYS.find(b=>h==='#geburtstag-'+b.name.toLowerCase()); if (pv) return pv;
   return BIRTHDAYS.find(b=>d.getMonth()+1===b.m && d.getDate()===b.d)||null; }
 function isBirthdayKid(n){ const b=birthdayNow(); return !!(b && n && b.name.toLowerCase()===String(n).toLowerCase()); }
+/* Geburtstagsbonus (09.11.2026): am eigenen Geburtstag zählen die Punkte doppelt – sichtbar mit „🎂 ×2“ an der Punktzahl */
+function bdayX2(){ try{ return !!(player && isBirthdayKid(player)); }catch(e){ return false; } }
+let bdayBadge=null, bdayFlashAt=0;
+(function(){ const w=document.querySelector('.scorewrap'); if (!w) return; bdayBadge=document.createElement('i'); bdayBadge.className='bdx2'; bdayBadge.hidden=true;
+  bdayBadge.setAttribute('role','img'); bdayBadge.setAttribute('aria-label','Geburtstagsbonus: Punkte doppelt'); bdayBadge.textContent='🎂 ×2'; w.appendChild(bdayBadge); })();
+function updBday(){ if (bdayBadge) bdayBadge.hidden=!bdayX2(); }
+function bdayFlash(){ updBday(); if (!bdayBadge || bdayBadge.hidden) return; const t=Date.now(); if (t-bdayFlashAt<250) return; bdayFlashAt=t; bdayBadge.classList.remove('flash'); void bdayBadge.offsetWidth; bdayBadge.classList.add('flash'); }
+setInterval(updBday,1000); updBday();
 function birthdayShow(done){
   const bk=birthdayNow(); if (!bk){ done(); return; }
   const o=document.createElement('div'); o.className='bday'; o.setAttribute('role','button'); o.setAttribute('aria-label','Alles Gute zum Geburtstag, '+bk.name);
@@ -1569,4 +1585,5 @@ if (/[?&]test\b/.test(location.search)) window.__sol={get s(){ return {tab,fnd,s
     const h=dot.closest('header')||bar; document.documentElement.style.setProperty('--netpeek', Math.round(h.getBoundingClientRect().bottom+6)+'px');
     el.classList.add('peek'); clearTimeout(t); t=setTimeout(()=>el.classList.remove('peek'),2200); });
 })();
+
 </script>
