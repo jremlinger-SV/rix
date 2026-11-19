@@ -16,7 +16,9 @@ Nach dem Intro wählt man **JJE_blocks** (Block-Puzzle, früher Jemrix), **JJE_m
 
 Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine eigene Liste.
 
-**Aktueller Datenbank-Stand** (in dieser Reihenfolge ausgeführt): `supabase-setup.sql` → `supabase-jenmah.sql` → `supabase-spielzeit.sql` → `supabase-haertung.sql` → `supabase-tetris.sql` → `supabase-monatsreset.sql` → `supabase-arki.sql` → `supabase-snake.sql` → `supabase-maze.sql` → `supabase-solitaire.sql`. Ältere Dateien (`supabase-update-2.sql`, `supabase-multiplayer.sql`) nicht mehr ausführen – sie würden neuere Funktionen überschreiben.
+**Aktueller Datenbank-Stand** (in dieser Reihenfolge ausgeführt): `supabase-setup.sql` → `supabase-jenmah.sql` → `supabase-spielzeit.sql` → `supabase-haertung.sql` → `supabase-tetris.sql` → `supabase-monatsreset.sql` → `supabase-arki.sql` → `supabase-snake.sql` → `supabase-maze.sql` → `supabase-solitaire.sql` → `supabase-chess.sql` → `supabase-wochenreset.sql`. Ältere Dateien (`supabase-update-2.sql`, `supabase-multiplayer.sql`) nicht mehr ausführen – sie würden neuere Funktionen überschreiben.
+
+**Wochen-Reset (seit 19.11.2026):** `supabase-wochenreset.sql` setzt alle Highscore-Listen **jeden Freitag um 0:00 Uhr** (deutsche Zeit) zurück und ersetzt den früheren Monats-Reset am 1. Der Mahjong-Level-Fortschritt bleibt. Alles sofort zurücksetzen: `select public.jje_reset_all();`. **Bei einem neuen Spiel** dessen `reset_scores_xxx()` zusätzlich in `jje_reset_all()` aufnehmen – die Hinweise „Monats-Reset“ in den älteren Spiel-Dateien gelten nicht mehr.
 
 **jenMah-Liste:** einmalig `supabase-jenmah.sql` im SQL Editor ausführen (eigene Liste, gleicher Familien-Code). Zurücksetzen mit `select reset_scores_mah();`.
 
@@ -56,6 +58,7 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 | `supabase-maze.sql` | eigene Highscore-Liste für JJE_maze (plus Monats-Reset) |
 | `supabase-solitaire.sql` | eigene Highscore-Liste für JJE_solitaire (plus Monats-Reset) |
 | `supabase-chess.sql` | eigene Highscore-Liste für JJE_chess (plus Monats-Reset) |
+| `supabase-wochenreset.sql` | Reset aller Listen jeden Freitag 0:00 Uhr (ersetzt den Monats-Reset), `jje_reset_all()` |
 | `build.py`, `sw.template.js` | Werkzeuge zum Neu-Erzeugen von `index.html` und `sw.js` |
 
 ## Vorschau-Links
