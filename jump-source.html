@@ -381,6 +381,7 @@ body.gameover .afoot .top2{visibility:hidden}
 .play{align-items:stretch}
 .wellwrap{width:100%;height:100%}
 #cv{touch-action:none;display:block}
+.flipbtn{margin-top:10px;background:none;border:0;color:inherit;opacity:.7;font:700 .82rem var(--body);text-decoration:underline;text-underline-offset:3px;padding:6px 10px;cursor:pointer}
 
 /* Netz-Hinweis: einzeilig oben im Spielfeld (nicht über Kopf und Knöpfen), kräftiger Kontrast in hell und dunkel */
 .netline{position:absolute!important;top:8px!important;bottom:auto!important;left:50%;transform:translateX(-50%);z-index:9;max-width:calc(100% - 24px);box-sizing:border-box;
@@ -455,6 +456,7 @@ body.gameover .afoot .top2{visibility:hidden}
         <h2 id="pauseT">Pause</h2>
         <p id="pauseMsg">Antippen zum Weiterspielen.</p>
         <div class="overbtns"><button type="button" id="resume">Weiter</button><button class="ghostbtn light" id="phelp" type="button">So geht's</button><button class="ghostbtn light" id="pquit" type="button">Beenden</button></div>
+        <button class="flipbtn" id="pflip" type="button">Neigen umdrehen</button>
       </div>
       <div class="pause help" id="help" hidden role="dialog" aria-labelledby="helpT">
         <h2 id="helpT">So geht's</h2>
@@ -575,7 +577,8 @@ const W=360;
 let H=640, K=1;                           // logische Höhe und Maßstab (CSS-Pixel je Einheit)
 const M_PER=10;                           // 10 Einheiten = 1 Meter
 const G=900, JUMP=588, SPRING=967, TRAMP=1177, PROP_V=430, ROCKET_V=880;   // ruhiger: gleiche Sprunghöhe, längere Flugzeit (25.11.2026)
-const HERO=30;                            // Kantenlänge von Jemmi
+const HERO=30;
+const STAND=.09;                          // kurzer Bodenkontakt beim Landen (90 ms), damit man sich sortieren kann                            // Kantenlänge von Jemmi
 const PW=62, PH=13;                       // Plattform
 
 /* ===================== Schwierigkeit (keine Wahl, eine Liste) ===================== */
@@ -603,7 +606,8 @@ function persist(){}                      // laufende Sprünge werden nicht gesp
    Wie bei Doodle Jump: Seitenwert des Beschleunigungssensors (devicemotion, accelerationIncludingGravity.x) – daraus der
    Kippwinkel nach links/rechts, der auch bei fast senkrecht gehaltenem Handy ruhig bleibt. Leicht geglättet, linear,
    volle Geschwindigkeit bei ~28°. Mitte = Haltung beim Start. Die Richtung wird beim Spielen automatisch mit dem
-   Richtung fest je Gerät (iPhone und Android liefern das Vorzeichen unterschiedlich). */
+   Maßgeblich für links/rechts ist der Lagewinkel gamma (rechts kippen = positiv); das Vorzeichen des Sensors wird daran
+   ausgerichtet (iPhone und Android liefern es unterschiedlich). In der Pause lässt sich die Richtung zusätzlich umdrehen. */
 let tiltState='unknown', tiltG=0, tiltSeen=0, tiltLast=0, tiltZero=0, tiltZeroSet=false, accSeen=0;
 const TILT_PERM=(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function')
   || (typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function');
@@ -614,17 +618,21 @@ function tiltFeed(raw){
   if (tiltState!=='on' && tiltState!=='off') tiltState='on';
   if (Math.abs(tiltG-tiltLast)>3){ tiltLast=tiltG; idleTime=0; }
 }
+let accSign=0, signVote=0, gamRaw=0, gamSeen=0;
+let tiltFlip=load('jjejmp-flip',false)===true;   // „Neigen umdrehen“ in der Pause
 window.addEventListener('devicemotion',e=>{
   const g=e.accelerationIncludingGravity; if (!g || typeof g.x!=='number' || typeof g.y!=='number' || typeof g.z!=='number') return;
   const ang=Math.atan2(g.x, Math.hypot(g.y,g.z))*180/Math.PI;   // Kippwinkel links/rechts
   if (!Number.isFinite(ang)) return;
-  accSeen=performance.now();
-  const sg=/Android/i.test(navigator.userAgent)?1:-1;   // iPhone liefert x andersherum (am Gerät geprüft 25.11.2026)
-  tiltFeed(ang*sg);
+  // Vorzeichen des Sensors am Lagewinkel ausrichten (rechts kippen = gamma positiv) – erst dann wird der Sensor benutzt
+  if (performance.now()-gamSeen<300 && Math.abs(gamRaw)>4 && Math.abs(ang)>3){ signVote=Math.max(-20,Math.min(20,signVote+Math.sign(gamRaw*ang))); if (Math.abs(signVote)>=6) accSign=Math.sign(signVote); }
+  if (!accSign) return;
+  accSeen=performance.now(); tiltFeed(ang*accSign*(tiltFlip?-1:1));
 });
 window.addEventListener('deviceorientation',e=>{
   if (typeof e.gamma!=='number') return;
-  if (performance.now()-accSeen>500) tiltFeed(-e.gamma);   // nur falls kein Beschleunigungssensor liefert (gleiche Richtung wie oben)
+  gamRaw=e.gamma; gamSeen=performance.now();
+  if (performance.now()-accSeen>400) tiltFeed(e.gamma*(tiltFlip?-1:1));   // bis der Sensor ausgerichtet ist (oder ohne Sensor): Lagewinkel
 });
 function askTilt(){
   if (!TILT_PERM || tiltState==='on' || tiltState==='off' || tiltState==='asking') return;
@@ -635,6 +643,8 @@ function askTilt(){
   Promise.allSettled(ps).then(r=>{ const ok=r.some(x=>x.status==='fulfilled' && x.value==='granted');
     tiltState=ok?'on':'off'; if (!ok) toast('Neigen aus – Finger links/rechts halten'); });
 }
+function flipLabel(){ const b=$('pflip'); if (b) b.textContent=tiltFlip?'Neigen: umgedreht ↺':'Neigen umdrehen'; }
+if ($('pflip')){ flipLabel(); $('pflip').onclick=e=>{ e.stopPropagation(); tiltFlip=!tiltFlip; save('jjejmp-flip',tiltFlip); tiltG=-tiltG; tiltZero=-tiltZero; flipLabel(); SND.plop(1); }; }
 /* iOS fragt nur nach einem echten Tipp (click) – deshalb beim ersten Antippen irgendwo, z. B. „Los geht's“ */
 document.addEventListener('click',()=>askTilt(),true);
 const tiltOn=()=>tiltState==='on' && performance.now()-tiltSeen<1500;
@@ -685,9 +695,9 @@ function newGame(){
   const b=addPlat(0,'n'); b.x=W/2-PW/2;
   for (let i=0;i<3;i++){ genY-=rndR(40,60); addPlat(genY,'n'); }
   genUpTo(camY-H*1.3);
-  hero={x:W/2, y:-HERO/2-5, vx:0, vy:0, face:1, squash:0, prop:0, rocket:0, shield:0, dead:0, flip:0, spin:0};
+  hero={x:W/2, y:-HERO/2-5, vx:0, vy:0, face:1, squash:0, stand:0, standP:null, prop:0, rocket:0, shield:0, dead:0, flip:0, spin:0};
   initClouds();
-  waiting=true; fresh=true;
+  waiting=true; fresh=true; autoT=0;
   bestAtStart=myBest(); started=true; shownScore=0; renderOdo(0); showStats();
   document.body.classList.remove('gameover'); $('over').hidden=true;
   idleTime=0;
@@ -912,10 +922,12 @@ function drawHero(c,now,alpha){
     c.scale(sx-st,sy+st);
     const s=HERO, hh=s/2;
     // Füße
-    const kick=h.vy<0?3:0;
-    c.strokeStyle='#1d46b8'; c.lineWidth=4; c.lineCap='round';
-    c.beginPath(); c.moveTo(-7,hh-2); c.lineTo(-8,hh+5-kick); c.moveTo(7,hh-2); c.lineTo(8,hh+5-kick); c.stroke();
-    c.fillStyle='#2f6bff'; c.beginPath(); c.ellipse(-9+h.face,hh+6-kick,5.2,3,0,0,7); c.ellipse(9+h.face,hh+6-kick,5.2,3,0,0,7); c.fill();
+    // Füße: beim Landen kurz eingeknickt, beim Absprung gestreckt, beim Fallen leicht gespreizt (ganz zurückhaltend)
+    const L=h.leg==null?6:h.leg, spread=7+(6-L)*.35;
+    c.strokeStyle='#1d46b8'; c.lineWidth=3.6; c.lineCap='round';
+    c.beginPath(); c.moveTo(-6.5,hh-3); c.lineTo(-spread,hh+L-2); c.moveTo(6.5,hh-3); c.lineTo(spread,hh+L-2); c.stroke();
+    c.fillStyle='#1e3a8a'; c.beginPath(); c.ellipse(-spread-1+h.face*1.5,hh+L,4.8,2.7,0,0,7); c.ellipse(spread+1+h.face*1.5,hh+L,4.8,2.7,0,0,7); c.fill();
+    c.fillStyle='rgba(159,216,255,.55)'; c.beginPath(); c.ellipse(-spread-1.5+h.face*1.5,hh+L-1,2.2,1,0,0,7); c.ellipse(spread+.5+h.face*1.5,hh+L-1,2.2,1,0,0,7); c.fill();
     if (h.rocket>0) drawRocket(c,-h.face*13,4,true,now);
     c.shadowColor='#4f9dff'; c.shadowBlur=10;
     const g=c.createLinearGradient(0,-hh,0,hh); g.addColorStop(0,'#9fd8ff'); g.addColorStop(.55,'#2f6bff'); g.addColorStop(1,'#1d46b8');
@@ -987,7 +999,7 @@ function draw(dt, now){
   if (canPlay() && waiting){
     hintT+=dt; const a=Math.min(1,hintT*2)*(.6+.4*Math.sin(hintT*4));
     ctx.globalAlpha=a; ctx.font='800 14px Nunito, system-ui, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    const txt=fresh ? 'Tippen zum Start' : 'Tippen zum Weiterspielen', tw=ctx.measureText(txt).width+26, hy=H*.3;
+    const txt=fresh ? 'Gleich geht\'s los …' : 'Tippen zum Weiterspielen', tw=ctx.measureText(txt).width+26, hy=H*.3;
     ctx.fillStyle='rgba(7,12,31,.72)'; rr(ctx,W/2-tw/2,hy-14,tw,28,14); ctx.fill();
     ctx.fillStyle='#e6f0ff'; ctx.fillText(txt, W/2, hy+.5);
     if (fresh){ ctx.font='700 12px Nunito, system-ui, sans-serif'; const t2=TILT_PERM||tiltOn() ? 'Handy neigen zum Lenken' : 'Finger links/rechts halten zum Lenken', w2=ctx.measureText(t2).width+20;
@@ -1004,7 +1016,7 @@ function frame(now){
   draw(dt, now); markPlaying();
   requestAnimationFrame(frame);
 }
-let keyDir=0;
+let keyDir=0, autoT=0;
 function steerTarget(){
   if (tiltOn()){   // relativ zur Haltung beim Start: 2° Ruhezone, linear bis zur vollen Geschwindigkeit bei 28°
     const d=tiltG-tiltZero, a=Math.abs(d); if (a<2) return 0;
@@ -1014,7 +1026,9 @@ function steerTarget(){
 }
 function step(dt){
   if (!hero) return;
-  if (waiting){ hero.squash=Math.max(0,hero.squash-dt*4); return; }
+  if (waiting){ hero.squash=Math.max(0,hero.squash-dt*4);
+    if (fresh){ autoT+=dt; if (autoT>=1) go(); }   // Spielstart ohne Tippen: 1 s nach dem Aufruf springt Jemmi los
+    return; }
   // in zwei kleinen Schritten rechnen (stabil auch bei schnellen Sprüngen)
   const n=dt>.02?2:1; for (let i=0;i<n;i++) sub(dt/n);
   runTime+=dt;
@@ -1022,6 +1036,7 @@ function step(dt){
 function sub(dt){
   const h=hero;
   h.squash=Math.max(0,h.squash-dt*5); if (h.flip>0) h.flip=Math.max(0,h.flip-dt*1.4);
+  { const t=h.stand>0?2.5 : h.vy<-JUMP*.45?8.5 : h.vy>150?5 : 6.5; h.leg=(h.leg==null?6:h.leg)+(t-(h.leg==null?6:h.leg))*Math.min(1,dt*16); }
   // Plattformen bewegen
   plats.forEach(p=>{
     if (p.t==='m'){ p.x+=p.vx*dt; if (p.x<2){ p.x=2; p.vx=Math.abs(p.vx); } if (p.x>W-PW-2){ p.x=W-PW-2; p.vx=-Math.abs(p.vx); } }
@@ -1037,6 +1052,9 @@ function sub(dt){
   const oy=h.y;
   if (h.rocket>0 && !h.dead){ h.rocket-=dt; h.vy=-ROCKET_V; if (h.rocket<=0) h.vy=-JUMP*.6; if (Math.random()<.6) parts.push({x:h.x-h.face*13,y:h.y+16,vx:rndR(-20,20),vy:rndR(80,160),life:.35,t:0,s:3,c:'#9fd8ff',r:0}); }
   else if (h.prop>0 && !h.dead){ h.prop-=dt; h.vy=-PROP_V; if (h.prop<=0) h.vy=-JUMP*.5; }
+  else if (h.stand>0 && !h.dead){ const p=h.standP; h.stand-=dt; h.vy=0;
+    if (!p || p.gone>=1 || p.br){ h.stand=0; }
+    else { h.y=p.y-HERO/2-5; if (p.t==='m') h.x+=p.vx*dt; if (h.stand<=0){ h.vy=-JUMP; h.stand=0; } } }
   else if (h.dead==='hole'){ h.spin+=dt*1.2; h.x+=(hole.x-h.x)*Math.min(1,dt*6); h.y+=(hole.y-h.y)*Math.min(1,dt*6); if (h.spin>=1.1){ gameOver(); } }
   else h.vy+=G*dt;
   if (h.dead!=='hole'){ h.y+=h.vy*dt; h.x+=h.vx*dt; }
@@ -1044,7 +1062,7 @@ function sub(dt){
   if (h.x<0) h.x+=W; if (h.x>=W) h.x-=W;
   if (h.shield>0) h.shield=Math.max(0,h.shield-dt);
   // Landen (nur beim Fallen, Füße kreuzen die Oberkante)
-  if (!h.dead && h.vy>0 && h.prop<=0 && h.rocket<=0){
+  if (!h.dead && h.vy>0 && h.prop<=0 && h.rocket<=0 && !(h.stand>0)){
     const fb=oy+HERO/2+5, fn=h.y+HERO/2+5;
     for (const p of plats){
       if (p.gone>=1 || p.br || (p.t==='c' && p.used)) continue;
@@ -1055,7 +1073,7 @@ function sub(dt){
         h.y=p.y-HERO/2-5;
         if (it && it.k==='tramp'){ h.vy=-TRAMP; h.flip=1; it.used=1; SND.turbo(3); }
         else if (it){ h.vy=-SPRING; it.used=1; SND.turbo(2); }
-        else { h.vy=-JUMP; SND.boing(heightM(p.y)); }
+        else { h.vy=0; h.stand=STAND; h.standP=p; SND.boing(heightM(p.y)); }   // kurz stehen, dann abspringen
         h.squash=1; p.hit=1;
         if (p.t==='c'){ p.used=1; SND.puff(); }
         break;
@@ -1147,7 +1165,7 @@ window.addEventListener('resize',relayout);
 /* Testzugang (nur mit ?test in der Adresse) */
 if (/[?&]test\b/.test(location.search)) window.__jmp={ get s(){ return {score,level,ended,started,waiting,camY,H,dead:hero&&hero.dead,hero:hero&&{x:hero.x,y:hero.y,vx:hero.vx,vy:hero.vy},plats:plats.map(p=>({x:p.x,y:p.y,t:p.t,used:p.used,br:p.br,gone:p.gone})),foes:foes.map(f=>({x:f.x,y:f.y,hole:!!f.hole,dead:f.dead})),items:items.length}; },
   key(d){ keyDir=d; }, go, shoot,
-  warp(m){ const y=baseY-m*M_PER; plats=[]; items=[]; foes=[]; shots=[]; hero.y=y-HERO/2-5; hero.vy=0; camY=y-H*.6; genY=y; lastFoeY=y; lastHoleY=y; const p=addPlat(y,'n'); p.x=hero.x-PW/2; genUpTo(camY-H*1.3); level=m; metersScored=m; worldIdx=WORLDS.reduce((a,w,i)=>m>=w.m?i:a,0); }, tilt(g){ tiltG=g; tiltSeen=performance.now(); tiltState='on'; }, motion(x){ window.dispatchEvent(Object.assign(new Event('devicemotion'),{accelerationIncludingGravity:{x,y:-7,z:-6}})); } };
+  warp(m){ const y=baseY-m*M_PER; plats=[]; items=[]; foes=[]; shots=[]; hero.y=y-HERO/2-5; hero.vy=0; camY=y-H*.6; genY=y; lastFoeY=y; lastHoleY=y; const p=addPlat(y,'n'); p.x=hero.x-PW/2; genUpTo(camY-H*1.3); level=m; metersScored=m; worldIdx=WORLDS.reduce((a,w,i)=>m>=w.m?i:a,0); }, tilt(g){ tiltG=g; tiltSeen=performance.now(); tiltState='on'; }, flip(){ return tiltFlip; } };
 
 /* ===================== Pause ===================== */
 function pauseGame(msg){ if (!started || ended) return; paused=true; softHeld=false; tp=null; $('pauseMsg').textContent=msg||'Antippen zum Weiterspielen.'; $('pause').hidden=false; persist(); }
