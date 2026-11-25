@@ -551,7 +551,7 @@ body.gameover .afoot .top2{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='26.11.2026, 00:05';   // wird beim Bauen gefüllt
+const APP_VERSION='26.11.2026, 00:06';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -653,7 +653,7 @@ const TILT_PERM=(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEv
   || (typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function');
 function tiltFeed(raw){
   raw=Math.max(-50,Math.min(50,raw));
-  tiltG+=(raw-tiltG)*.25; tiltSeen=performance.now();   // leicht geglättet, damit Zittern nicht lenkt
+  tiltG+=(raw-tiltG)*.42; tiltSeen=performance.now();   // leicht geglättet, damit Zittern nicht lenkt
   if (!tiltZeroSet || waiting){ tiltZero+=(Math.max(-15,Math.min(15,tiltG))-tiltZero)*(tiltZeroSet?.1:1); tiltZeroSet=true; }   // Haltung vor dem Start = Mitte
   if (tiltState!=='on' && tiltState!=='off') tiltState='on';
   if (Math.abs(tiltG-tiltLast)>3){ tiltLast=tiltG; idleTime=0; }
@@ -1105,7 +1105,7 @@ function sub(dt){
   items.forEach(it=>{ if ((it.k==='spring'||it.k==='tramp') && it.used>0) it.used=Math.max(0,it.used-dt*3); });
   foes.forEach(f=>{ if (f.dead) f.dead+=dt*2.5; else if (!f.hole){ f.a+=dt*f.sp; f.x=f.x0+Math.sin(f.a)*f.amp; } });
   // Lenken: sanft auf Zielgeschwindigkeit
-  if (!h.dead){ const tv=steerTarget(); h.vx+=(tv-h.vx)*Math.min(1,dt*(tiltOn()?6:7)); if (Math.abs(h.vx)>25) h.face=Math.sign(h.vx); }
+  if (!h.dead){ const tv=steerTarget(); h.vx+=(tv-h.vx)*Math.min(1,dt*(tiltOn()?10:7)); if (Math.abs(h.vx)>25) h.face=Math.sign(h.vx); }
   // senkrecht
   const oy=h.y;
   if (h.rocket>0 && !h.dead){ h.rocket-=dt; h.vy=-ROCKET_V; if (h.rocket<=0) h.vy=-JUMP*.6; if (Math.random()<.6) parts.push({x:h.x-h.face*13,y:h.y+16,vx:rndR(-20,20),vy:rndR(80,160),life:.35,t:0,s:3,c:'#9fd8ff',r:0}); }
