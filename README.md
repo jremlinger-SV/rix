@@ -63,6 +63,7 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 | `supabase-chess.sql` | eigene Highscore-Liste für JJE_chess (plus Monats-Reset) |
 | `supabase-wochenreset.sql` | Reset aller Listen jeden Freitag 0:00 Uhr (ersetzt den Monats-Reset), `jje_reset_all()` |
 | `supabase-jump.sql` | eigene Highscore-Liste für JJE_jump (plus Wochen-Reset) |
+| `supabase-starts.sql` | Spielstarts aller Spieler zusammen je Spiel (Anzeige auf der Spielauswahl), `get_plays()` / `add_plays()` |
 | `build.py`, `sw.template.js` | Werkzeuge zum Neu-Erzeugen von `index.html` und `sw.js` |
 
 ## Vorschau-Links

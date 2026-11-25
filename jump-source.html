@@ -684,7 +684,10 @@ function genUpTo(top){
     if (h>2000 && genY<lastHoleY-1400 && Math.random()<.08){ lastHoleY=genY; const hx=rndR(40,W-40); foes.push({x:hx, x0:hx, y:genY-g*.5, a:0, r:24, hole:1, dead:0, sp:0, amp:0}); }
   }
 }
+/* Spielstarts zählen (familienweit, Übertragung über die Spielauswahl) */
+function countStart(g){ try{ let q=load('jje-plays-pending',[]); if (!Array.isArray(q)) q=[]; q.push({g, id:Date.now().toString(36)+Math.random().toString(36).slice(2,9), at:Date.now()}); save('jje-plays-pending',q.slice(-1000)); }catch(e){} }
 function newGame(){
+  countStart('jmp');
   score=0; level=0; ended=false; paused=false; playTime=0; runTime=0; hole=null;
   liveCrownOn=false; $('livecrown').hidden=true;
   started=false; layout();

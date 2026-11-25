@@ -543,7 +543,7 @@ body.gameover .afoot .top2{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='25.11.2026, 23:55';   // wird beim Bauen gefüllt
+const APP_VERSION='26.11.2026, 00:05';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -744,7 +744,10 @@ function posOf(e){ let x=e.x+e.dir.x*e.prog, y=e.y+e.dir.y*e.prog; return {x,y};
 function wrapDist(a,b){ let dx=Math.abs(a.x-b.x); dx=Math.min(dx,COLS-dx); return Math.hypot(dx,a.y-b.y); }
 
 /* ===================== Ablauf ===================== */
+/* Spielstarts zählen (familienweit, Übertragung über die Spielauswahl) */
+function countStart(g){ try{ let q=load('jje-plays-pending',[]); if (!Array.isArray(q)) q=[]; q.push({g, id:Date.now().toString(36)+Math.random().toString(36).slice(2,9), at:Date.now()}); save('jje-plays-pending',q.slice(-1000)); }catch(e){} }
 function newGame(){
+  countStart('maz');
   score=0; level=1; lives=3; ended=false; paused=false; playTime=0; runTime=0; levelTime=0; dying=0; crash=null; levelT=0; clearing=0;
   extraAt=[6000,25000];
   liveCrownOn=false; $('livecrown').hidden=true;

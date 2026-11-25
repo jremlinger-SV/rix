@@ -1098,7 +1098,10 @@ function persist(){ if (ended || !started) return;
   save('jjesch-game',{who:(player||'').toLowerCase(),mode,score,playTime,bestAtStart,lookOrder,lookN:gamesPlayed,runTime,moves:E.moves(),undo:undoStack.slice(-60),tips:tipsUsed}); }
 
 /* ===================== Ablauf ===================== */
+/* Spielstarts zählen (familienweit, Übertragung über die Spielauswahl) */
+function countStart(g){ try{ let q=load('jje-plays-pending',[]); if (!Array.isArray(q)) q=[]; q.push({g, id:Date.now().toString(36)+Math.random().toString(36).slice(2,9), at:Date.now()}); save('jje-plays-pending',q.slice(-1000)); }catch(e){} }
 function newGame(){
+  countStart('sch');
   aiSeq++; thinking=false; pendingWarn=null; sel=null; tipsUsed=0;
   score=0; ended=false; paused=false; playTime=0; runTime=0; clearing=false; undoStack=[];
   liveCrownOn=false; $('livecrown').hidden=true;

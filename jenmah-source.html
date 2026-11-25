@@ -1191,7 +1191,7 @@ function newGame(){
   setTimeout(askName,0);
   startLevel(player ? getProgress(player) : 1, true);
 }
-$('again').onclick=()=>{ startLevel(overMode==='next' ? getProgress(player) : lvl); };   // startLevel gibt das Feld wieder frei
+$('again').onclick=()=>{ countStart('mah'); startLevel(overMode==='next' ? getProgress(player) : lvl); };   // startLevel gibt das Feld wieder frei
 /* Beenden: zurück zur Familien-Startseite, Name wird neu gewählt */
 window.addEventListener('pageshow',e=>{ if (e.persisted) location.reload(); });   // Rückkehr aus dem Safari-Zwischenspeicher: frisch laden
 
@@ -1258,7 +1258,9 @@ function askName(){
   }
   markLeader();
 }
-function setPlayer(n){ idleTime=0; if (player && clean(player).toLowerCase()!==clean(n).toLowerCase()) recordTime(); player=n; save('jenmah-name',n); $('reg').hidden=true; SND.start(); lastProgress=performance.now();
+/* Spielstarts zählen (familienweit, Übertragung über die Spielauswahl) */
+function countStart(g){ try{ let q=load('jje-plays-pending',[]); if (!Array.isArray(q)) q=[]; q.push({g, id:Date.now().toString(36)+Math.random().toString(36).slice(2,9), at:Date.now()}); save('jje-plays-pending',q.slice(-1000)); }catch(e){} }
+function setPlayer(n){ countStart('mah'); idleTime=0; if (player && clean(player).toLowerCase()!==clean(n).toLowerCase()) recordTime(); player=n; save('jenmah-name',n); $('reg').hidden=true; SND.start(); lastProgress=performance.now();
   const want=hashWanted||getProgress(n); hashWanted=0;
   if (owner!==n.toLowerCase() || lvl!==want) startLevel(want); else { owner=n.toLowerCase(); showLevelUI(); persist(); }
   if (isBirthdayKid(n) && !document.querySelector('.bday')) birthdayShow(()=>{ idleTime=0; lastProgress=performance.now(); }); }

@@ -493,7 +493,7 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='25.11.2026, 23:55';   // wird beim Bauen gefüllt
+const APP_VERSION='26.11.2026, 00:05';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -589,7 +589,10 @@ function persist(){ if (ended || !started) return;
   save('jjetet-game',{who:(player||'').toLowerCase(),mode,grid,cur,queue,bag,hold,holdUsed,score,lines,level,combo,b2b,pieces,riseT,playTime,bestAtStart,lookOrder}); }
 
 /* ===================== Ablauf ===================== */
+/* Spielstarts zählen (familienweit, Übertragung über die Spielauswahl) */
+function countStart(g){ try{ let q=load('jje-plays-pending',[]); if (!Array.isArray(q)) q=[]; q.push({g, id:Date.now().toString(36)+Math.random().toString(36).slice(2,9), at:Date.now()}); save('jje-plays-pending',q.slice(-1000)); }catch(e){} }
 function newGame(){
+  countStart('tet');
   const M=MODES[mode];
   grid=new Array(ROWS*W).fill(0); queue=[]; bag=[]; hold=null; holdUsed=false; cur=null; clearing=null; parts=[];
   score=0; lines=0; level=M.start; combo=-1; b2b=false; pieces=0; riseT=0; playTime=0; ended=false; paused=false; liveCrownOn=false; $('livecrown').hidden=true;

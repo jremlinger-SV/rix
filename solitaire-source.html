@@ -780,7 +780,10 @@ function findMoves(){
 }
 
 /* ===================== Ablauf ===================== */
+/* Spielstarts zählen (familienweit, Übertragung über die Spielauswahl) */
+function countStart(g){ try{ let q=load('jje-plays-pending',[]); if (!Array.isArray(q)) q=[]; q.push({g, id:Date.now().toString(36)+Math.random().toString(36).slice(2,9), at:Date.now()}); save('jje-plays-pending',q.slice(-1000)); }catch(e){} }
 function newGame(){
+  countStart('sol');
   score=0; level=1; ended=false; paused=false; playTime=0; runTime=0; clearing=false; autoRun=false;
   liveCrownOn=false; $('livecrown').hidden=true;
   lookOrder=shuffleLooks(); look=null; applyLook(false);

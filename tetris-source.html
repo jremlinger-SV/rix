@@ -549,7 +549,10 @@ function persist(){ if (ended || !started) return;
   save('jjetet-game',{who:(player||'').toLowerCase(),mode,grid,cur,queue,bag,hold,holdUsed,score,lines,level,combo,b2b,pieces,riseT,playTime,bestAtStart,lookOrder}); }
 
 /* ===================== Ablauf ===================== */
+/* Spielstarts zählen (familienweit, Übertragung über die Spielauswahl) */
+function countStart(g){ try{ let q=load('jje-plays-pending',[]); if (!Array.isArray(q)) q=[]; q.push({g, id:Date.now().toString(36)+Math.random().toString(36).slice(2,9), at:Date.now()}); save('jje-plays-pending',q.slice(-1000)); }catch(e){} }
 function newGame(){
+  countStart('tet');
   const M=MODES[mode];
   grid=new Array(ROWS*W).fill(0); queue=[]; bag=[]; hold=null; holdUsed=false; cur=null; clearing=null; parts=[];
   score=0; lines=0; level=M.start; combo=-1; b2b=false; pieces=0; riseT=0; playTime=0; ended=false; paused=false; liveCrownOn=false; $('livecrown').hidden=true;
