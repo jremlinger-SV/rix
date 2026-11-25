@@ -551,7 +551,7 @@ body.gameover .afoot .top2{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='25.11.2026, 23:50';   // wird beim Bauen gefüllt
+const APP_VERSION='25.11.2026, 23:55';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -659,7 +659,7 @@ function tiltFeed(raw){
   if (Math.abs(tiltG-tiltLast)>3){ tiltLast=tiltG; idleTime=0; }
 }
 let accSign=0, signVote=0, gamRaw=0, gamSeen=0;
-let tiltFlip=load('jjejmp-flip',false)===true;   // „Neigen umdrehen“ in der Pause
+let tiltFlip=load('jjejmp-flip2',false)===true;   // „Neigen umdrehen“ in der Pause
 window.addEventListener('devicemotion',e=>{
   const g=e.accelerationIncludingGravity; if (!g || typeof g.x!=='number' || typeof g.y!=='number' || typeof g.z!=='number') return;
   const ang=Math.atan2(g.x, Math.hypot(g.y,g.z))*180/Math.PI;   // Kippwinkel links/rechts
@@ -684,7 +684,7 @@ function askTilt(){
     tiltState=ok?'on':'off'; if (!ok) toast('Neigen aus – Finger links/rechts halten'); });
 }
 function flipLabel(){ const b=$('pflip'); if (b) b.textContent=tiltFlip?'Neigen: umgedreht ↺':'Neigen umdrehen'; }
-if ($('pflip')){ flipLabel(); $('pflip').onclick=e=>{ e.stopPropagation(); tiltFlip=!tiltFlip; save('jjejmp-flip',tiltFlip); tiltG=-tiltG; tiltZero=-tiltZero; flipLabel(); SND.plop(1); }; }
+if ($('pflip')){ flipLabel(); $('pflip').onclick=e=>{ e.stopPropagation(); tiltFlip=!tiltFlip; save('jjejmp-flip2',tiltFlip); tiltG=-tiltG; tiltZero=-tiltZero; flipLabel(); SND.plop(1); }; }
 /* iOS fragt nur nach einem echten Tipp (click) – deshalb beim ersten Antippen irgendwo, z. B. „Los geht's“ */
 document.addEventListener('click',()=>askTilt(),true);
 const tiltOn=()=>tiltState==='on' && performance.now()-tiltSeen<1500;
@@ -969,20 +969,31 @@ function drawHero(c,now,alpha){
     c.fillStyle='#1e3a8a'; c.beginPath(); c.ellipse(-spread-1+h.face*1.5,hh+L,4.8,2.7,0,0,7); c.ellipse(spread+1+h.face*1.5,hh+L,4.8,2.7,0,0,7); c.fill();
     c.fillStyle='rgba(159,216,255,.55)'; c.beginPath(); c.ellipse(-spread-1.5+h.face*1.5,hh+L-1,2.2,1,0,0,7); c.ellipse(spread+.5+h.face*1.5,hh+L-1,2.2,1,0,0,7); c.fill();
     if (h.rocket>0) drawRocket(c,-h.face*13,4,true,now);
+    // Antenne mit Leuchtkugel: federt bei Sprung, Landung und Seitwärtsbewegung nach (hinter dem Körper)
+    if (!h.prop){ const ang=(h.ant||0)+Math.sin(now/420)*.12, tipX=Math.sin(ang)*11, tipY=-hh-Math.cos(ang)*11;
+      c.strokeStyle='#2153d6'; c.lineWidth=2; c.lineCap='round'; c.beginPath(); c.moveTo(0,-hh+2); c.quadraticCurveTo(tipX*.35,-hh-6,tipX,tipY); c.stroke();
+      c.fillStyle='#ffd84d'; c.shadowColor='#ffd84d'; c.shadowBlur=8; c.beginPath(); c.arc(tipX,tipY-1,3.2,0,7); c.fill(); c.shadowBlur=0;
+      c.fillStyle='rgba(255,255,255,.8)'; c.beginPath(); c.arc(tipX-1,tipY-2.2,1,0,7); c.fill(); }
     c.shadowColor='#4f9dff'; c.shadowBlur=10;
-    const g=c.createLinearGradient(0,-hh,0,hh); g.addColorStop(0,'#9fd8ff'); g.addColorStop(.55,'#2f6bff'); g.addColorStop(1,'#1d46b8');
-    c.fillStyle=g; rr(c,-hh,-hh,s,s,7.5); c.fill(); c.shadowBlur=0;
-    c.fillStyle='rgba(255,255,255,.4)'; rr(c,-hh+3.5,-hh+3,s-7,5,2.5); c.fill();
-    // Augen schauen in Laufrichtung, beim Fallen nach unten
-    const ex=h.face*2.2, ey=h.vy>250?2:-1, blink=(Math.floor(now/2600)%3===0 && (now%2600)<120)?.25:1;
-    [-1,1].forEach(sd=>{ const bx=sd*5.8+ex*.6, by=-1+ey*.4;
-      c.fillStyle='#fff'; c.beginPath(); c.ellipse(bx,by,4.3,5.2*blink,0,0,7); c.fill();
-      if (h.dead){ c.strokeStyle='#0f1d3d'; c.lineWidth=1.6; c.beginPath(); c.moveTo(bx-2,by-2); c.lineTo(bx+2,by+2); c.moveTo(bx+2,by-2); c.lineTo(bx-2,by+2); c.stroke(); }
-      else { c.fillStyle='#0f1d3d'; c.beginPath(); c.arc(bx+h.face*1.3,by+ey*.8,2.3*Math.max(.4,blink),0,7); c.fill(); } });
-    c.strokeStyle='#0f1d3d'; c.lineWidth=1.8; c.lineCap='round'; c.beginPath();
-    if (h.vy<-200 || h.prop>0 || h.rocket>0) c.arc(0,7,3.4,.15*Math.PI,.85*Math.PI); else c.arc(0,10,2.6,1.15*Math.PI,1.85*Math.PI); c.stroke();
+    const g=c.createLinearGradient(0,-hh,0,hh); g.addColorStop(0,'#a9dcff'); g.addColorStop(.55,'#3b7bff'); g.addColorStop(1,'#2153d6');
+    c.fillStyle=g; rr(c,-hh,-hh,s,s,12.5); c.fill(); c.shadowBlur=0;
+    c.fillStyle='rgba(255,255,255,.42)'; rr(c,-hh+5,-hh+3,s-10,5,2.5); c.fill();
+    // Bäckchen
+    c.fillStyle='rgba(244,114,182,.55)'; c.beginPath(); c.ellipse(-9.5,4.5,3.6,2.2,0,0,7); c.ellipse(9.5,4.5,3.6,2.2,0,0,7); c.fill();
+    // große Glanzaugen, schauen in Laufrichtung (beim Fallen etwas nach unten)
+    const falling=h.vy>250, ey=falling?1:-2.5, R=5.4, blink=(Math.floor(now/2600)%3===0 && (now%2600)<120)?.2:1;
+    [-1,1].forEach(sd=>{ const bx=sd*5.8+h.face*1.2, by=ey;
+      c.fillStyle='#fff'; c.beginPath(); c.ellipse(bx,by,R,R*1.12*blink,0,0,7); c.fill();
+      if (h.dead){ c.strokeStyle='#0f1d3d'; c.lineWidth=1.6; c.beginPath(); c.moveTo(bx-2,by-2); c.lineTo(bx+2,by+2); c.moveTo(bx+2,by-2); c.lineTo(bx-2,by+2); c.stroke(); return; }
+      if (blink<1) return;
+      const qx=bx+h.face*1.4, qy=by+(falling?1.4:.4); c.fillStyle='#0f1d3d'; c.beginPath(); c.arc(qx,qy,R*.62,0,7); c.fill();
+      c.fillStyle='#fff'; c.beginPath(); c.arc(qx-1.3,qy-1.6,1.35,0,7); c.fill(); c.beginPath(); c.arc(qx+1.1,qy+1.1,.6,0,7); c.fill(); });
+    // Mund: immer freundlich, beim Fallen ein „Oh!“
+    c.lineCap='round';
+    if (falling || h.dead){ c.fillStyle='#0f1d3d'; c.beginPath(); c.ellipse(h.face,8.5,2.4,2.8,0,0,7); c.fill(); }
+    else { c.strokeStyle='#0f1d3d'; c.lineWidth=2; c.beginPath(); c.arc(h.face,5.5,4.6,.18*Math.PI,.82*Math.PI); c.stroke(); }
     if (h.prop>0) drawProp(c,0,-hh-3,now);
-    if (birthdayNow() && !h.prop){ c.fillStyle='#f472b6'; c.beginPath(); c.moveTo(-5,-hh+1); c.lineTo(5,-hh+1); c.lineTo(1,-hh-11); c.closePath(); c.fill(); c.fillStyle='#ffd84d'; c.beginPath(); c.arc(1,-hh-11,2,0,7); c.fill(); }
+    if (birthdayNow() && !h.prop){ c.fillStyle='#f472b6'; c.beginPath(); c.moveTo(4,-hh+1); c.lineTo(12,-hh+2); c.lineTo(9,-hh-9); c.closePath(); c.fill(); c.fillStyle='#ffd84d'; c.beginPath(); c.arc(9,-hh-9,2,0,7); c.fill(); }
     c.restore();
     if (h.shield>0){ c.save(); c.globalAlpha=alpha*(h.shield<1.5 && Math.sin(now/80)>0 ? .35 : .8); c.strokeStyle='#9fd8ff'; c.fillStyle='rgba(159,216,255,.16)'; c.lineWidth=2.2;
       c.beginPath(); c.arc(px,h.y,HERO*.85,0,7); c.fill(); c.stroke(); c.restore(); }
@@ -1059,7 +1070,7 @@ function frame(now){
 let keyDir=0, autoT=0;
 function steerTarget(){
   if (tiltOn()){   // relativ zur Haltung beim Start: 2° Ruhezone, linear bis zur vollen Geschwindigkeit bei 28°
-    const d=tiltG-tiltZero, a=Math.abs(d); if (a<2) return 0;
+    const d=-(tiltG-tiltZero), a=Math.abs(d); if (a<2) return 0;   // am iPhone geprüft: Vorzeichen umgekehrt (25.11.2026)
     return Math.sign(d)*Math.min(1,(a-2)/26)*300; }
   if (holdDir) return holdDir*280;
   return keyDir*280;
@@ -1076,6 +1087,10 @@ function step(dt){
 function sub(dt){
   const h=hero;
   h.squash=Math.max(0,h.squash-dt*5); if (h.flip>0) h.flip=Math.max(0,h.flip-dt*1.4);
+  { // Antenne: gedämpfte Feder, wird von Seitwärtsbewegung, Absprung und Landung angestoßen
+    const tgt=Math.max(-.7,Math.min(.7,-h.vx/700)) + (h.stand>0?0:Math.max(-.25,Math.min(.25,h.vy/3000))*Math.sign(h.face||1));
+    h.antV=(h.antV||0)+((tgt-(h.ant||0))*90 - (h.antV||0)*7)*dt; h.ant=(h.ant||0)+h.antV*dt;
+    if (h.squash>.95) h.antV+=(Math.random()<.5?-1:1)*2.2*dt*60*.05; }
   { const t=h.stand>0?2.5 : h.vy<-JUMP*.45?8.5 : h.vy>150?5 : 6.5; h.leg=(h.leg==null?6:h.leg)+(t-(h.leg==null?6:h.leg))*Math.min(1,dt*16); }
   // Plattformen bewegen
   plats.forEach(p=>{
@@ -1106,6 +1121,7 @@ function sub(dt){
     const fb=oy+HERO/2+5, fn=h.y+HERO/2+5;
     for (const p of plats){
       if (p.gone>=1 || p.br || (p.t==='c' && p.used)) continue;
+      if (p.y>camY+H-PH*.5) continue;   // was unten aus dem Bild ist, trägt nicht mehr
       if (fb<=p.y+2 && fn>=p.y && overlapX(h.x,p.x,p.w)){
         if (p.t==='i'){ p.br=.01; SND.crack(); continue; }   // Eis bricht – kein Absprung
         // Feder/Trampolin auf dieser Plattform getroffen?
@@ -1160,7 +1176,7 @@ function sub(dt){
   plats=plats.filter(p=>p.y<bottom && !(p.br>1.1)); items=items.filter(it=>(it.p?plats.includes(it.p):it.y<bottom)); foes=foes.filter(f=>f.y<bottom && !(f.dead>1));
   genUpTo(camY-H*.6);
   // heruntergefallen?
-  if (h.y-camY>H+HERO){ if (!h.dead){ h.dead='fall'; SND.lose(); } gameOver(); }
+  if (h.y-HERO*.2-camY>H){ if (!h.dead){ h.dead='fall'; SND.lose(); } gameOver(); }
 }
 function killFoe(f,pts){ f.dead=.01; burst(f.x,f.y,'#a855f7',14); SND.pop(3,0); addBonus(pts,f.x,f.y); }
 function wrapDX(a,b){ let d=a-b; if (d>W/2) d-=W; if (d<-W/2) d+=W; return d; }
