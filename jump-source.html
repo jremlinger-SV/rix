@@ -574,7 +574,7 @@ let lookOrder=null, look=LOOKS[0];
 const W=360;
 let H=640, K=1;                           // logische Höhe und Maßstab (CSS-Pixel je Einheit)
 const M_PER=10;                           // 10 Einheiten = 1 Meter
-const G=1500, JUMP=760, SPRING=1250, TRAMP=1520, PROP_V=560, ROCKET_V=1150;
+const G=900, JUMP=588, SPRING=967, TRAMP=1177, PROP_V=430, ROCKET_V=880;   // ruhiger: gleiche Sprunghöhe, längere Flugzeit (25.11.2026)
 const HERO=30;                            // Kantenlänge von Jemmi
 const PW=62, PH=13;                       // Plattform
 
@@ -603,9 +603,8 @@ function persist(){}                      // laufende Sprünge werden nicht gesp
    Wie bei Doodle Jump: Seitenwert des Beschleunigungssensors (devicemotion, accelerationIncludingGravity.x) – daraus der
    Kippwinkel nach links/rechts, der auch bei fast senkrecht gehaltenem Handy ruhig bleibt. Leicht geglättet, linear,
    volle Geschwindigkeit bei ~28°. Mitte = Haltung beim Start. Die Richtung wird beim Spielen automatisch mit dem
-   Lagewinkel (gamma) abgeglichen und gemerkt (iPhone und Android liefern das Vorzeichen unterschiedlich). */
-let tiltState='unknown', tiltG=0, tiltSeen=0, tiltLast=0, tiltZero=0, tiltZeroSet=false, accSeen=0, gamRaw=0, gamSeen=0;
-let accSign=load('jjejmp-accsign',0)||0, signVote=0;
+   Richtung fest je Gerät (iPhone und Android liefern das Vorzeichen unterschiedlich). */
+let tiltState='unknown', tiltG=0, tiltSeen=0, tiltLast=0, tiltZero=0, tiltZeroSet=false, accSeen=0;
 const TILT_PERM=(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function')
   || (typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function');
 function tiltFeed(raw){
@@ -620,16 +619,12 @@ window.addEventListener('devicemotion',e=>{
   const ang=Math.atan2(g.x, Math.hypot(g.y,g.z))*180/Math.PI;   // Kippwinkel links/rechts
   if (!Number.isFinite(ang)) return;
   accSeen=performance.now();
-  // Richtung mit gamma abgleichen (gamma > 0 heißt: rechts nach unten gekippt)
-  if (performance.now()-gamSeen<300 && Math.abs(gamRaw)>8 && Math.abs(ang)>6){ signVote=Math.max(-40,Math.min(40,signVote+Math.sign(gamRaw*ang)));
-    const s2=signVote>=12?1:signVote<=-12?-1:0; if (s2 && s2!==accSign){ const was=accSign || (/Android/i.test(navigator.userAgent)?-1:1); if (was!==s2){ tiltG=-tiltG; tiltZero=-tiltZero; } accSign=s2; save('jjejmp-accsign',s2); } }
-  const sg=accSign || (/Android/i.test(navigator.userAgent)?-1:1);
+  const sg=/Android/i.test(navigator.userAgent)?1:-1;   // iPhone liefert x andersherum (am Gerät geprüft 25.11.2026)
   tiltFeed(ang*sg);
 });
 window.addEventListener('deviceorientation',e=>{
   if (typeof e.gamma!=='number') return;
-  gamRaw=e.gamma; gamSeen=performance.now();
-  if (performance.now()-accSeen>500) tiltFeed(e.gamma);   // nur falls kein Beschleunigungssensor liefert
+  if (performance.now()-accSeen>500) tiltFeed(-e.gamma);   // nur falls kein Beschleunigungssensor liefert (gleiche Richtung wie oben)
 });
 function askTilt(){
   if (!TILT_PERM || tiltState==='on' || tiltState==='off' || tiltState==='asking') return;
@@ -650,7 +645,7 @@ function gapFor(h){ return Math.min(168, 46+Math.min(118,h*.045)); }
 function rndR(a,b){ return a+Math.random()*(b-a); }
 function addPlat(y, type){
   const p={x:rndR(4,W-PW-4), y, w:PW, t:type||'n', vx:0, used:0, gone:0, br:0};
-  if (p.t==='m'){ p.vx=(Math.random()<.5?-1:1)*rndR(55,95+Math.min(50,heightM(y)*.02)); }
+  if (p.t==='m'){ p.vx=(Math.random()<.5?-1:1)*rndR(40,70+Math.min(40,heightM(y)*.015)); }
   plats.push(p); return p;
 }
 function genUpTo(top){
@@ -1013,9 +1008,9 @@ let keyDir=0;
 function steerTarget(){
   if (tiltOn()){   // relativ zur Haltung beim Start: 2° Ruhezone, linear bis zur vollen Geschwindigkeit bei 28°
     const d=tiltG-tiltZero, a=Math.abs(d); if (a<2) return 0;
-    return Math.sign(d)*Math.min(1,(a-2)/26)*400; }
-  if (holdDir) return holdDir*360;
-  return keyDir*360;
+    return Math.sign(d)*Math.min(1,(a-2)/26)*300; }
+  if (holdDir) return holdDir*280;
+  return keyDir*280;
 }
 function step(dt){
   if (!hero) return;
