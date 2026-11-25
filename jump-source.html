@@ -599,20 +599,46 @@ let softHeld=false, tp=null;              // für die gemeinsame Pause-Logik
 const LAND=matchMedia('(orientation: landscape) and (max-height: 560px)');
 function persist(){}                      // laufende Sprünge werden nicht gespeichert (Spiele sind kurz)
 
-/* ===================== Neigen (iPhone) mit Finger als Ersatz ===================== */
-let tiltState='unknown', tiltG=0, tiltSeen=0, tiltLast=0;
-const TILT_PERM=typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function';
-window.addEventListener('deviceorientation',e=>{
-  if (typeof e.gamma!=='number') return;
-  tiltG=e.gamma; tiltSeen=performance.now();
+/* ===================== Neigen (iPhone) mit Finger als Ersatz =====================
+   Wie bei Doodle Jump: Seitenwert des Beschleunigungssensors (devicemotion, accelerationIncludingGravity.x) – daraus der
+   Kippwinkel nach links/rechts, der auch bei fast senkrecht gehaltenem Handy ruhig bleibt. Leicht geglättet, linear,
+   volle Geschwindigkeit bei ~28°. Mitte = Haltung beim Start. Die Richtung wird beim Spielen automatisch mit dem
+   Lagewinkel (gamma) abgeglichen und gemerkt (iPhone und Android liefern das Vorzeichen unterschiedlich). */
+let tiltState='unknown', tiltG=0, tiltSeen=0, tiltLast=0, tiltZero=0, tiltZeroSet=false, accSeen=0, gamRaw=0, gamSeen=0;
+let accSign=load('jjejmp-accsign',0)||0, signVote=0;
+const TILT_PERM=(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function')
+  || (typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function');
+function tiltFeed(raw){
+  raw=Math.max(-50,Math.min(50,raw));
+  tiltG+=(raw-tiltG)*.25; tiltSeen=performance.now();   // leicht geglättet, damit Zittern nicht lenkt
+  if (!tiltZeroSet || waiting){ tiltZero+=(Math.max(-15,Math.min(15,tiltG))-tiltZero)*(tiltZeroSet?.1:1); tiltZeroSet=true; }   // Haltung vor dem Start = Mitte
   if (tiltState!=='on' && tiltState!=='off') tiltState='on';
   if (Math.abs(tiltG-tiltLast)>3){ tiltLast=tiltG; idleTime=0; }
+}
+window.addEventListener('devicemotion',e=>{
+  const g=e.accelerationIncludingGravity; if (!g || typeof g.x!=='number' || typeof g.y!=='number' || typeof g.z!=='number') return;
+  const ang=Math.atan2(g.x, Math.hypot(g.y,g.z))*180/Math.PI;   // Kippwinkel links/rechts
+  if (!Number.isFinite(ang)) return;
+  accSeen=performance.now();
+  // Richtung mit gamma abgleichen (gamma > 0 heißt: rechts nach unten gekippt)
+  if (performance.now()-gamSeen<300 && Math.abs(gamRaw)>8 && Math.abs(ang)>6){ signVote=Math.max(-40,Math.min(40,signVote+Math.sign(gamRaw*ang)));
+    const s2=signVote>=12?1:signVote<=-12?-1:0; if (s2 && s2!==accSign){ const was=accSign || (/Android/i.test(navigator.userAgent)?-1:1); if (was!==s2){ tiltG=-tiltG; tiltZero=-tiltZero; } accSign=s2; save('jjejmp-accsign',s2); } }
+  const sg=accSign || (/Android/i.test(navigator.userAgent)?-1:1);
+  tiltFeed(ang*sg);
+});
+window.addEventListener('deviceorientation',e=>{
+  if (typeof e.gamma!=='number') return;
+  gamRaw=e.gamma; gamSeen=performance.now();
+  if (performance.now()-accSeen>500) tiltFeed(e.gamma);   // nur falls kein Beschleunigungssensor liefert
 });
 function askTilt(){
   if (!TILT_PERM || tiltState==='on' || tiltState==='off' || tiltState==='asking') return;
   tiltState='asking';
-  try{ DeviceOrientationEvent.requestPermission().then(r=>{ tiltState=r==='granted'?'on':'off'; if (tiltState==='off') toast('Neigen aus – Finger links/rechts halten'); })
-    .catch(()=>{ tiltState='off'; }); }catch(e){ tiltState='off'; }
+  const ps=[];
+  try{ if (typeof DeviceMotionEvent!=='undefined' && DeviceMotionEvent.requestPermission) ps.push(DeviceMotionEvent.requestPermission()); }catch(e){}
+  try{ if (typeof DeviceOrientationEvent!=='undefined' && DeviceOrientationEvent.requestPermission) ps.push(DeviceOrientationEvent.requestPermission()); }catch(e){}
+  Promise.allSettled(ps).then(r=>{ const ok=r.some(x=>x.status==='fulfilled' && x.value==='granted');
+    tiltState=ok?'on':'off'; if (!ok) toast('Neigen aus – Finger links/rechts halten'); });
 }
 /* iOS fragt nur nach einem echten Tipp (click) – deshalb beim ersten Antippen irgendwo, z. B. „Los geht's“ */
 document.addEventListener('click',()=>askTilt(),true);
@@ -677,7 +703,7 @@ function markPlaying(){ document.body.classList.toggle('playing', started && !en
 
 function go(){   // erster Tipp: Spiel läuft los
   if (!canPlay() || !waiting) return false;
-  waiting=false;
+  waiting=false; tiltZero=Math.max(-15,Math.min(15,tiltG));   // so wie das Handy jetzt gehalten wird, ist geradeaus
   if (fresh){ fresh=false; hero.vy=-JUMP; hero.squash=1; SND.boing(0); }
   return true;
 }
@@ -985,7 +1011,9 @@ function frame(now){
 }
 let keyDir=0;
 function steerTarget(){
-  if (tiltOn()){ const g=Math.max(-1,Math.min(1,(Math.abs(tiltG)<1.5?0:tiltG)/20)); return g*430; }
+  if (tiltOn()){   // relativ zur Haltung beim Start: 2° Ruhezone, linear bis zur vollen Geschwindigkeit bei 28°
+    const d=tiltG-tiltZero, a=Math.abs(d); if (a<2) return 0;
+    return Math.sign(d)*Math.min(1,(a-2)/26)*400; }
   if (holdDir) return holdDir*360;
   return keyDir*360;
 }
@@ -1009,7 +1037,7 @@ function sub(dt){
   items.forEach(it=>{ if ((it.k==='spring'||it.k==='tramp') && it.used>0) it.used=Math.max(0,it.used-dt*3); });
   foes.forEach(f=>{ if (f.dead) f.dead+=dt*2.5; else if (!f.hole){ f.a+=dt*f.sp; f.x=f.x0+Math.sin(f.a)*f.amp; } });
   // Lenken: sanft auf Zielgeschwindigkeit
-  if (!h.dead){ const tv=steerTarget(); h.vx+=(tv-h.vx)*Math.min(1,dt*(tiltOn()?9:7)); if (Math.abs(h.vx)>25) h.face=Math.sign(h.vx); }
+  if (!h.dead){ const tv=steerTarget(); h.vx+=(tv-h.vx)*Math.min(1,dt*(tiltOn()?6:7)); if (Math.abs(h.vx)>25) h.face=Math.sign(h.vx); }
   // senkrecht
   const oy=h.y;
   if (h.rocket>0 && !h.dead){ h.rocket-=dt; h.vy=-ROCKET_V; if (h.rocket<=0) h.vy=-JUMP*.6; if (Math.random()<.6) parts.push({x:h.x-h.face*13,y:h.y+16,vx:rndR(-20,20),vy:rndR(80,160),life:.35,t:0,s:3,c:'#9fd8ff',r:0}); }
@@ -1124,7 +1152,7 @@ window.addEventListener('resize',relayout);
 /* Testzugang (nur mit ?test in der Adresse) */
 if (/[?&]test\b/.test(location.search)) window.__jmp={ get s(){ return {score,level,ended,started,waiting,camY,H,dead:hero&&hero.dead,hero:hero&&{x:hero.x,y:hero.y,vx:hero.vx,vy:hero.vy},plats:plats.map(p=>({x:p.x,y:p.y,t:p.t,used:p.used,br:p.br,gone:p.gone})),foes:foes.map(f=>({x:f.x,y:f.y,hole:!!f.hole,dead:f.dead})),items:items.length}; },
   key(d){ keyDir=d; }, go, shoot,
-  warp(m){ const y=baseY-m*M_PER; plats=[]; items=[]; foes=[]; shots=[]; hero.y=y-HERO/2-5; hero.vy=0; camY=y-H*.6; genY=y; lastFoeY=y; lastHoleY=y; const p=addPlat(y,'n'); p.x=hero.x-PW/2; genUpTo(camY-H*1.3); level=m; metersScored=m; worldIdx=WORLDS.reduce((a,w,i)=>m>=w.m?i:a,0); }, tilt(g){ tiltG=g; tiltSeen=performance.now(); tiltState='on'; } };
+  warp(m){ const y=baseY-m*M_PER; plats=[]; items=[]; foes=[]; shots=[]; hero.y=y-HERO/2-5; hero.vy=0; camY=y-H*.6; genY=y; lastFoeY=y; lastHoleY=y; const p=addPlat(y,'n'); p.x=hero.x-PW/2; genUpTo(camY-H*1.3); level=m; metersScored=m; worldIdx=WORLDS.reduce((a,w,i)=>m>=w.m?i:a,0); }, tilt(g){ tiltG=g; tiltSeen=performance.now(); tiltState='on'; }, motion(x){ window.dispatchEvent(Object.assign(new Event('devicemotion'),{accelerationIncludingGravity:{x,y:-7,z:-6}})); } };
 
 /* ===================== Pause ===================== */
 function pauseGame(msg){ if (!started || ended) return; paused=true; softHeld=false; tp=null; $('pauseMsg').textContent=msg||'Antippen zum Weiterspielen.'; $('pause').hidden=false; persist(); }
