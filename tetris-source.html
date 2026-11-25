@@ -389,7 +389,7 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
     </h1>
     <div class="mscore" aria-label="Punkte">
       <span class="scorewrap"><b id="score">0</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
-      <span class="msub"><b class="mode" id="modelbl">Leicht</b> · Stufe <b id="level">1</b> · <b id="lines">0</b> Reihen</span>
+      <span class="msub"><b class="mode" id="modelbl" hidden></b>Stufe <b id="level">1</b> · <b id="lines">0</b> Reihen</span>
     </div>
     <div class="hbtns"><button class="sndbtn pausebtn" id="pausebtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button><button class="sndbtn qbtn" id="qbtn" type="button" aria-label="Beenden – zurück zur Spielauswahl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h3.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M10 8l-4 4 4 4M6.5 12H15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ql">Beenden? Nochmal tippen</span></button><button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button></div>
   </header>
@@ -425,8 +425,7 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
         <p id="overmsg">Punkte</p>
         <div class="hs-title" id="hstitle">Highscores</div>
         <ol class="hs" id="hslist"></ol>
-        <div class="mlabel">Schwierigkeit</div>
-        <div class="modes" id="modesOver"></div>
+        <div class="modes" id="modesOver" hidden></div>
         <div class="overbtns"><button id="again">Neues Spiel</button><button class="ghostbtn light" id="quit" type="button">Beenden</button></div>
       </div>
       <div class="over reg" id="reg" hidden>
@@ -436,8 +435,7 @@ header.mh .hbtns .sndbtn{width:36px!important;height:36px!important;--qw:36px}
           <div class="quick" id="quick" aria-label="Schnellauswahl"></div>
           <input id="regname" name="regname" type="text" maxlength="20" autocomplete="given-name" placeholder="Vorname" aria-label="Vorname">
           <div class="err" id="regerr"></div>
-          <div class="mlabel">Schwierigkeit</div>
-          <div class="modes" id="modesReg"></div>
+          <div class="modes" id="modesReg" hidden></div>
           <button type="submit">Los geht's</button>
         </form>
       </div>
@@ -478,11 +476,11 @@ const K_I={'0>1':[[0,0],[-2,0],[1,0],[-2,-1],[1,2]],'1>0':[[0,0],[2,0],[-1,0],[2
 
 /* ===================== Schwierigkeiten ===================== */
 const MODES={
-  leicht:{label:'Leicht', hint:'gemütlich', start:1, slow:1.5,  ghost:true,  next:2, garbage:0, rise:0},
+  leicht:{label:'Leicht', hint:'gemütlich', start:1, slow:1.25, ghost:true,  next:2, garbage:0, rise:0, per:8},   // einzige Stufe (Stufe 1: vorher slow 1.5, 10 Reihen je Stufe)
   mittel:{label:'Mittel', hint:'flotter',   start:4, slow:1,    ghost:true,  next:2, garbage:0, rise:0},
   schwer:{label:'Schwer', hint:'für Profis',start:7, slow:.9,   ghost:false, next:1, garbage:6, rise:40}};
 const MODE_KEYS=Object.keys(MODES);
-let mode=load('jjetet-mode','leicht'); if (!MODES[mode]) mode='leicht';
+let mode='leicht';   // keine Schwierigkeitswahl mehr – eine Liste
 function gravity(L){ const l=Math.min(L,18); return Math.max(.045, Math.pow(.8-(l-1)*.007, l-1))*MODES[mode].slow; }   // Sekunden pro Reihe
 
 /* ===================== Looks (wie JJE_blocks, Saison-Looks nur zur passenden Zeit ±1 Woche) ===================== */
@@ -640,7 +638,7 @@ function scoreLines(n, tspin, rows){
     if (hard){ if (b2b){ pts=Math.round(pts*1.5); sub='Serie ×1,5'; } b2b=true; } else b2b=false;
     combo++; if (combo>0){ pts+=50*combo*L; sub=(sub?sub+' · ':'')+'Kombi ×'+(combo+1); }
     lines+=n;
-    const nl=MODES[mode].start+Math.floor(lines/10);
+    const nl=MODES[mode].start+Math.floor(lines/(MODES[mode].per||10));
     if (nl>level){ level=nl; const lk=applyLook(true); toast('Stufe '+level+(lk?' · Look: '+lk:'')); setTimeout(()=>SND.star(),250); }
     SND.swoosh(n);
     if (n===4 || tspin) setTimeout(()=>SND.clear(),120);
@@ -1241,9 +1239,9 @@ function topList(m){
     pending.filter(e=>e.mode===m).forEach(e=>{ const k=clean(e.name).toLowerCase(); const o=bestBy.get(k)||{name:clean(e.name),score:0,secs:0};
       if (e.score>o.score){ o.score=e.score; o.name=clean(e.name); } o.secs+=(+e.secs||0); bestBy.set(k,o); });
     Object.entries(unsentSecs).forEach(([k,v])=>{ if (!k.startsWith(m+':')) return; const o=bestBy.get(k.slice(m.length+1)); if (o) o.secs+=v; });
-    return {title:(sharedRows && netOk ? 'Highscores · ' : 'Highscores (zuletzt synchronisiert) · ')+MODES[m].label, rows:[...bestBy.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10)}; }
+    return {title:(sharedRows && netOk ? 'Highscores' : 'Highscores (zuletzt synchronisiert)'), rows:[...bestBy.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10)}; }
   const bestBy=new Map(); localScores.filter(r=>r.mode===m).forEach(r=>{ const k=clean(r.name).toLowerCase(); if (!bestBy.has(k)||bestBy.get(k).score<r.score) bestBy.set(k,{name:clean(r.name),score:r.score,secs:localTime[m+':'+k]||0}); });
-  return {title:'Highscores · '+MODES[m].label+' · dieses Gerät', rows:[...bestBy.values()].sort((a,b)=>b.score-a.score).slice(0,10)};
+  return {title:'Highscores · dieses Gerät', rows:[...bestBy.values()].sort((a,b)=>b.score-a.score).slice(0,10)};
 }
 function myBest(){ if (!player) return 0; const k=player.toLowerCase(); const r=topList().rows.find(x=>x.name.toLowerCase()===k); const l=localScores.filter(x=>x.mode===mode && x.name.toLowerCase()===k).reduce((a,b)=>Math.max(a,b.score),0); return Math.max(r?r.score:0,l); }
 window.addEventListener('online',()=>{ netOk=null; fetchScores(); });
@@ -1340,7 +1338,7 @@ renderModes(); relayout(); updateNet(); renderTop2(); fetchScores(); familyIntro
 const saved=load('jjetet-game',null);
 try{
   const okKind=k=>KINDS.includes(k);
-  const ok=saved && MODES[saved.mode] && Array.isArray(saved.grid) && saved.grid.length===ROWS*W && saved.grid.every(v=>Number.isInteger(v) && v>=0 && v<=8)
+  const ok=saved && saved.mode==='leicht' && Array.isArray(saved.grid) && saved.grid.length===ROWS*W && saved.grid.every(v=>Number.isInteger(v) && v>=0 && v<=8)
     && Array.isArray(saved.queue) && saved.queue.every(okKind) && (!saved.cur || (okKind(saved.cur.k) && [0,1,2,3].includes(saved.cur.r)));
   if (ok && player && (saved.who||'')===player.toLowerCase()){
     mode=saved.mode; grid=saved.grid; queue=saved.queue; bag=(saved.bag||[]).filter(okKind); hold=okKind(saved.hold)?saved.hold:null; holdUsed=!!saved.holdUsed;

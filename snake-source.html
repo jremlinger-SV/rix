@@ -433,7 +433,7 @@ body.gameover .afoot .top2{visibility:hidden}
     </h1>
     <div class="mscore" aria-label="Punkte">
       <span class="scorewrap"><b id="score">0</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
-      <span class="msub"><b class="mode" id="modelbl">Leicht</b> · Stufe <b id="level">1</b><b id="len" hidden>4</b></span>
+      <span class="msub"><b class="mode" id="modelbl" hidden></b>Stufe <b id="level">1</b><b id="len" hidden>4</b></span>
     </div>
     <div class="hbtns"><button class="sndbtn pausebtn" id="pausebtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button><button class="sndbtn qbtn" id="qbtn" type="button" aria-label="Beenden – zurück zur Spielauswahl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h3.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M10 8l-4 4 4 4M6.5 12H15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ql">Beenden? Nochmal tippen</span></button><button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button></div>
   </header>
@@ -474,8 +474,7 @@ body.gameover .afoot .top2{visibility:hidden}
         <p id="overmsg">Punkte</p>
         <div class="hs-title" id="hstitle">Highscores</div>
         <ol class="hs" id="hslist"></ol>
-        <div class="mlabel">Schwierigkeit</div>
-        <div class="modes" id="modesOver"></div>
+        <div class="modes" id="modesOver" hidden></div>
         <div class="overbtns"><button id="again">Neues Spiel</button><button class="ghostbtn light" id="quit" type="button">Beenden</button></div>
       </div>
       <div class="over reg" id="reg" hidden>
@@ -485,8 +484,7 @@ body.gameover .afoot .top2{visibility:hidden}
           <div class="quick" id="quick" aria-label="Schnellauswahl"></div>
           <input id="regname" name="regname" type="text" maxlength="20" autocomplete="given-name" placeholder="Vorname" aria-label="Vorname">
           <div class="err" id="regerr"></div>
-          <div class="mlabel">Schwierigkeit</div>
-          <div class="modes" id="modesReg"></div>
+          <div class="modes" id="modesReg" hidden></div>
           <button type="submit">Los geht's</button>
         </form>
       </div>
@@ -572,11 +570,11 @@ const FOODS_PER_LEVEL=6;
 
 /* ===================== Schwierigkeiten ===================== */
 const MODES={
-  leicht:{label:'Leicht', hint:'gemütlich', step:.19,  min:.115, edge:0, obst:0, mult:1,   gem:9},
+  leicht:{label:'Leicht', hint:'gemütlich', step:.175, min:.105, edge:0, obst:5, mult:1,   gem:9},   // einzige Stufe (vorher step .19, min .115, keine Hindernisse; jetzt ab Stufe 5)
   mittel:{label:'Mittel', hint:'flotter',   step:.155, min:.092, edge:0, obst:3, mult:1.3, gem:7.5},
   schwer:{label:'Schwer', hint:'mit Rand',  step:.13,  min:.074, edge:1, obst:2, mult:1.7, gem:6.5}};
 const MODE_KEYS=Object.keys(MODES);
-let mode=load('jjesnk-mode','leicht'); if (!MODES[mode]) mode='leicht';
+let mode='leicht';   // keine Schwierigkeitswahl mehr – eine Liste
 
 /* ===================== Zustand ===================== */
 let snake=[], dir={x:1,y:0}, queue=[], food=null, gem=null, walls=new Set(), grow=0, prevTail=null, gulp=null, crash=null;
@@ -739,7 +737,7 @@ function showEnd(){
   $('overtitle').textContent=lead ? 'Neuer Highscore!' : own ? 'Dein neuer Rekord!' : 'Spiel vorbei';
   if (lead || own) setTimeout(()=>SND.star(),300);
   $('final').textContent=fmt(score);
-  $('overmsg').textContent=`Punkte · ${MODES[mode].label} · Länge ${snake.length} · Stufe ${level}`;
+  $('overmsg').textContent=`Punkte · Länge ${snake.length} · Stufe ${level}`;
   renderModes();
   document.body.classList.add('gameover'); $('over').hidden=false; renderScores();
 }
@@ -1359,9 +1357,9 @@ function topList(m){
     pending.filter(e=>e.mode===m).forEach(e=>{ const k=clean(e.name).toLowerCase(); const o=bestBy.get(k)||{name:clean(e.name),score:0,secs:0};
       if (e.score>o.score){ o.score=e.score; o.name=clean(e.name); } o.secs+=(+e.secs||0); bestBy.set(k,o); });
     Object.entries(unsentSecs).forEach(([k,v])=>{ if (!k.startsWith(m+':')) return; const o=bestBy.get(k.slice(m.length+1)); if (o) o.secs+=v; });
-    return {title:(sharedRows && netOk ? 'Highscores · ' : 'Highscores (zuletzt synchronisiert) · ')+MODES[m].label, rows:[...bestBy.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10)}; }
+    return {title:(sharedRows && netOk ? 'Highscores' : 'Highscores (zuletzt synchronisiert)'), rows:[...bestBy.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10)}; }
   const bestBy=new Map(); localScores.filter(r=>r.mode===m).forEach(r=>{ const k=clean(r.name).toLowerCase(); if (!bestBy.has(k)||bestBy.get(k).score<r.score) bestBy.set(k,{name:clean(r.name),score:r.score,secs:localTime[m+':'+k]||0}); });
-  return {title:'Highscores · '+MODES[m].label+' · dieses Gerät', rows:[...bestBy.values()].sort((a,b)=>b.score-a.score).slice(0,10)};
+  return {title:'Highscores · dieses Gerät', rows:[...bestBy.values()].sort((a,b)=>b.score-a.score).slice(0,10)};
 }
 function myBest(){ if (!player) return 0; const k=player.toLowerCase(); const r=topList().rows.find(x=>x.name.toLowerCase()===k); const l=localScores.filter(x=>x.mode===mode && x.name.toLowerCase()===k).reduce((a,b)=>Math.max(a,b.score),0); return Math.max(r?r.score:0,l); }
 window.addEventListener('online',()=>{ netOk=null; fetchScores(); });
@@ -1458,7 +1456,7 @@ renderModes(); relayout(); updateNet(); renderTop2(); fetchScores(); familyIntro
 const saved=load('jjesnk-game',null);
 try{
   const cell=a=>Array.isArray(a) && a.length>=2 && Number.isInteger(a[0]) && Number.isInteger(a[1]) && a[0]>=0 && a[1]>=0 && a[0]<COLS && a[1]<(saved&&saved.rows||0);
-  const ok=saved && MODES[saved.mode] && saved.cols===COLS && Number.isInteger(saved.rows) && saved.rows>=18 && saved.rows<=46
+  const ok=saved && saved.mode==='leicht' && saved.cols===COLS && Number.isInteger(saved.rows) && saved.rows>=18 && saved.rows<=46
     && Array.isArray(saved.snake) && saved.snake.length>=2 && saved.snake.every(cell) && Array.isArray(saved.walls) && Number.isInteger(saved.level) && saved.level>=1;
   if (ok && player && (saved.who||'')===player.toLowerCase()){
     mode=saved.mode; level=saved.level; score=+saved.score||0; playTime=+saved.playTime||0; bestAtStart=saved.bestAtStart??0;

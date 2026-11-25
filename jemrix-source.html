@@ -2248,10 +2248,12 @@ function hsRefreshAll(){
     .then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; } }).catch(()=>null)));
   return Promise.race([Promise.all(jobs), new Promise(r=>setTimeout(r,4500))]);
 }
+const ONE_MODE=['tet','ark','snk','maz','sol','sch'];   // Spiele ohne Schwierigkeitswahl (nur noch eine Liste, intern 'leicht')
+const modesOf=g=>ONE_MODE.includes(g)?['leicht']:Object.keys(HS_TL);
 function hsLeaders(){
   const out={};
-  HS_GAMES.forEach(([g,title])=>{ (g==='tet'||g==='ark'||g==='snk'||g==='maz'||g==='sol'||g==='sch' ? Object.keys(HS_TL) : [null]).forEach(m=>{
-    try{ const d=hsData(g,m), r=d.rows[0]; if (r && r.score>0) out[g+(m?':'+m:'')]={name:clean(r.name), score:r.score, txt:d.fmt(r.score), game:title, mode:m?HS_TL[m]:''}; }catch(e){} }); });
+  HS_GAMES.forEach(([g,title])=>{ (g==='tet'||g==='ark'||g==='snk'||g==='maz'||g==='sol'||g==='sch' ? modesOf(g) : [null]).forEach(m=>{
+    try{ const d=hsData(g,m), r=d.rows[0]; if (r && r.score>0) out[g+(m?':'+m:'')]={name:clean(r.name), score:r.score, txt:d.fmt(r.score), game:title, mode:m&&!ONE_MODE.includes(g)?HS_TL[m]:''}; }catch(e){} }); });
   return out;
 }
 function hsOwnName(){   // wer auf diesem iPhone spielt: der Name mit den meisten eigenen Ergebnissen
@@ -2557,18 +2559,18 @@ function renderRecs(){
   const rec=(el,rows,fmt)=>{ el.innerHTML=''; const r=rows.find(x=>x && x.score>0); if (!r) return; el.insertAdjacentHTML('afterbegin',CROWN); el.append(clean(r.name)+' · '+(fmt||showPts)(r.score)); };
   rec($('recJemrix'), topList().rows);
   rec($('recMah'), hsData('mah').rows, v=>'Level '+v);
-  const all=Object.keys(HS_TL).map(m=>{ const r=hsData('tet',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
-  rec($('recTet'), all?[all]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[all.mode]);
-  const allA=Object.keys(HS_TL).map(m=>{ const r=hsData('ark',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
-  if ($('recArk')) rec($('recArk'), allA?[allA]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allA.mode]);
-  const allS=Object.keys(HS_TL).map(m=>{ const r=hsData('snk',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
-  if ($('recSnk')) rec($('recSnk'), allS?[allS]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allS.mode]);
-  const allZ=Object.keys(HS_TL).map(m=>{ const r=hsData('maz',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
-  if ($('recMaz')) rec($('recMaz'), allZ?[allZ]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allZ.mode]);
-  const allO=Object.keys(HS_TL).map(m=>{ const r=hsData('sol',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
-  if ($('recSol')) rec($('recSol'), allO?[allO]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allO.mode]);
-  const allC=Object.keys(HS_TL).map(m=>{ const r=hsData('sch',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
-  if ($('recSch')) rec($('recSch'), allC?[allC]:[], v=>Number(v).toLocaleString('de-DE')+' · '+HS_TL[allC.mode]);
+  const all=modesOf('tet').map(m=>{ const r=hsData('tet',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  rec($('recTet'), all?[all]:[], v=>Number(v).toLocaleString('de-DE'));
+  const allA=modesOf('ark').map(m=>{ const r=hsData('ark',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  if ($('recArk')) rec($('recArk'), allA?[allA]:[], v=>Number(v).toLocaleString('de-DE'));
+  const allS=modesOf('snk').map(m=>{ const r=hsData('snk',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  if ($('recSnk')) rec($('recSnk'), allS?[allS]:[], v=>Number(v).toLocaleString('de-DE'));
+  const allZ=modesOf('maz').map(m=>{ const r=hsData('maz',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  if ($('recMaz')) rec($('recMaz'), allZ?[allZ]:[], v=>Number(v).toLocaleString('de-DE'));
+  const allO=modesOf('sol').map(m=>{ const r=hsData('sol',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  if ($('recSol')) rec($('recSol'), allO?[allO]:[], v=>Number(v).toLocaleString('de-DE'));
+  const allC=modesOf('sch').map(m=>{ const r=hsData('sch',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  if ($('recSch')) rec($('recSch'), allC?[allC]:[], v=>Number(v).toLocaleString('de-DE'));
 }
 /* Highscore-Fenster auf der Spielauswahl: je Spiel die Familienliste (Tetris und Arki je Schwierigkeit) */
 /* Wartende Ergebnisse der anderen Spiele (offline oder vor Anlage der Liste erzielt) gleich von der Spielauswahl aus übertragen,
@@ -2657,7 +2659,7 @@ function setupHsOverlay(){
     });
   };
   const tabs=()=>{
-    const box=$('hsTabs'); box.innerHTML=''; box.hidden = cur!=='tet' && cur!=='ark' && cur!=='snk' && cur!=='maz' && cur!=='sol' && cur!=='sch'; if (box.hidden) return;
+    const box=$('hsTabs'); box.innerHTML=''; box.hidden = ONE_MODE.includes(cur) || cur!=='tet' && cur!=='ark' && cur!=='snk' && cur!=='maz' && cur!=='sol' && cur!=='sch'; if (box.hidden) return;
     Object.keys(HS_TL).forEach(k=>{ const b=document.createElement('button'); b.type='button'; b.textContent=HS_TL[k]; if (k===curMode) b.className='on';
       b.onclick=()=>{ curMode=k; tabs(); render(); }; box.appendChild(b); });
   };
@@ -2665,7 +2667,7 @@ function setupHsOverlay(){
     cur=g; const card={blocks:'pickJemrix',mah:'pickMah',tet:'pickTet',ark:'pickArk',snk:'pickSnk',maz:'pickMaz',sol:'pickSol',sch:'pickSch'}[g];
     $('hsT').textContent={blocks:'JJE_blocks',mah:'JJE_mahjong',tet:'JJE_tetris',ark:'JJE_arki',snk:'JJE_snake',maz:'JJE_maze',sol:'JJE_solitaire',sch:'JJE_chess'}[g];
     const art=$(card).querySelector('.pk-art'); $('hsArt').innerHTML=art ? art.innerHTML : '';
-    if (g==='tet' || g==='ark' || g==='snk' || g==='maz' || g==='sol' || g==='sch'){ const pm=load({tet:'jjetet-mode',ark:'jjeark-mode',snk:'jjesnk-mode',maz:'jjemaz-mode',sol:'jjesol-mode',sch:'jjesch-mode'}[g],'leicht'); curMode=HS_TL[pm]?pm:'leicht'; }
+    if (g==='tet' || g==='ark' || g==='snk' || g==='maz' || g==='sol' || g==='sch'){ const pm=load({tet:'jjetet-mode',ark:'jjeark-mode',snk:'jjesnk-mode',maz:'jjemaz-mode',sol:'jjesol-mode',sch:'jjesch-mode'}[g],'leicht'); curMode=HS_TL[pm]&&!ONE_MODE.includes(g)?pm:'leicht'; }
     tabs(); render(); ov.hidden=false; try{ SND.plop(1); }catch(e){}
     setTimeout(()=>$('hsx').focus(),50);
     const fn={mah:'get_scores_mah', tet:'get_scores_tet', ark:'get_scores_ark', snk:'get_scores_snk', maz:'get_scores_maz', sol:'get_scores_sol', sch:'get_scores_sch'}[g];

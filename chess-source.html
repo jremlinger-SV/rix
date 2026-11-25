@@ -572,7 +572,7 @@ body.gameover .tools{visibility:hidden}
     </h1>
     <div class="mscore" aria-label="Punkte">
       <span class="scorewrap"><b id="score">0</b><i class="livecrown" id="livecrown" hidden aria-label="Neuer Highscore"></i></span>
-      <span class="msub"><b class="mode" id="modelbl">Leicht</b> · Zug <b id="level">1</b></span>
+      <span class="msub"><b class="mode" id="modelbl" hidden></b>Zug <b id="level">1</b></span>
     </div>
     <div class="hbtns"><button class="sndbtn pausebtn" id="pausebtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button><button class="sndbtn qbtn" id="qbtn" type="button" aria-label="Beenden – zurück zur Spielauswahl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h3.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M10 8l-4 4 4 4M6.5 12H15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ql">Beenden? Nochmal tippen</span></button><button class="sndbtn" id="sndbtn" type="button" aria-label="Ton aus" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button></div>
   </header>
@@ -624,8 +624,7 @@ body.gameover .tools{visibility:hidden}
         <p id="overmsg">Punkte</p>
         <div class="hs-title" id="hstitle">Highscores</div>
         <ol class="hs" id="hslist"></ol>
-        <div class="mlabel">Schwierigkeit</div>
-        <div class="modes" id="modesOver"></div>
+        <div class="modes" id="modesOver" hidden></div>
         <div class="overbtns"><button id="again">Neues Spiel</button><button class="ghostbtn light" id="quit" type="button">Beenden</button></div>
       </div>
       <div class="over reg" id="reg" hidden>
@@ -635,8 +634,7 @@ body.gameover .tools{visibility:hidden}
           <div class="quick" id="quick" aria-label="Schnellauswahl"></div>
           <input id="regname" name="regname" type="text" maxlength="20" autocomplete="given-name" placeholder="Vorname" aria-label="Vorname">
           <div class="err" id="regerr"></div>
-          <div class="mlabel">Schwierigkeit</div>
-          <div class="modes" id="modesReg"></div>
+          <div class="modes" id="modesReg" hidden></div>
           <button type="submit">Los geht's</button>
         </form>
       </div>
@@ -870,9 +868,9 @@ function JJE_CHESS(){
     if (ms.length===1) return ms[0];
     if (level==='leicht'){
       // spielt wie ein Anfänger: sieht oft nur einen Zug weit, verschenkt auch mal etwas
-      if (Math.random()<.4){ const mt=mateIn1(ms); if (mt) return mt; }
-      if (Math.random()<.3) return safeRandom(ms);
-      const sc=rootScores(1,order(ms.slice(),0,null)).map(x=>({m:x.m, v:x.v+(Math.random()*300-150)}));
+      if (Math.random()<.55){ const mt=mateIn1(ms); if (mt) return mt; }   // vorher .4
+      if (Math.random()<.22) return safeRandom(ms);   // vorher .3
+      const sc=rootScores(1,order(ms.slice(),0,null)).map(x=>({m:x.m, v:x.v+(Math.random()*240-120)}));   // vorher ±150
       sc.sort((a,c)=>c.v-a.v); return sc[0].m;
     }
     if (level==='mittel'){
@@ -1061,11 +1059,11 @@ let lookOrder=null, look=LOOKS[0];
 
 /* ===================== Schwierigkeiten ===================== */
 const MODES={
-  leicht:{label:'Leicht', hint:'zum Üben',     mult:1,   undo:5,  hint2:5,  warn:true,  ms:500},
+  leicht:{label:'Leicht', hint:'zum Üben',     mult:1,   undo:5,  hint2:5,  warn:true,  ms:500},   // einzige Stufe
   mittel:{label:'Mittel', hint:'spielt solide', mult:1.5, undo:10, hint2:10, warn:true,  ms:900},
   schwer:{label:'Schwer', hint:'denkt voraus',  mult:2.2, undo:20, hint2:20, warn:false, ms:1000}};
 const MODE_KEYS=Object.keys(MODES);
-let mode=load('jjesch-mode','leicht'); if (!MODES[mode]) mode='leicht';
+let mode='leicht';   // keine Schwierigkeitswahl mehr – eine Liste
 
 /* ===================== Schach-Kern (Regeln, Computer) ===================== */
 const E=JJE_CHESS();
@@ -1202,7 +1200,7 @@ function showEnd(){
   $('overtitle').textContent=lead ? 'Neuer Highscore!' : own ? 'Dein neuer Rekord!' : t;
   if (lead || own) setTimeout(()=>SND.star(),300);
   $('final').textContent=fmt(score);
-  $('overmsg').textContent=`Punkte · ${MODES[mode].label} · ${E.full} Züge`;
+  $('overmsg').textContent=`Punkte · ${E.full} Züge`;
   renderModes();
   document.body.classList.add('gameover'); $('over').hidden=false; renderScores();
 }
@@ -1752,9 +1750,9 @@ function topList(m){
     pending.filter(e=>e.mode===m).forEach(e=>{ const k=clean(e.name).toLowerCase(); const o=bestBy.get(k)||{name:clean(e.name),score:0,secs:0};
       if (e.score>o.score){ o.score=e.score; o.name=clean(e.name); } o.secs+=(+e.secs||0); bestBy.set(k,o); });
     Object.entries(unsentSecs).forEach(([k,v])=>{ if (!k.startsWith(m+':')) return; const o=bestBy.get(k.slice(m.length+1)); if (o) o.secs+=v; });
-    return {title:(sharedRows && netOk ? 'Highscores · ' : 'Highscores (zuletzt synchronisiert) · ')+MODES[m].label, rows:[...bestBy.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10)}; }
+    return {title:(sharedRows && netOk ? 'Highscores' : 'Highscores (zuletzt synchronisiert)'), rows:[...bestBy.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10)}; }
   const bestBy=new Map(); localScores.filter(r=>r.mode===m).forEach(r=>{ const k=clean(r.name).toLowerCase(); if (!bestBy.has(k)||bestBy.get(k).score<r.score) bestBy.set(k,{name:clean(r.name),score:r.score,secs:localTime[m+':'+k]||0}); });
-  return {title:'Highscores · '+MODES[m].label+' · dieses Gerät', rows:[...bestBy.values()].sort((a,b)=>b.score-a.score).slice(0,10)};
+  return {title:'Highscores · dieses Gerät', rows:[...bestBy.values()].sort((a,b)=>b.score-a.score).slice(0,10)};
 }
 function myBest(){ if (!player) return 0; const k=player.toLowerCase(); const r=topList().rows.find(x=>x.name.toLowerCase()===k); const l=localScores.filter(x=>x.mode===mode && x.name.toLowerCase()===k).reduce((a,b)=>Math.max(a,b.score),0); return Math.max(r?r.score:0,l); }
 window.addEventListener('online',()=>{ netOk=null; fetchScores(); });
@@ -1850,7 +1848,7 @@ lookOrder=shuffleLooks(); applyLook(false);
 renderModes(); layout(); render(false,true); updateNet(); renderTop2(); fetchScores(); familyIntro(); updTools();
 const saved=load('jjesch-game',null);
 try{
-  const ok=saved && MODES[saved.mode] && Array.isArray(saved.moves) && saved.moves.every(u=>typeof u==='string' && /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(u));
+  const ok=saved && saved.mode==='leicht' && Array.isArray(saved.moves) && saved.moves.every(u=>typeof u==='string' && /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(u));
   if (ok && player && (saved.who||'')===player.toLowerCase() && E.loadMoves(saved.moves) && !E.status().over){
     mode=saved.mode; score=+saved.score||0; playTime=+saved.playTime||0; bestAtStart=saved.bestAtStart??0; runTime=+saved.runTime||0; tipsUsed=+saved.tips||0;
     undoStack=Array.isArray(saved.undo)?saved.undo.filter(v=>typeof v==='number'):[];
