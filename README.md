@@ -33,6 +33,8 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 **JJE_solitaire-Liste:** einmalig `supabase-solitaire.sql` ausführen (eigene Liste je Schwierigkeit, nimmt die Liste auch in den Monats-Reset auf). Zurücksetzen mit `select reset_scores_sol();`.
 **JJE_chess-Liste:** einmalig `supabase-chess.sql` ausführen (eigene Liste je Schwierigkeit, nimmt die Liste auch in den Monats-Reset auf). Zurücksetzen mit `select reset_scores_sch();`.
 
+**JJE_jump-Liste:** einmalig `supabase-jump.sql` ausführen (eigene Liste, nimmt die Liste auch in den Wochen-Reset `jje_reset_all()` auf). Zurücksetzen mit `select reset_scores_jmp();`.
+
 **Liste zurücksetzen:** Im Supabase SQL Editor `select reset_scores();` ausführen. Die Geräte leeren ihre lokalen Listen beim nächsten Start automatisch mit.
 
 ## Dateien
@@ -46,6 +48,7 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 | `maze.html` | JJE_maze – Labyrinth (wird aus `maze-source.html` erzeugt) |
 | `solitaire.html` | JJE_solitaire – Klondike (wird aus `solitaire-source.html` erzeugt) |
 | `chess.html` | JJE_chess – Schach gegen den Computer, kindgerecht mit Korrekturhilfe (wird aus `chess-source.html` erzeugt) |
+| `jump.html` | JJE_jump – Sprungspiel nach Vorbild Doodle Jump (Neigen, Schießen, Höhen-Welten; wird aus `jump-source.html` erzeugt) |
 | `config.js` | Supabase-Zugang und Familien-Code |
 | `sw.js` | Offline-Speicher |
 | `manifest.webmanifest`, `icons/` | App-Name, Icon, Startbild |
@@ -59,6 +62,7 @@ Ohne diese Angaben läuft das Spiel trotzdem – dann führt jedes iPhone seine 
 | `supabase-solitaire.sql` | eigene Highscore-Liste für JJE_solitaire (plus Monats-Reset) |
 | `supabase-chess.sql` | eigene Highscore-Liste für JJE_chess (plus Monats-Reset) |
 | `supabase-wochenreset.sql` | Reset aller Listen jeden Freitag 0:00 Uhr (ersetzt den Monats-Reset), `jje_reset_all()` |
+| `supabase-jump.sql` | eigene Highscore-Liste für JJE_jump (plus Wochen-Reset) |
 | `build.py`, `sw.template.js` | Werkzeuge zum Neu-Erzeugen von `index.html` und `sw.js` |
 
 ## Vorschau-Links

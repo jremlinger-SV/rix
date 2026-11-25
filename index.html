@@ -973,6 +973,13 @@ header .stats{gap:10px}
     </button>
     <button class="pk-hs" type="button" data-g="sch" aria-label="Highscores JJE_chess"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z" fill="currentColor"/><path d="M7 6H4.5a.5.5 0 0 0-.5.5C4 9 5.5 10.5 7.4 10.8M17 6h2.5a.5.5 0 0 1 .5.5c0 2.5-1.5 4-3.4 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13v4M8.5 20h7l-.8-3h-5.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
     </div>
+    <div class="pk-row">
+    <button class="pk-card" id="pickJmp" type="button">
+      <span class="pk-art" aria-hidden="true"><svg viewBox="0 0 36 36"><rect x="4" y="27" width="12" height="3.4" rx="1.7" fill="#2f6bff"/><rect x="20" y="19" width="12" height="3.4" rx="1.7" fill="#16b8b0"/><path d="M10 26 Q14 10 21 8" fill="none" stroke="#9fd8ff" stroke-width="1.5" stroke-dasharray="1.6 2.3" stroke-linecap="round"/><rect x="18" y="3.5" width="10" height="10" rx="2.6" fill="#38bdf8"/><circle cx="21.2" cy="7.8" r="1.2" fill="#fff"/><circle cx="24.8" cy="7.8" r="1.2" fill="#fff"/></svg></span>
+      <span class="pk-txt"><b class="pk-name">JJE_jump</b><small>Hoch hinaus</small><span class="pk-rec" id="recJmp"></span></span>
+    </button>
+    <button class="pk-hs" type="button" data-g="jmp" aria-label="Highscores JJE_jump"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z" fill="currentColor"/><path d="M7 6H4.5a.5.5 0 0 0-.5.5C4 9 5.5 10.5 7.4 10.8M17 6h2.5a.5.5 0 0 1 .5.5c0 2.5-1.5 4-3.4 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13v4M8.5 20h7l-.8-3h-5.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span class="pk-beta hsb" aria-hidden="true"><b>BETA</b></span></button>
+    </div>
     </div>
     <div class="pk-foot"><span>Achtung: nur für <b>Remlingers</b></span></div>
     <div class="hsov" id="hsov" hidden>
@@ -1034,7 +1041,7 @@ const SHAPES = [
 const $ = id => document.getElementById(id);
 const boardEl = $('board'), trayEl = $('tray');
 let grid, pieces, score, best = 0, combo, busy = false;
-const APP_VERSION='25.11.2026, 22:52';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
+const APP_VERSION='25.11.2026, 23:22';   // wird beim Bauen der iPhone-App mit Datum/Uhrzeit gefüllt
 
 function load(k, d){ try { const v = localStorage.getItem(k); if (!v) return d; const r = JSON.parse(v);
   // gespeicherte Werte mit falschem Typ (z. B. aus einer älteren Version) nicht übernehmen
@@ -2298,25 +2305,25 @@ markLeader();
 
 /* Highscore-Hinweis: Platz 1 je Spiel (und Schwierigkeit) mit dem Stand beim letzten Öffnen vergleichen.
    Gemeldet wird nur eine höhere Nr. 1 eines anderen Spielers; der erste Start merkt sich nur den Stand. */
-const HS_GAMES=[['blocks','JJE_blocks'],['mah','JJE_mahjong'],['tet','JJE_tetris'],['ark','JJE_arki'],['snk','JJE_snake'],['maz','JJE_maze'],['sol','JJE_solitaire'],['sch','JJE_chess']];
+const HS_GAMES=[['blocks','JJE_blocks'],['mah','JJE_mahjong'],['tet','JJE_tetris'],['ark','JJE_arki'],['snk','JJE_snake'],['maz','JJE_maze'],['sol','JJE_solitaire'],['sch','JJE_chess'],['jmp','JJE_jump']];
 function hsRefreshAll(){
   const jobs=[Promise.resolve(typeof fetchScores==='function' ? fetchScores() : null).catch(()=>null)];
-  ['mah','tet','ark','snk','maz','sol','sch'].forEach(g=>jobs.push(fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol',sch:'get_scores_sch'}[g])
+  ['mah','tet','ark','snk','maz','sol','sch','jmp'].forEach(g=>jobs.push(fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol',sch:'get_scores_sch',jmp:'get_scores_jmp'}[g])
     .then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; } }).catch(()=>null)));
   return Promise.race([Promise.all(jobs), new Promise(r=>setTimeout(r,4500))]);
 }
-const ONE_MODE=['tet','ark','snk','maz','sol','sch'];   // Spiele ohne Schwierigkeitswahl (nur noch eine Liste, intern 'leicht')
+const ONE_MODE=['tet','ark','snk','maz','sol','sch','jmp'];   // Spiele ohne Schwierigkeitswahl (nur noch eine Liste, intern 'leicht')
 const modesOf=g=>ONE_MODE.includes(g)?['leicht']:Object.keys(HS_TL);
 function hsLeaders(){
   const out={};
-  HS_GAMES.forEach(([g,title])=>{ (g==='tet'||g==='ark'||g==='snk'||g==='maz'||g==='sol'||g==='sch' ? modesOf(g) : [null]).forEach(m=>{
+  HS_GAMES.forEach(([g,title])=>{ (g==='tet'||g==='ark'||g==='snk'||g==='maz'||g==='sol'||g==='sch'||g==='jmp' ? modesOf(g) : [null]).forEach(m=>{
     try{ const d=hsData(g,m), r=d.rows[0]; if (r && r.score>0) out[g+(m?':'+m:'')]={name:clean(r.name), score:r.score, txt:d.fmt(r.score), game:title, mode:m&&!ONE_MODE.includes(g)?HS_TL[m]:''}; }catch(e){} }); });
   return out;
 }
 function hsOwnName(){   // wer auf diesem iPhone spielt: der Name mit den meisten eigenen Ergebnissen
   const cnt=new Map();
-  ['jemrix-scores','jenmah-lv-scores','jjetet-scores','jjeark-scores','jjesnk-scores','jjemaz-scores','jjesol-scores','jjesch-scores'].forEach(k=>{ const a=load(k,[]); if (Array.isArray(a)) a.forEach(e=>{ if (e && e.name){ const n=clean(e.name).toLowerCase(); cnt.set(n,(cnt.get(n)||0)+1); } }); });
-  ['jemrix-name','jenmah-name','jjetet-name','jjeark-name','jjesnk-name','jjemaz-name','jjesol-name','jjesch-name'].forEach(k=>{ const n=clean(load(k,'')).toLowerCase(); if (n) cnt.set(n,(cnt.get(n)||0)+3); });
+  ['jemrix-scores','jenmah-lv-scores','jjetet-scores','jjeark-scores','jjesnk-scores','jjemaz-scores','jjesol-scores','jjesch-scores','jjejmp-scores'].forEach(k=>{ const a=load(k,[]); if (Array.isArray(a)) a.forEach(e=>{ if (e && e.name){ const n=clean(e.name).toLowerCase(); cnt.set(n,(cnt.get(n)||0)+1); } }); });
+  ['jemrix-name','jenmah-name','jjetet-name','jjeark-name','jjesnk-name','jjemaz-name','jjesol-name','jjesch-name','jjejmp-name'].forEach(k=>{ const n=clean(load(k,'')).toLowerCase(); if (n) cnt.set(n,(cnt.get(n)||0)+3); });
   let best='', bn=0; cnt.forEach((v,k)=>{ if (v>bn){ bn=v; best=k; } });
   if (best) save('jje-own-name',best); else best=String(load('jje-own-name','')||'');   // nach einem Monats-Reset sind die Listen leer – Name gemerkt
   return best;
@@ -2582,7 +2589,7 @@ function showModes(cont){
   renderRecs();
   // Platz 1 auf den Karten frisch vom Server holen (sonst zeigen Mahjong/Tetris bis zum Öffnen des Spiels die alte Liste)
   Promise.resolve(typeof fetchScores==='function' ? fetchScores() : null).then(renderRecs,renderRecs);
-  Promise.resolve(syncOthers()).catch(()=>null).then(()=>['mah','tet','ark','snk','maz','sol','sch'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol',sch:'get_scores_sch'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } })));
+  Promise.resolve(syncOthers()).catch(()=>null).then(()=>['mah','tet','ark','snk','maz','sol','sch','jmp'].forEach(g=>fetchOther({mah:'get_scores_mah',tet:'get_scores_tet',ark:'get_scores_ark',snk:'get_scores_snk',maz:'get_scores_maz',sol:'get_scores_sol',sch:'get_scores_sch',jmp:'get_scores_jmp'}[g]).then(j=>{ if (j){ hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); } })));
   setupHsOverlay();
   let chosen=false;
   $('pickJemrix').onclick=()=>{ if (chosen) return; chosen=true; $('pickJemrix').classList.add('go'); SND.plop(2);
@@ -2609,6 +2616,9 @@ function showModes(cont){
   $('pickSch').onclick=()=>{ if (chosen) return; chosen=true; $('pickSch').classList.add('go'); SND.plop(2);
     try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
     setTimeout(()=>{ pk.classList.add('leaving'); setTimeout(()=>{ location.href='chess.html'; },220); },160); };
+  $('pickJmp').onclick=()=>{ if (chosen) return; chosen=true; $('pickJmp').classList.add('go'); SND.plop(2);
+    try{ if (grid && $('over').hidden && !endHold) persist(); }catch(e){}
+    setTimeout(()=>{ pk.classList.add('leaving'); setTimeout(()=>{ location.href='jump.html'; },220); },160); };
 }
 /* Platz 1 je Spiel auf den Karten der Spielauswahl – bevorzugt frisch vom Server */
 function renderRecs(){
@@ -2628,12 +2638,14 @@ function renderRecs(){
   if ($('recSol')) rec($('recSol'), allO?[allO]:[], v=>Number(v).toLocaleString('de-DE'));
   const allC=modesOf('sch').map(m=>{ const r=hsData('sch',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
   if ($('recSch')) rec($('recSch'), allC?[allC]:[], v=>Number(v).toLocaleString('de-DE'));
+  const allJ=modesOf('jmp').map(m=>{ const r=hsData('jmp',m).rows[0]; return r?Object.assign({mode:m},r):null; }).filter(Boolean).sort((a,b)=>b.score-a.score)[0];
+  if ($('recJmp')) rec($('recJmp'), allJ?[allJ]:[], v=>Number(v).toLocaleString('de-DE'));
 }
 /* Highscore-Fenster auf der Spielauswahl: je Spiel die Familienliste (Tetris und Arki je Schwierigkeit) */
 /* Wartende Ergebnisse der anderen Spiele (offline oder vor Anlage der Liste erzielt) gleich von der Spielauswahl aus übertragen,
    nicht erst beim nächsten Öffnen des jeweiligen Spiels. Doppeltes Senden schadet nicht: pro Name zählt nur der beste Wert. */
 const OTHER_PENDING=[['jenmah-lv-pending','submit_scores_mah'],['jjetet-pending','submit_scores_tet'],['jjeark-pending','submit_scores_ark'],
-  ['jjesnk-pending','submit_scores_snk'],['jjemaz-pending','submit_scores_maz'],['jjesol-pending','submit_scores_sol'],['jjesch-pending','submit_scores_sch']];
+  ['jjesnk-pending','submit_scores_snk'],['jjemaz-pending','submit_scores_maz'],['jjesol-pending','submit_scores_sol'],['jjesch-pending','submit_scores_sch'],['jjejmp-pending','submit_scores_jmp']];
 let othersSyncing=false;
 async function syncOthers(){
   if (othersSyncing || typeof api!=='function' || typeof ONLINE==='undefined' || !ONLINE || typeof FAMILY_CODE==='undefined' || navigator.onLine===false) return;
@@ -2663,7 +2675,7 @@ function bestPerName(rows, pend){
   return [...by.values()].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,10);
 }
 const HS_TL={leicht:'Leicht',mittel:'Mittel',schwer:'Schwer'};
-let hsFresh={mah:null, tet:null, ark:null, snk:null, maz:null, sol:null, sch:null}, hsReset={mah:0, tet:0, ark:0, snk:0, maz:0, sol:0, sch:0};
+let hsFresh={mah:null, tet:null, ark:null, snk:null, maz:null, sol:null, sch:null, jmp:null}, hsReset={mah:0, tet:0, ark:0, snk:0, maz:0, sol:0, sch:0, jmp:0};
 function hsData(g, m){
   if (g==='blocks'){ const tl=topList(); return {rows:tl.rows, fmt:showPts, sub:tl.title}; }
   if (g==='mah'){
@@ -2685,6 +2697,11 @@ function hsData(g, m){
     const sh=hsFresh.sol || load('jjesol-shared-cache',null), pend=load('jjesol-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.sol || (e.at||0)>hsReset.sol));
     const rows=Array.isArray(sh) ? bestPerName(sh.filter(r=>r && r.mode===m), pend) : bestPerName(load('jjesol-scores',[]).filter(r=>r && r.mode===m), []);
     return {rows, fmt:v=>Number(v).toLocaleString('de-DE'), sub:hsSub(hsFresh.sol, sh)};
+  }
+  if (g==='jmp'){
+    const sh=hsFresh.jmp || load('jjejmp-shared-cache',null), pend=load('jjejmp-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.jmp || (e.at||0)>hsReset.jmp));
+    const rows=Array.isArray(sh) ? bestPerName(sh.filter(r=>r && r.mode===m), pend) : bestPerName(load('jjejmp-scores',[]).filter(r=>r && r.mode===m), []);
+    return {rows, fmt:v=>Number(v).toLocaleString('de-DE'), sub:hsSub(hsFresh.jmp, sh)};
   }
   if (g==='sch'){
     const sh=hsFresh.sch || load('jjesch-shared-cache',null), pend=load('jjesch-pending',[]).filter(e=>e && e.mode===m && (!hsFresh.sch || (e.at||0)>hsReset.sch));
@@ -2716,18 +2733,18 @@ function setupHsOverlay(){
     });
   };
   const tabs=()=>{
-    const box=$('hsTabs'); box.innerHTML=''; box.hidden = ONE_MODE.includes(cur) || cur!=='tet' && cur!=='ark' && cur!=='snk' && cur!=='maz' && cur!=='sol' && cur!=='sch'; if (box.hidden) return;
+    const box=$('hsTabs'); box.innerHTML=''; box.hidden = ONE_MODE.includes(cur) || cur!=='tet' && cur!=='ark' && cur!=='snk' && cur!=='maz' && cur!=='sol' && cur!=='sch' && cur!=='jmp'; if (box.hidden) return;
     Object.keys(HS_TL).forEach(k=>{ const b=document.createElement('button'); b.type='button'; b.textContent=HS_TL[k]; if (k===curMode) b.className='on';
       b.onclick=()=>{ curMode=k; tabs(); render(); }; box.appendChild(b); });
   };
   const open=g=>{
-    cur=g; const card={blocks:'pickJemrix',mah:'pickMah',tet:'pickTet',ark:'pickArk',snk:'pickSnk',maz:'pickMaz',sol:'pickSol',sch:'pickSch'}[g];
-    $('hsT').textContent={blocks:'JJE_blocks',mah:'JJE_mahjong',tet:'JJE_tetris',ark:'JJE_arki',snk:'JJE_snake',maz:'JJE_maze',sol:'JJE_solitaire',sch:'JJE_chess'}[g];
+    cur=g; const card={blocks:'pickJemrix',mah:'pickMah',tet:'pickTet',ark:'pickArk',snk:'pickSnk',maz:'pickMaz',sol:'pickSol',sch:'pickSch',jmp:'pickJmp'}[g];
+    $('hsT').textContent={blocks:'JJE_blocks',mah:'JJE_mahjong',tet:'JJE_tetris',ark:'JJE_arki',snk:'JJE_snake',maz:'JJE_maze',sol:'JJE_solitaire',sch:'JJE_chess',jmp:'JJE_jump'}[g];
     const art=$(card).querySelector('.pk-art'); $('hsArt').innerHTML=art ? art.innerHTML : '';
-    if (g==='tet' || g==='ark' || g==='snk' || g==='maz' || g==='sol' || g==='sch'){ const pm=load({tet:'jjetet-mode',ark:'jjeark-mode',snk:'jjesnk-mode',maz:'jjemaz-mode',sol:'jjesol-mode',sch:'jjesch-mode'}[g],'leicht'); curMode=HS_TL[pm]&&!ONE_MODE.includes(g)?pm:'leicht'; }
+    if (g==='tet' || g==='ark' || g==='snk' || g==='maz' || g==='sol' || g==='sch' || g==='jmp'){ const pm=load({tet:'jjetet-mode',ark:'jjeark-mode',snk:'jjesnk-mode',maz:'jjemaz-mode',sol:'jjesol-mode',sch:'jjesch-mode',jmp:'jjejmp-mode'}[g],'leicht'); curMode=HS_TL[pm]&&!ONE_MODE.includes(g)?pm:'leicht'; }
     tabs(); render(); ov.hidden=false; try{ SND.plop(1); }catch(e){}
     setTimeout(()=>$('hsx').focus(),50);
-    const fn={mah:'get_scores_mah', tet:'get_scores_tet', ark:'get_scores_ark', snk:'get_scores_snk', maz:'get_scores_maz', sol:'get_scores_sol', sch:'get_scores_sch'}[g];
+    const fn={mah:'get_scores_mah', tet:'get_scores_tet', ark:'get_scores_ark', snk:'get_scores_snk', maz:'get_scores_maz', sol:'get_scores_sol', sch:'get_scores_sch', jmp:'get_scores_jmp'}[g];
     if (fn) fetchOther(fn).then(j=>{ if (!j) return; hsFresh[g]=j.players; hsReset[g]=typeof j.reset==='number'?j.reset:0; renderRecs(); if (cur===g && !ov.hidden) render(); });
   };
   const close=()=>{ ov.hidden=true; cur=null; };
