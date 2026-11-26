@@ -552,7 +552,7 @@ body.gameover .afoot .top2{visibility:hidden}
 const $=id=>document.getElementById(id);
 function load(k,d){ try{ const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const APP_VERSION='26.11.2026, 20:49';   // wird beim Bauen gefüllt
+const APP_VERSION='26.11.2026, 22:02';   // wird beim Bauen gefüllt
 const PREVIEW=!!window.JJE_PREVIEW;
 const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -1316,7 +1316,7 @@ function sub(dt){
   /* schwarzes Loch: zieht Jemmi hinein (Rakete und Propeller fliegen vorbei) */
   if (!h.dead) for (const o of holes){ if (Math.hypot(wrapDX(h.x,o.x),bodyC-o.y)<o.r+8 && !(h.rocket>0 || h.prop>0)){ hole=o; if (TEL) TEL.cause='hole'; die('hole'); break; } }
   // Kamera folgt nach oben, nie nach unten
-  const lim=camY+H*.55; if (h.y<lim && !h.dead) camY=h.y-H*.55;   /* Figur bleibt knapp über der Mitte */
+  { const tgt=h.y-H*.55; if (tgt<camY && !h.dead) camY+=(tgt-camY)*(1-Math.exp(-dt*9)); }   /* weiche Kamera: kein abruptes Anhalten an der Kameralinie (26.11.2026) */
   // Höhe und Punkte
   const m=Math.floor(heightM(h.y)); if (m>level && !h.dead){ level=m; showStatsLite(); }
   if (level>metersScored){ addScore(level-metersScored,true); metersScored=level; }
