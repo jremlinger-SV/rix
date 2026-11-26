@@ -2632,7 +2632,7 @@ function renderPlays(){
       el=document.createElement('span'); el.className='pk-cnt';
       if (txt){ if (rec) txt.insertBefore(meta,rec); else txt.appendChild(meta); if (rec) meta.appendChild(rec); } else card.appendChild(meta);
       meta.appendChild(el); }   // Anzahl steht immer hinter dem Highscore
-    el.hidden=!n; el.innerHTML=PLAY_ICO+'<b>'+n.toLocaleString('de-DE')+'</b>'+(n===1?' Spiel':' Spiele'); el.setAttribute('aria-label','Alle zusammen: '+n.toLocaleString('de-DE')+(n===1?' Spiel':' Spiele')); el.title=el.getAttribute('aria-label'); });
+    el.hidden=false; el.innerHTML=PLAY_ICO+'<b>'+n.toLocaleString('de-DE')+'</b>'+(n===1?' Spiel':' Spiele'); el.setAttribute('aria-label','Alle zusammen: '+n.toLocaleString('de-DE')+(n===1?' Spiel':' Spiele')); el.title=el.getAttribute('aria-label'); });
 }
 async function syncPlays(){
   if (playsSyncing || typeof api!=='function' || typeof ONLINE==='undefined' || !ONLINE || typeof FAMILY_CODE==='undefined'){ renderPlays(); return; }
