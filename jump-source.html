@@ -599,7 +599,7 @@ const themeAt=h=>WORLDS.reduce((a,w)=>h>=w.m?w.th:a,'A');
 
 /* ===================== Zustand ===================== */
 let hero=null, plats=[], items=[], foes=[], shots=[], clouds=[], mets=[], metT=12;
-let camY=0, baseY=0, genY=0, metersScored=0, bonus=0, worldIdx=0, lastFoeY=0, lastHoleY=0;
+let lastPathX=W/2, camY=0, baseY=0, genY=0, metersScored=0, bonus=0, worldIdx=0, lastFoeY=0, lastHoleY=0;
 let score=0, level=0, ended=false, started=false, paused=false, waiting=true, fresh=true, hole=null;
 let playTime=0, bestAtStart=0, runTime=0;
 let softHeld=false, tp=null;              // für die gemeinsame Pause-Logik
@@ -642,6 +642,7 @@ window.addEventListener('deviceorientation',e=>{
 });
 function askTilt(){
   if (!TILT_PERM || tiltState==='on' || tiltState==='off' || tiltState==='asking') return;
+  if (performance.now()-tiltSeen<1500 || performance.now()-accSeen<1500){ tiltState='on'; return; }   // schon erlaubt: keine Systemfrage
   tiltState='asking';
   const ps=[];
   try{ if (typeof DeviceMotionEvent!=='undefined' && DeviceMotionEvent.requestPermission) ps.push(DeviceMotionEvent.requestPermission()); }catch(e){}
@@ -685,8 +686,12 @@ function genUpTo(top){
     // Eis als Täuschung zwischen den Plattformen (nie nötig)
     if (h>500 && Math.random()<Math.min(.3,(h-500)/4000)){ const ip=addPlat(genY+g*.45,'i'); if (Math.abs(ip.x-p.x)<PW+10) ip.x=(p.x+W/2)%(W-PW); }
     // Raumschiffe ab 600 m: schweben hin und her, abschießen oder von oben draufspringen
-    if (h>600 && lastFoeY-genY>Math.max(380,900-h*.12) && Math.random()<Math.min(.45,.12+(h-600)/5000)){
-      lastFoeY=genY; const fx=rndR(40,W-40); foes.push({x:fx, x0:fx, y:genY-g*.5, a:Math.random()*6, r:21, dead:0, sp:rndR(.7,1.2), amp:rndR(20,70), hit:0}); }
+    if (h>600 && lastFoeY-genY>Math.max(520,1000-h*.1) && Math.random()<Math.min(.3,.1+(h-600)/6000)){
+      // nie über dem Weg: Abstand zu den beiden nächsten Steinen inklusive Schwebebreite
+      const cs=[p.x+PW/2, lastPathX], amp=rndR(15,45); let best=null, bd=-1;
+      for (let t=0;t<10;t++){ const fx=rndR(40,W-40), d=Math.min(...cs.map(cx=>Math.abs(fx-cx)))-amp; if (d>bd){ bd=d; best=fx; } }
+      if (bd>=48){ lastFoeY=genY; foes.push({x:best, x0:best, y:genY-g*.5, a:Math.random()*6, r:21, dead:0, sp:rndR(.6,1.1), amp, hit:0}); } }
+    lastPathX=p.x+PW/2;
   }
 }
 /* Spielstarts zählen (familienweit, Übertragung über die Spielauswahl) */
@@ -705,7 +710,7 @@ function newGame(){
   genUpTo(camY-H*1.3);
   hero={x:W/2, y:-FOOT, vx:0, vy:0, face:1, squash:0, stand:0, standP:null, prop:0, rocket:0, shield:0, dead:0, flip:0, spin:0};
   initClouds();
-  waiting=true; fresh=true; autoT=0;
+  waiting=true; fresh=true; autoT=0; rescued=false;
   bestAtStart=myBest(); started=true; shownScore=0; renderOdo(0); showStats();
   document.body.classList.remove('gameover'); $('over').hidden=true;
   idleTime=0;
@@ -723,7 +728,8 @@ function go(){   // erster Tipp: Spiel läuft los
 function shoot(){
   if (!canPlay() || waiting || !hero || hero.dead) return;
   if (shots.length>=3) return;
-  shots.push({x:hero.x, y:hero.y-HERO*.6, vy:-950}); SND.laser(); hero.squash=Math.max(hero.squash,.35);
+  let vx=0; { let bd=1e9; for (const f of foes){ if (f.dead || f.y>hero.y || hero.y-f.y>H) continue; const dx=wrapDX(f.x,hero.x); if (Math.abs(dx)<150 && Math.abs(dx)<bd){ bd=Math.abs(dx); vx=Math.max(-300,Math.min(300,dx*950/Math.max(80,hero.y-f.y))); } } }   // leichtes Zielen
+  shots.push({x:hero.x, y:hero.y-HERO*.6, vy:-950, vx}); SND.laser(); hero.squash=Math.max(hero.squash,.35);
 }
 
 /* ===================== Punkte ===================== */
@@ -968,7 +974,7 @@ function drawRocket(c,x,y,fire){
 function drawFoe(c,f,now){
   const t=thOf(themeAt(heightM(f.y)));
   c.save(); c.translate(f.x,f.y);
-  if (f.dead){ c.globalAlpha=Math.max(0,1-f.dead); c.translate(0,f.dead*40); c.rotate(f.dead*2.5); }
+  if (f.dead){ c.globalAlpha=Math.max(0,1-f.dead); if (f.flee) c.translate(0,-f.dead*160); else { c.translate(0,f.dead*40); c.rotate(f.dead*2.5); } }
   if (t.beam && !f.dead){ const g=c.createLinearGradient(0,8,0,80); g.addColorStop(0,'rgba(159,216,255,.3)'); g.addColorStop(1,'rgba(159,216,255,0)'); c.fillStyle=g; c.beginPath(); c.moveTo(-12,8); c.lineTo(12,8); c.lineTo(30,80); c.lineTo(-30,80); c.closePath(); c.fill(); }
   c.rotate(Math.sin(now/400+f.a)*.08);
   c.fillStyle='rgba(191,228,255,.88)'; c.beginPath(); c.ellipse(0,-6,14,13,0,Math.PI,0); c.fill();
@@ -978,13 +984,16 @@ function drawFoe(c,f,now){
   c.fillStyle='#fff'; c.beginPath(); c.arc(-4.8+look,-10,.9,0,7); c.arc(4.2+look,-10,.9,0,7); c.fill();
   for (let i=0;i<5;i++){ const dx=-22+i*11; c.fillStyle=((Math.floor(now/180)+i)%2)?'#ffd84d':'#9fd8ff'; c.beginPath(); c.arc(dx,2,2.6,0,7); c.fill(); }
   c.restore();
-  if (f.hit>0){ c.save(); c.translate(f.x,f.y-4); c.globalAlpha=f.hit; c.strokeStyle='#ffd84d'; c.lineWidth=2.6; c.lineCap='round';
+  if (f.hit>0 && !f.flee){ c.save(); c.translate(f.x,f.y-4); c.globalAlpha=f.hit; c.strokeStyle='#ffd84d'; c.lineWidth=2.6; c.lineCap='round';
     for (let i=0;i<8;i++){ const a=i*Math.PI/4, r1=8+(1-f.hit)*6; c.beginPath(); c.moveTo(Math.cos(a)*r1,Math.sin(a)*r1); c.lineTo(Math.cos(a)*(r1+9),Math.sin(a)*(r1+9)); c.stroke(); } c.restore(); }
 }
 /* Meteor mit Leuchtspur; vorher warnt ein „!“ am Rand auf seiner Höhe */
 function drawMet(c,m,now){
   const t=thOf(themeAt(heightM(m.y)));
   if (m.warn>0){ const x=m.dir>0?16:W-16, pulse=.75+.25*Math.sin(now/90);
+    // gestrichelte Flugbahn, damit man ausweichen kann
+    { const x0=m.dir>0?-30:W+30, tEnd=(W+60)/Math.abs(m.vx); c.save(); c.globalAlpha=.55*pulse; c.setLineDash([7,7]); c.lineDashOffset=-now/30; c.strokeStyle='#ffd84d'; c.lineWidth=2;
+      c.beginPath(); c.moveTo(x0,m.y); c.lineTo(x0+m.vx*tEnd,m.y+m.vy*tEnd); c.stroke(); c.restore(); }
     c.save(); c.translate(x,m.y); c.globalAlpha=pulse; c.fillStyle='rgba(15,29,61,.78)'; c.beginPath(); c.arc(0,0,13,0,7); c.fill(); c.strokeStyle='#ffd84d'; c.lineWidth=2; c.stroke();
     c.fillStyle='#ffd84d'; c.font='800 16px Nunito, system-ui, sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('!',0,1); c.restore(); return; }
   const ang=Math.atan2(m.vy,m.vx), r=m.r;
@@ -1006,7 +1015,7 @@ function drawHero(c,now,alpha){
   const sx=1+sq*.12-up*.05, sy=1-sq*.13+up*.07;
   const L=h.leg==null?6:h.leg, feetY=h.y+FOOT, face=h.face||1;
   draws.forEach(px=>{
-    c.save(); c.globalAlpha=alpha; c.translate(px,feetY); c.scale(SC,SC);
+    c.save(); c.globalAlpha=alpha*(h.safe>0 && Math.sin(now/60)>0 ? .45 : 1); c.translate(px,feetY); c.scale(SC,SC);
     if (h.dead==='hole'){ const k=Math.min(1,h.spin); c.translate(0,-26); c.rotate(k*8); c.scale(1-k*.9,1-k*.9); c.translate(0,26); }
     else if (h.dead){ c.translate(0,-26); c.rotate(h.spin*4); c.translate(0,26); }
     else if (h.flip>0){ c.translate(0,-26); c.rotate((1-h.flip)*Math.PI*2*face); c.translate(0,26); }
@@ -1091,6 +1100,7 @@ function draw(dt, now){
     mets.forEach(m=>drawMet(ctx,m,now));
     ctx.fillStyle='#ffd84d'; shots.forEach(s=>{ ctx.save(); ctx.translate(s.x,s.y); ctx.rotate(now/90); starPath(ctx,5,6,2.6); ctx.fill(); ctx.restore(); });
     ctx.globalAlpha=1;
+    if (!rescued && level<150 && !ended){ const y=camY+H-3, a=Math.max(0,1-level/150)*.7; ctx.save(); ctx.globalAlpha=a; ctx.strokeStyle='#ffffff'; ctx.lineWidth=2; ctx.setLineDash([3,6]); ctx.beginPath(); for (let x=0;x<=W;x+=24){ ctx.moveTo(x,y); ctx.quadraticCurveTo(x+12,y-5,x+24,y); } ctx.stroke(); ctx.restore(); }
     drawHero(ctx,now,fade);
     drawParts(ctx,dt);
   }
@@ -1116,7 +1126,7 @@ function frame(now){
   draw(dt, now); markPlaying();
   requestAnimationFrame(frame);
 }
-let keyDir=0, autoT=0;
+let keyDir=0, autoT=0, rescued=false;
 function steerTarget(){
   if (tiltOn()){   // relativ zur Haltung beim Start: 2° Ruhezone, linear bis zur vollen Geschwindigkeit bei 28°
     const d=-(tiltG-tiltZero), a=Math.abs(d); if (a<1.5) return 0;   // am iPhone geprüft: Vorzeichen umgekehrt (25.11.2026)
@@ -1165,6 +1175,7 @@ function sub(dt){
   if (h.dead && h.dead!=='hole') h.spin+=dt;
   if (h.x<0) h.x+=W; if (h.x>=W) h.x-=W;
   if (h.shield>0) h.shield=Math.max(0,h.shield-dt);
+  if (h.safe>0) h.safe=Math.max(0,h.safe-dt);
   // Landen (nur beim Fallen): Fußsohle kreuzt eine Landefläche – zuerst Feder/Trampolin (liegen höher), dann die Plattform
   if (!h.dead && h.vy>0 && h.prop<=0 && h.rocket<=0 && !(h.stand>0)){
     const fb=oy+FOOT, fn=h.y+FOOT, vis=y=>y<=camY+H-PH*.5;
@@ -1201,7 +1212,7 @@ function sub(dt){
     else if (it.k==='shield'){ h.shield=9; SND.star(); toast('Schutzblase'); }
   }
   // Schüsse
-  shots.forEach(s=>{ s.y+=s.vy*dt; });
+  shots.forEach(s=>{ s.y+=s.vy*dt; s.x+=(s.vx||0)*dt; });
   shots=shots.filter(s=>s.y>camY-30 && !s.hit);
   for (const s of shots) for (const f of foes){ if (f.dead) continue;
     if (Math.abs(wrapDX(s.x,f.x))<f.r+12 && Math.abs(s.y-f.y)<17){ s.hit=1; tel('ufo_shot'); killFoe(f,50); } }
@@ -1214,17 +1225,19 @@ function sub(dt){
       if (h.rocket>0 || h.prop>0){ killFoe(f,50); continue; }
       if (h.vy>0 && h.y+FOOT<f.y-2){ tel('ufo_stomp'); killFoe(f,75); h.vy=-JUMP; h.squash=1; continue; }   // von oben draufgesprungen
       if (h.shield>0){ h.shield=0; killFoe(f,50); h.vy=Math.min(h.vy,-JUMP*.6); continue; }
-      if (TEL) TEL.cause='ufo'; die('hit'); break;
+      if (h.safe>0) continue;
+      // Autsch: Jemmi wird nach unten weggeschubst, das Raumschiff flieht – kein Spielende
+      h.vy=Math.max(h.vy,320); h.vx=(dx>=0?1:-1)*260; h.safe=1.2; h.stand=0; f.dead=.01; f.flee=1; burst(h.x,bodyC,'#9fd8ff',10); SND.pop(1,0); toast('Autsch!'); tel('ufo_bump');
     }
   }
   // Meteore ab 900 m: „!“ am Rand warnt, dann fliegt er schräg durchs Bild
   if (level>900 && !h.dead){ metT-=dt; if (metT<=0){ const dir=Math.random()<.5?1:-1;
-    mets.push({dir, y:camY+rndR(.16,.58)*H, x:dir>0?-30:W+30, vx:dir*rndR(250,320), vy:rndR(30,80), r:15, warn:1.1});
+    mets.push({dir, y:camY+rndR(.16,.58)*H, x:dir>0?-30:W+30, vx:dir*rndR(200,255), vy:rndR(25,60), r:15, warn:1.2});
     metT=Math.max(4,rndR(9,14)-Math.min(5,(level-900)/600)); tel('meteor'); } }
   for (const m of mets){
     if (m.warn>0){ m.warn-=dt; if (m.warn<=0) SND.swoosh(1); continue; }
     m.x+=m.vx*dt; m.y+=m.vy*dt;
-    if (!h.dead && !m.gone && Math.hypot(wrapDX(h.x,m.x),bodyC-m.y)<m.r+12){
+    if (!h.dead && !m.gone && !(h.safe>0) && Math.hypot(wrapDX(h.x,m.x),bodyC-m.y)<m.r+7){
       if (h.rocket>0 || h.prop>0 || h.shield>0){ if (h.shield>0 && !(h.rocket>0||h.prop>0)) h.shield=0; m.gone=1; burst(m.x,m.y,'#c4b5fd',14); SND.pop(2,0); addBonus(40,m.x,m.y); }
       else { if (TEL) TEL.cause='meteor'; die('hit'); }
     }
@@ -1242,6 +1255,7 @@ function sub(dt){
   plats=plats.filter(p=>p.y<bottom && !(p.br>1.1)); items=items.filter(it=>(it.p?plats.includes(it.p):it.y<bottom)); foes=foes.filter(f=>f.y<bottom && !(f.dead>1));
   genUpTo(camY-H*.6);
   // heruntergefallen?
+  if (h.y-HERO*.2-camY>H && !h.dead && !rescued && level<150){ rescued=true; h.y=camY+H-FOOT-4; h.vy=-SPRING; h.vx*=.3; h.squash=1; h.safe=.6; SND.turbo(2); toast('Hoppla!'); tel('rescue'); }
   if (h.y-HERO*.2-camY>H){ if (!h.dead){ h.dead='fall'; SND.lose(); if (TEL) TEL.cause='fall:'+(TEL.lastLand||'-'); } gameOver(); }
 }
 function killFoe(f,pts){ f.dead=.01; f.hit=1; burst(f.x,f.y,'#ffd84d',14); SND.pop(3,0); addBonus(pts,f.x,f.y); }
