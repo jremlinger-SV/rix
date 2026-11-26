@@ -642,7 +642,7 @@ window.addEventListener('deviceorientation',e=>{
 });
 function askTilt(){
   if (!TILT_PERM || tiltState==='on' || tiltState==='off' || tiltState==='asking') return;
-  if (performance.now()-tiltSeen<1500 || performance.now()-accSeen<1500){ tiltState='on'; return; }   // schon erlaubt: keine Systemfrage
+  if ((tiltSeen>0 && performance.now()-tiltSeen<1500) || (accSeen>0 && performance.now()-accSeen<1500)){ tiltState='on'; return; }   // liefert schon Daten = schon erlaubt: keine Systemfrage
   tiltState='asking';
   const ps=[];
   try{ if (typeof DeviceMotionEvent!=='undefined' && DeviceMotionEvent.requestPermission) ps.push(DeviceMotionEvent.requestPermission()); }catch(e){}
